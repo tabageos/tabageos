@@ -1,6 +1,8 @@
 ### Tabageos
 Tabageos is a Javascript library for making tile based html5 games.
 
+See some example quick games here; https://www.tabageos.com/examples
+
 <!--
 **tabageos/tabageos** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
 
