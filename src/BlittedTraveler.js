@@ -242,7 +242,10 @@
         this.animationSpecs[animationName] = [yIndex || 1, arrayOfXYIndexValues];  
         
     };
-    BlittedTraveler.prototype.getPosition = function(addedX, addedY) {
+    BlittedTraveler.prototype.getPosition = function() {
+        return this._pos;
+    };
+    BlittedTraveler.prototype.getCAPosition = function(addedX, addedY) {
         if (!this._cpos || !this._addedPos) {
             this._cpos = new tabageos.MoverPoint();
             this._addedPos = new tabageos.MoverPoint();
