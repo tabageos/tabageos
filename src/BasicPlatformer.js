@@ -72,13 +72,13 @@
 	BasicPlatformer.prototype.getValuesOfCloseTiles = function(map) {
 		
 		var fpx = Math.floor(this.x);
-        var fpy = Math.floor(this.y);
+		var fpy = Math.floor(this.y);
 		
-        this.tile = tabageos.BlitMath.checkTileValueAt(fpx,fpy,map||this.tileMap,this._tW,this._tH);
-        this.tileUp = tabageos.BlitMath.checkTileValueAt(fpx,fpy-this._tH,map||this.tileMap,this._tW,this._tH);
-        this.tileDown = tabageos.BlitMath.checkTileValueAt(fpx,fpy+this._tH,map||this.tileMap,this._tW,this._tH);
-        this.tileLeft = tabageos.BlitMath.checkTileValueAt(fpx-this._tW,fpy,map||this.tileMap,this._tW,this._tH);
-        this.tileRight = tabageos.BlitMath.checkTileValueAt(fpx+this._tW,fpy,map||this.tileMap,this._tW,this._tH);
+		this.tile = tabageos.BlitMath.checkTileValueAt(fpx,fpy,map||this.tileMap,this._tW,this._tH);
+		this.tileUp = tabageos.BlitMath.checkTileValueAt(fpx,fpy-this._tH,map||this.tileMap,this._tW,this._tH);
+		this.tileDown = tabageos.BlitMath.checkTileValueAt(fpx,fpy+this._tH,map||this.tileMap,this._tW,this._tH);
+		this.tileLeft = tabageos.BlitMath.checkTileValueAt(fpx-this._tW,fpy,map||this.tileMap,this._tW,this._tH);
+		this.tileRight = tabageos.BlitMath.checkTileValueAt(fpx+this._tW,fpy,map||this.tileMap,this._tW,this._tH);
 		
 	};
 	
@@ -126,9 +126,9 @@
 			} else {
 				this._playerRef.onLadder = 0;
 			}
-		
+			
 		}
-	
+		
 	};
 	
 	tabageos.BasicPlatformer = BasicPlatformer;
