@@ -1,5 +1,4 @@
-
-tabageos = tabageos || {};
+// --Utils
 
 /*
 * Scales the game based on window.innerWidth/Height and gameWidth/Height
@@ -24,38 +23,68 @@ tabageos = tabageos || {};
 *
 */
 tabageos.ResizeGame = function(gameWidth, gameHeight, divideScaleXBy, divideScaleYBy, container, controller, showController, controllerStyle, scaleRectReference, dontPositionController, cW, cH, camera, cmScaleX, cmScaleY) {
-    
-	var scaleX = window.innerWidth / gameWidth;
-    var scaleY = window.innerHeight / gameHeight;
-    
-	if (controller && !showController) {
-        controller.hide();
-    } else if (showController && controller) { window.console.log("c show "+ cW + "  "+ cH);
-        controller.show(cW || 640, cH || 192, controllerStyle || 1);
-    }
 	
-    if (container) {
-        container.style.transformOrigin = "0 0";
-        container.style.transform = "scale(" + (divideScaleXBy ? scaleX / divideScaleXBy : 1) + "," + (divideScaleYBy ? scaleY / divideScaleYBy : 1) + ")";
-        var scaleRect = container.getBoundingClientRect();
+	var scaleX = window.innerWidth / gameWidth;
+	var scaleY = window.innerHeight / gameHeight;
+	
+	if (controller && !showController) {
+		controller.hide();
+	} else if (showController && controller) { window.console.log("c show "+ cW + "  "+ cH);
+		controller.show(cW || 640, cH || 192, controllerStyle || 1);
+	}
+	
+	if (container) {
+		container.style.transformOrigin = "0 0";
+		container.style.transform = "scale(" + (divideScaleXBy ? scaleX / divideScaleXBy : 1) + "," + (divideScaleYBy ? scaleY / divideScaleYBy : 1) + ")";
+		var scaleRect = container.getBoundingClientRect();
 		
 		if(camera) {
 			camera.layerToRender.canvas.style.transformOrigin = "0 0";
 			camera.layerToRender.canvas.style.transform = "scale(" + (divideScaleXBy ? cmScaleX / divideScaleXBy : 1) + "," + (divideScaleYBy ? cmScaleY / divideScaleYBy : 1) + ")";
 		}
 		
-        if(scaleRectReference) {
-            scaleRectReference.width = scaleRect.width;
-            scaleRectReference.height = scaleRect.height;
-        }
+		if(scaleRectReference) {
+			scaleRectReference.width = scaleRect.width;
+			scaleRectReference.height = scaleRect.height;
+		}
 		
-        tabageos.MouseController.defineMousePositionOffset(gameWidth, gameHeight, scaleRect.width, scaleRect.height);
-    }
-};
-tabageos.seekTouch = function() {
-	return ('ontouchstart'in window ? 1 : (navigator.maxTouchPoints ? 1 : 0));
+		tabageos.MouseController.defineMousePositionOffset(gameWidth, gameHeight, scaleRect.width, scaleRect.height);
+	}
 };
 
+tabageos._touched = 0;
+tabageos._edge = 0;
+tabageos.seekTouch = function() {
+	var basic =  ('ontouchstart' in window ? 1 : (navigator.maxTouchPoints ? 1 : 0));
+	tabageos._edge = window.navigator.userAgent.toLowerCase().indexOf("edg") != -1;
+	if(tabageos._edge) basic = false;//for edge we assume no touch, but right when they do 'touch' the touch controller should then show.
+	//so on endge, start button must be actually 'touched' for touch.
+	if(!tabageos._touched) {
+		window.removeEventListener('pointerdown', tabageos.getPointerType, false);
+		window.addEventListener('pointerdown', tabageos.getPointerType, false);//get true modern touch
+	}
+	return tabageos._touched || basic;
+};
+tabageos.getPointerType = function(e) {
+	window.removeEventListener('pointerdown', tabageos.getPointerType, false);
+	var result = e.pointerType && e.pointerType == 'touch' ? 1 : 0;
+	
+	if(!result) {
+		
+		if(tabageos.GameSkeleton.game && tabageos.GameSkeleton.game.controller) {
+			tabageos.GameSkeleton.game.controller.hide();
+		}
+	}
+	
+	tabageos._touched = result;
+	
+	if(result && tabageos.GameSkeleton.game) {
+		tabageos.GameSkeleton.game.__instanceBasicTwoLayerResize();//will seekTouch again and potentially show the controller
+	}
+};
+tabageos._pointerEvents = function() {
+	return window.PointerEvent ? 1 : 0;
+};
 tabageos.combineTwoNumbers = function(a,b) {
 	return a << 16 | b;
 };
@@ -86,3 +115,40 @@ tabageos.stringSplitNumberAtDecimal = function(num, direction) {
 	}
 	return Number( (num+"").split(".")[1] );
 };
+tabageos.stringSplitter = function(str, ntimes, exportCodeString) {
+	ntimes = ntimes || 10;
+	if(ntimes > 10) ntimes = 10;
+	var wlen = str.length;
+	var plen = wlen/ntimes;
+	var i = 0;
+	for(i;i<ntimes;i++) {	
+		window.console.log( (exportCodeString ? "tabageos.GameSkeleton._str["+i+"]=\"" : "") + str.substr(plen*i,plen).replace("\"data:image/png;base64,","") + "\";" );
+	}
+};
+tabageos.loadSpriteSheetAndStart = function(img, w,h,start) {
+	window.addEventListener("GameSkeleton", start, false);
+	window.setTimeout( function(e) {
+		var sheet = new Image();
+		sheet.onload = function(e) {
+			var i = 0;
+			for(i;i<10;i++) {
+				
+				if(tabageos.GameSkeleton._str[i]) {
+					i = 77; break;
+				}
+				
+			}
+			if(i != 77) {
+				tabageos.GameSkeleton.__sprites = new tabageos.CanvasObject(null,w,h);
+				tabageos.GameSkeleton.__sprites.copyPixels(sheet,new tabageos.Rectangle(0,0,w,h),new tabageos.MoverPoint());
+				var ev = document.createEvent("MouseEvents");
+				ev.initEvent("GameSkeleton", true, true);
+				window.dispatchEvent(ev);
+			} else {
+				var ai = tabageos.GameSkeleton._str;
+				tabageos.GameSkeleton.__baseToCol( w,h, ai[0]+ai[1]+ai[2]+ai[3]+ai[4]+ai[5]+ai[6]+ai[7]+ai[8]+ai[9]  );
+			}
+		}; sheet.src = img;
+	}, 700 ); 
+};
+//-- end Utils

@@ -1,106 +1,106 @@
 (function() { 
 
 	'use strict';
-    
-    function TravelingSceneryThrower(x,y,width,height, map, ca,dontCloneMap,dt,tWidth,tHeight,mr,mc) {
+	
+	function TravelingSceneryThrower(x,y,width,height, map, ca,dontCloneMap,dt,tWidth,tHeight,mr,mc) {
 		tabageos.TravelerSkeleton.call(this,x,y,width,height);
 		tabageos.MapTraveler.call(this,x,y,width,height, map, ca,dontCloneMap,dt,tWidth,tHeight,mr,mc);
-        
-        this.width = width || 0;
-        this.height = height || 0;
-        this._middlePoint = new tabageos.MoverPoint();
-        this._pos = new tabageos.MoverPoint(x,y);
-        this._veloc = new tabageos.MoverPoint(0,0);
-        this._lastVeloc = new tabageos.MoverPoint(0,0);
-        this._lastPos = new tabageos.MoverPoint(x,y);
-        this._deltaTime = dt || tabageos.TimeKeeper._sae;
-        this._map = dontCloneMap ? map : tabageos.BlitMath.cloneMultiArray(map);
-        this._state = 1;
-        this.x = x || 0;
-        this.y = y || 0;
-        this._rect = new tabageos.Rectangle(this.x,this.y,this.width,this.height);
-        this._canvasAnimation = ca || null;
-        this._tH = tHeight || this.height;
-        this._tW = tWidth || this.width;
-        this._outAltered = new tabageos.MoverPoint();
-        this.holdingRect = new tabageos.Rectangle(0,0,width,height);
-        this.holdingOffsetX = 1;
-        this.holdingOffsetY = 3;
-        this._jumps = 0;
-        this.easeProximity = 7;
-        this._checkHelper = new tabageos.MoverPoint();
-        this.forceApplier = new tabageos.MoverPoint();
-        this.forceHolder = new tabageos.MoverPoint();
-        this._w = width || 0;
-        this._h = height || 0;
-        this.wanderOffset = new tabageos.MoverPoint(0,0);
-        this.blankMO = new tabageos.MoverPoint();
-        this._eventDispatcher = new tabageos.EventDispatcher();
+		
+		this.width = width || 0;
+		this.height = height || 0;
+		this._middlePoint = new tabageos.MoverPoint();
+		this._pos = new tabageos.MoverPoint(x,y);
+		this._veloc = new tabageos.MoverPoint(0,0);
+		this._lastVeloc = new tabageos.MoverPoint(0,0);
+		this._lastPos = new tabageos.MoverPoint(x,y);
+		this._deltaTime = dt || tabageos.TimeKeeper._sae;
+		this._map = dontCloneMap ? map : tabageos.BlitMath.cloneMultiArray(map);
+		this._state = 1;
+		this.x = x || 0;
+		this.y = y || 0;
+		this._rect = new tabageos.Rectangle(this.x,this.y,this.width,this.height);
+		this._canvasAnimation = ca || null;
+		this._tH = tHeight || this.height;
+		this._tW = tWidth || this.width;
+		this._outAltered = new tabageos.MoverPoint();
+		this.holdingRect = new tabageos.Rectangle(0,0,width,height);
+		this.holdingOffsetX = 1;
+		this.holdingOffsetY = 3;
+		this._jumps = 0;
+		this.easeProximity = 7;
+		this._checkHelper = new tabageos.MoverPoint();
+		this.forceApplier = new tabageos.MoverPoint();
+		this.forceHolder = new tabageos.MoverPoint();
+		this._w = width || 0;
+		this._h = height || 0;
+		this.wanderOffset = new tabageos.MoverPoint(0,0);
+		this.blankMO = new tabageos.MoverPoint();
+		this._eventDispatcher = new tabageos.EventDispatcher();
 		this.holdings = [];
 		this._holdingHelperRect = new tabageos.Rectangle(0,0,0,0);
 		
-        
-    };
+		
+	};
 	TravelingSceneryThrower.prototype.constructor = TravelingSceneryThrower;
-    TravelingSceneryThrower.prototype = Object.create(tabageos.TravelerSkeleton.prototype); 
+	TravelingSceneryThrower.prototype = Object.create(tabageos.TravelerSkeleton.prototype); 
 	Object.assign(TravelingSceneryThrower.prototype, tabageos.MapTraveler.prototype);
-    TravelingSceneryThrower.prototype.throwStrength = 10;
-    TravelingSceneryThrower.prototype.health = 100;
-    TravelingSceneryThrower.prototype.holding;
+	TravelingSceneryThrower.prototype.throwStrength = 10;
+	TravelingSceneryThrower.prototype.health = 100;
+	TravelingSceneryThrower.prototype.holding;
 	TravelingSceneryThrower.prototype.holdings;
-    TravelingSceneryThrower.prototype.holdingRect;
+	TravelingSceneryThrower.prototype.holdingRect;
 	TravelingSceneryThrower.prototype._holdingHelperRect;
-    TravelingSceneryThrower.prototype._canvasAnimation = null;
-    TravelingSceneryThrower.prototype._outAltered;
-    TravelingSceneryThrower.prototype.holdingOffsetX = 1;
-    TravelingSceneryThrower.prototype.holdingOffsetY = 3;
-    TravelingSceneryThrower.prototype.nameOfThrower = "strawHat";
+	TravelingSceneryThrower.prototype._canvasAnimation = null;
+	TravelingSceneryThrower.prototype._outAltered;
+	TravelingSceneryThrower.prototype.holdingOffsetX = 1;
+	TravelingSceneryThrower.prototype.holdingOffsetY = 3;
+	TravelingSceneryThrower.prototype.nameOfThrower = "strawHat";
 
-    TravelingSceneryThrower.prototype.alteredPosition = function(xAlterAmount, yAlterAmount) {
-        xAlterAmount = xAlterAmount || 0;
-        yAlterAmount = yAlterAmount || 0;
-        this._outAltered.x = this.x - xAlterAmount;
-        this._outAltered.y = this.y - yAlterAmount;
-        return this._outAltered;
-    };
-    TravelingSceneryThrower.prototype.holdingImageRect = function() {
-        return this.holdingRect;
-    };
-    TravelingSceneryThrower.prototype.pickUpTileData = function(td, imageWidthAdjust, imageHeightAdjust) {
-        if (!this.holding) {
-            this.holding = td;
-            this.holdingRect.x = this.holding.value[1] * (this._tw);
-            this.holdingRect.y = this.holding.value[0] * (this._th);
-            this.holdingRect.width = this._tw;
-            this.holdingRect.height = this._th;
-            if (imageWidthAdjust) {
-                this.holdingRect.width += imageWidthAdjust;
-            }
-            if (imageHeightAdjust) {
-                this.holdingRect.height += imageHeightAdjust;
-            }
-            return true;
-        }
-        return false;
-    };
+	TravelingSceneryThrower.prototype.alteredPosition = function(xAlterAmount, yAlterAmount) {
+		xAlterAmount = xAlterAmount || 0;
+		yAlterAmount = yAlterAmount || 0;
+		this._outAltered.x = this.x - xAlterAmount;
+		this._outAltered.y = this.y - yAlterAmount;
+		return this._outAltered;
+	};
+	TravelingSceneryThrower.prototype.holdingImageRect = function() {
+		return this.holdingRect;
+	};
+	TravelingSceneryThrower.prototype.pickUpTileData = function(td, imageWidthAdjust, imageHeightAdjust) {
+		if (!this.holding) {
+			this.holding = td;
+			this.holdingRect.x = this.holding.value[1] * (this._tw);
+			this.holdingRect.y = this.holding.value[0] * (this._th);
+			this.holdingRect.width = this._tw;
+			this.holdingRect.height = this._th;
+			if (imageWidthAdjust) {
+				this.holdingRect.width += imageWidthAdjust;
+			}
+			if (imageHeightAdjust) {
+				this.holdingRect.height += imageHeightAdjust;
+			}
+			return true;
+		}
+		return false;
+	};
 	TravelingSceneryThrower.prototype.pickUpAndStoreTileData = function(obj, imageWidthAdjust, imageHeightAdjust, dontReadyThrow) {
 		
-			this.holdings.push(obj);
-			var hi = this.holdings.length - 1;
-            this.holdingRect.x = this.holdings[hi].value[1] * (this._tw);
-            this.holdingRect.y = this.holdings[hi].value[0] * (this._th);
-            this.holdingRect.width = this._tw;
-            this.holdingRect.height = this._th;
-            if (imageWidthAdjust) {
-                this.holdingRect.width += imageWidthAdjust;
-            }
-            if (imageHeightAdjust) {
-                this.holdingRect.height += imageHeightAdjust;
-            }
-			
-			if(!dontReadyThrow) { this._readyNextThrow(); } else { this.holding = null; }
-			
-            return true;
+		this.holdings.push(obj);
+		var hi = this.holdings.length - 1;
+		this.holdingRect.x = this.holdings[hi].value[1] * (this._tw);
+		this.holdingRect.y = this.holdings[hi].value[0] * (this._th);
+		this.holdingRect.width = this._tw;
+		this.holdingRect.height = this._th;
+		if (imageWidthAdjust) {
+			this.holdingRect.width += imageWidthAdjust;
+		}
+		if (imageHeightAdjust) {
+			this.holdingRect.height += imageHeightAdjust;
+		}
+		
+		if(!dontReadyThrow) { this._readyNextThrow(); } else { this.holding = null; }
+		
+		return true;
 		
 	};
 	
@@ -116,7 +116,7 @@
 			} else {
 				if(this.holdings[i] && this.holdings[i].tileValue) {
 					if(this.holdings[i].tileValue[0] == tValue[0] && this.holdings[i].tileValue[1] == tValue[1]) {
-					
+						
 						this.holdings.splice(i, 1); break;
 					}
 				}
@@ -211,70 +211,70 @@
 	
 	TravelingSceneryThrower.prototype.pickUpAndStore = function(obj, imageWidthAdjust, imageHeightAdjust, dontReadyThrow) {
 		
-			this.holdings.push(obj);
-			var hi = this.holdings.length - 1;
-            this.holdingRect.x = this.holdings[hi].tileValue[1] * (obj.width);
-            this.holdingRect.y = this.holdings[hi].tileValue[0] * (obj.height);
-            this.holdingRect.width = obj.width;
-            this.holdingRect.height = obj.height;
-            if (imageWidthAdjust) {
-                this.holdingRect.width += imageWidthAdjust;
-            }
-            if (imageHeightAdjust) {
-                this.holdingRect.height += imageHeightAdjust;
-            }
-			
-			if(!dontReadyThrow) { this._readyNextThrow(); } else { this.holding = null; }
-			
-            return true;
+		this.holdings.push(obj);
+		var hi = this.holdings.length - 1;
+		this.holdingRect.x = this.holdings[hi].tileValue[1] * (obj.width);
+		this.holdingRect.y = this.holdings[hi].tileValue[0] * (obj.height);
+		this.holdingRect.width = obj.width;
+		this.holdingRect.height = obj.height;
+		if (imageWidthAdjust) {
+			this.holdingRect.width += imageWidthAdjust;
+		}
+		if (imageHeightAdjust) {
+			this.holdingRect.height += imageHeightAdjust;
+		}
+		
+		if(!dontReadyThrow) { this._readyNextThrow(); } else { this.holding = null; }
+		
+		return true;
 		
 	};
-    TravelingSceneryThrower.prototype.pickUp = function(obj, imageWidthAdjust, imageHeightAdjust) {
-        if (!this.holding) {
-            this.holding = obj;
-            this.holdingRect.x = obj.tileValue[1] * (obj.width);
-            this.holdingRect.y = obj.tileValue[0] * (obj.height);
-            this.holdingRect.width = obj.width;
-            this.holdingRect.height = obj.height;
-            if (imageWidthAdjust) {
-                this.holdingRect.width += imageWidthAdjust;
-            }
-            if (imageHeightAdjust) {
-                this.holdingRect.height += imageHeightAdjust;
-            }
-            return true;
-        }
-        return false;
-    };
-    TravelingSceneryThrower.prototype._throwHolding = function() {
-        
+	TravelingSceneryThrower.prototype.pickUp = function(obj, imageWidthAdjust, imageHeightAdjust) {
+		if (!this.holding) {
+			this.holding = obj;
+			this.holdingRect.x = obj.tileValue[1] * (obj.width);
+			this.holdingRect.y = obj.tileValue[0] * (obj.height);
+			this.holdingRect.width = obj.width;
+			this.holdingRect.height = obj.height;
+			if (imageWidthAdjust) {
+				this.holdingRect.width += imageWidthAdjust;
+			}
+			if (imageHeightAdjust) {
+				this.holdingRect.height += imageHeightAdjust;
+			}
+			return true;
+		}
+		return false;
+	};
+	TravelingSceneryThrower.prototype._throwHolding = function() {
+		
 		if(this.holdings.indexOf(this.holding) != -1) {
 			this.holdings.splice(this.holdings.indexOf(this.holding), 1);
 		}
-        this.holding = null;
-        
-    };
+		this.holding = null;
+		
+	};
 	TravelingSceneryThrower.prototype._readyNextThrow = function() {
 		
 		if(this.holdings.length) {
 			
 			
-				
-				this.holding = this.holdings[this.holdings.length-1];
-				if(this.holding.tileValue) {
-					this.holdingRect.x = this.holding.tileValue[1] * (this.holding.width);
-					this.holdingRect.y = this.holding.tileValue[0] * (this.holding.height);
-					this.holdingRect.width = this.holding.width;
-					this.holdingRect.height = this.holding.height;
-				} else {
-					this.holdingRect.x = this.holding.value[1] * (this._tW);
-					this.holdingRect.y = this.holding.value[0] * (this._tH);
-					this.holdingRect.width = this._tW;
-					this.holdingRect.height = this._tH;
+			
+			this.holding = this.holdings[this.holdings.length-1];
+			if(this.holding.tileValue) {
+				this.holdingRect.x = this.holding.tileValue[1] * (this.holding.width);
+				this.holdingRect.y = this.holding.tileValue[0] * (this.holding.height);
+				this.holdingRect.width = this.holding.width;
+				this.holdingRect.height = this.holding.height;
+			} else {
+				this.holdingRect.x = this.holding.value[1] * (this._tW);
+				this.holdingRect.y = this.holding.value[0] * (this._tH);
+				this.holdingRect.width = this._tW;
+				this.holdingRect.height = this._tH;
 
-					
-				}
 				
+			}
+			
 			
 		}
 		
@@ -285,62 +285,62 @@
 	};
 	TravelingSceneryThrower.prototype.rectFromHolding = function(holdin) {
 		
-				if(holdin.tileValue) {
-					this._holdingHelperRect.x = holdin.tileValue[1] * (holdin.width);
-					this._holdingHelperRect.y = holdin.tileValue[0] * (holdin.height);
-					this._holdingHelperRect.width = holdin.width;
-					this._holdingHelperRect.height = holdin.height;
-				} else {
-					this._holdingHelperRect.x = holdin.value[1] * (this._tW);
-					this._holdingHelperRect.y = holdin.value[0] * (this._tH);
-					this._holdingHelperRect.width = this._tW;
-					this._holdingHelperRect.height = this._tH;
-				}
+		if(holdin.tileValue) {
+			this._holdingHelperRect.x = holdin.tileValue[1] * (holdin.width);
+			this._holdingHelperRect.y = holdin.tileValue[0] * (holdin.height);
+			this._holdingHelperRect.width = holdin.width;
+			this._holdingHelperRect.height = holdin.height;
+		} else {
+			this._holdingHelperRect.x = holdin.value[1] * (this._tW);
+			this._holdingHelperRect.y = holdin.value[0] * (this._tH);
+			this._holdingHelperRect.width = this._tW;
+			this._holdingHelperRect.height = this._tH;
+		}
 		return this._holdingHelperRect;
 	};
-    TravelingSceneryThrower.prototype.throwSceneryObject = function(w,h,jumps) {
-        var scenery;
+	TravelingSceneryThrower.prototype.throwSceneryObject = function(w,h,jumps) {
+		var scenery;
 		
 		if(this.holding == null && this.holdings.length) {
 			this._readyNextThrow();
 		}
 		
-        if (this.holding) {
-            
-            scenery = new tabageos.SceneryObject(this.x+1-1,this.y+1-1,w||this._tw,h||this._th,this._map,null,1, this._deltaTime, this._tw, this._th,this._mapRows,this._mapColumns);
-            scenery._jumps = (jumps == 0 ? 0 : 1);
-            scenery.playerHoldingThis = this;
-            scenery.tileValue = this.holding.value || this.holding.tileValue;
-            scenery.tileRect = new tabageos.Rectangle(this.holdingRect.x,this.holdingRect.y,this.holdingRect.width,this.holdingRect.height);
-
-            this._throwHolding();
+		if (this.holding) {
 			
-            return scenery;
-        }
-        return null;
-    };
+			scenery = new tabageos.SceneryObject(this.x+1-1,this.y+1-1,w||this._tw,h||this._th,this._map,null,1, this._deltaTime, this._tw, this._th,this._mapRows,this._mapColumns);
+			scenery._jumps = (jumps == 0 ? 0 : 1);
+			scenery.playerHoldingThis = this;
+			scenery.tileValue = this.holding.value || this.holding.tileValue;
+			scenery.tileRect = new tabageos.Rectangle(this.holdingRect.x,this.holdingRect.y,this.holdingRect.width,this.holdingRect.height);
+
+			this._throwHolding();
+			
+			return scenery;
+		}
+		return null;
+	};
 	TravelingSceneryThrower.prototype.throwSceneryObjectTraveler = function(w,h,jumps) {
-        var scenery;
+		var scenery;
 		
 		if(this.holding == null && this.holdings.length) {
 			this._readyNextThrow();
 		}
 		
-        if (this.holding) {
-            
-            scenery = new tabageos.SceneryObjectTraveler(this.x+1-1,this.y+1-1,w||this._tw,h||this._th,this._map,null,1, this._deltaTime, this._tw, this._th,this._mapRows,this._mapColumns);
-            scenery._jumps = (jumps == 0 ? 0 : 1);
-            scenery.playerHoldingThis = this;
-            scenery.tileValue = this.holding.value || this.holding.tileValue;
-            scenery.tileRect = new tabageos.Rectangle(this.holdingRect.x,this.holdingRect.y,this.holdingRect.width,this.holdingRect.height);
-
-            this._throwHolding();
+		if (this.holding) {
 			
-            return scenery;
-        }
-        return null;
-    };
-    tabageos.TravelingSceneryThrower = TravelingSceneryThrower;
+			scenery = new tabageos.SceneryObjectTraveler(this.x+1-1,this.y+1-1,w||this._tw,h||this._th,this._map,null,1, this._deltaTime, this._tw, this._th,this._mapRows,this._mapColumns);
+			scenery._jumps = (jumps == 0 ? 0 : 1);
+			scenery.playerHoldingThis = this;
+			scenery.tileValue = this.holding.value || this.holding.tileValue;
+			scenery.tileRect = new tabageos.Rectangle(this.holdingRect.x,this.holdingRect.y,this.holdingRect.width,this.holdingRect.height);
+
+			this._throwHolding();
+			
+			return scenery;
+		}
+		return null;
+	};
+	tabageos.TravelingSceneryThrower = TravelingSceneryThrower;
 })();
 
 
