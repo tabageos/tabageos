@@ -173,7 +173,7 @@
 	GameSkeleton._str = ["","","","","","","","","","","",""];
 	
 	GameSkeleton.prototype.healthBarIsDisplayed = 0;
-	GameSkeleton.prototype.scoreTextIsDisplayed = 0;
+	GameSkeleton.prototype.scoreTextIsDisplayed = 0; 
 	
 	GameSkeleton.prototype.soundSystem = null;
 	GameSkeleton.prototype._mute = 0;
@@ -235,7 +235,6 @@
 		GameSkeleton.game._playerHUD.style.display = "inline";
 		if(backgroundId) {
 			GameSkeleton.game._healthBar.setAttribute("id", backgroundId);
-			
 		}
 	};
 	
@@ -514,9 +513,10 @@
                 window.console.log("a player has not been created, set this.player to some new Character Class");
             }
 			
-			if(!this.__worker) {
+			if(!this.__worker) { 
 				this.initWorkerLoop();
 			}
+			
 	};
 	
     
@@ -547,9 +547,6 @@
 			this.soundSystem.playMusic(0);
 		}
 	};
-	
-	
-	
 	
 	
 	GameSkeleton.seeAndChaseRoutine = function(obj,enemies,player,helperPoint,chaseRadius, dontOnlyChaseToX, separationDistance, map,tw,th) {
@@ -777,7 +774,7 @@
 	GameSkeleton.prototype.__workLoop = 0;
 	GameSkeleton.prototype.__worker = null;
 	
-	GameSkeleton.prototype.__loopWorker = function() {
+	GameSkeleton.prototype.__loopWorker = function() { 
 		
 		var blb = URL.createObjectURL( new Blob([ '(',
 		
@@ -798,7 +795,7 @@
 	};
 	GameSkeleton.prototype.__methodForWorker = null;
 	
-	GameSkeleton.prototype.initWorkerLoop = function() {
+	GameSkeleton.prototype.initWorkerLoop = function() { 
 		if(!this.__worker) {
 			this.__worker = GameSkeleton.game.__loopWorker();
 			this.__workLoop = 0;
@@ -810,11 +807,7 @@
 			});
 		
 		}
-		
-		
-		
 	};
-	
 	
 	GameSkeleton.prototype._loop = function(ts) {
 		GameSkeleton.game._ts = ts;
@@ -907,8 +900,6 @@
 				
 				if(GameSkeleton.game._cameraType === 1) {
 					
-					
-					
 					if(GameSkeleton.game.horizontalCameraMove) { 
 						if(GameSkeleton.game.cameraPoint.x == -9999) {
 							GameSkeleton.game.cameraPoint.x = (Math.round(GameSkeleton.game.player.x) - GameSkeleton.game.cameraFollowOffsetX) + (GameSkeleton.game.gameWidth/10);
@@ -926,13 +917,10 @@
 						
 					} else { 
 						
-					
-						
 						GameSkeleton.game.cameraPoint.x = Math.round(GameSkeleton.game.player.x) - GameSkeleton.game.cameraFollowOffsetX; 
 						GameSkeleton.game.cameraPoint.y = Math.round(GameSkeleton.game.player.y)- GameSkeleton.game.cameraFollowOffsetY;
 					
 					}					
-					
 					
 					GameSkeleton.game.camera.tweenedBlitLayerRender(GameSkeleton.game.cameraPoint, GameSkeleton.game.tweenLimitX || 0,GameSkeleton.game.tweenLimitY || 0, Math.round(GameSkeleton.game.frameTime / GameSkeleton.game._ts),GameSkeleton.game.cameraTweenType,0,0);
 				}
@@ -1600,7 +1588,7 @@
 
         if(e) e.preventDefault();
         if(GameSkeleton.game.screenOrganizer && GameSkeleton.game.screenOrganizer.currentScreen == 0) {
-            
+            //title screen.
             
         } else {
             GameSkeleton.game.paused = 1;
@@ -1635,9 +1623,9 @@
 	GameSkeleton.prototype._theReset = function() {
         
             GameSkeleton.game._doReset = 1;GameSkeleton.game.__workLoop = 0;
-			if(GameSkeleton.game._worker) {
-				GameSkeleton.game._worker.terminate();
-				GameSkeleton.game._worker = null;
+			if(GameSkeleton.game.__worker) {
+				GameSkeleton.game.__worker.terminate();
+				GameSkeleton.game.__worker = null;
 			}
 			window.cancelAnimationFrame(GameSkeleton.game._aid);
             window.removeEventListener("keyup", GameSkeleton.game.reset, false);
@@ -1736,7 +1724,7 @@
 			
 	};
 	
-	
+	//png streamlining methods
 	GameSkeleton.__baseToCol = function(w,h,str) {
 		
 		var bine = window.atob(str);//general binary decode
@@ -1750,22 +1738,24 @@
 		
 		var p = new PNG(u8c);//for specific png pixel decode 
 		
-		GameSkeleton.__buildColors(w,h,p.decode());//put each pixel into __sprites.
+		GameSkeleton.__eventBuildObject = {w:w,h:h,c:p.decode(),imd:null};
+		
+		GameSkeleton.__eventBuildColors();//worker build each pixel as ImageData
 		
 	};
 	
-	
+	//zipped png to colors, this is not used, JSzip would be needed if you want to do this.
 	GameSkeleton.__binaryToCol = function(name, innerName, w, h) {
 		
 		var jsZip;
 		try {
 			jsZip = new JSZip();
 		} catch(e) {
-			window.console.log("GameSkeleton.__binaryGet requires J"+"S"+"Z"+"i"+"p");
+			window.console.log("GameSkeleton.__binaryToCol requires J"+"S"+"Z"+"i"+"p");
 			return;
 		}
 		if(!w || !h) {
-			throw "for GameSkeleton.__binaryGet w and h must be defined as the width and height of the binary";
+			throw "for GameSkeleton.__binaryToCol w and h must be defined as the width and height of the binary";
 		}
 		tabageos.GameSkeleton.__bnCords = new tabageos.Rectangle(0,0,w,h);
 		var xmlhtt = new XMLHttpRequest();
@@ -1776,7 +1766,6 @@
 				.then(function(ip) {
 					ip.file(innerName).async("string").then(function(str) {
 						var d = str.split(',').map(Number);
-						
 						tabageos.GameSkeleton.__buildColors(tabageos.GameSkeleton.__bnCords.width,tabageos.GameSkeleton.__bnCords.height,d);
 					}) 
 				});
@@ -1787,21 +1776,74 @@
 		xmlhtt.send();
 	};
 	
+	GameSkeleton.__streamlineWorker = null;
+	GameSkeleton.__streamWorker = function() { 
+		var blb = URL.createObjectURL( new Blob([ '(',
+			function() {
+				self.onmessage = function(e) {
+					var d = e.data.data;
+					var c = e.data.c;
+					var i,j;
+					for (i = 0, j=0; j < c.length; j=j+4) {
+						d[i] = c[j];
+						d[i+1] = c[j+1];
+						d[i+2] = c[j+2];
+						d[i+3] = c[j+3];
+						i+=4;
+					}
+					self.postMessage( { imd:d } );
+				};
+			}.toString(),
+		')()' ], {type: 'application/javascript'} ) );
+		return new Worker( blb );
+	};
+	
+	GameSkeleton.__eventBuildCA = null;
+	GameSkeleton.__eventBuildObject = {w:0,h:0,c:0,imd:null};
+	GameSkeleton.__eventBuildColors = function() { 
+		try {
+			if(!GameSkeleton.__eventBuildCA) {
+				GameSkeleton.__eventBuildCA = new tabageos.CanvasObject(null,GameSkeleton.__eventBuildObject.w, GameSkeleton.__eventBuildObject.h);
+			}
+			if(!GameSkeleton.__eventBuildObject.imd) {
+				GameSkeleton.__eventBuildObject.imd = GameSkeleton.__eventBuildCA.context.createImageData(GameSkeleton.__eventBuildObject.w, GameSkeleton.__eventBuildObject.h);
+			}
+			GameSkeleton.__streamlineWorker = GameSkeleton.__streamWorker();
+			GameSkeleton.__streamlineWorker.addEventListener("message", function(e) {
+				
+				GameSkeleton.__sprites = GameSkeleton.__eventBuildCA;
+				//we do it this way because passing a whole ImageData via the worker can cause a memory error.
+				var dt = new ImageData(e.data.imd, GameSkeleton.__eventBuildObject.w, GameSkeleton.__eventBuildObject.h);
+				GameSkeleton.__sprites.context.putImageData(dt,0,0);
+				GameSkeleton.__streamlineWorker.terminate();
+				GameSkeleton.__streamlineWorker = null;
+				var ev = document.createEvent("MouseEvents");
+				ev.initEvent("GameSkeleton", true, true);
+				window.dispatchEvent(ev);
+				
+			}, false);
+			GameSkeleton.__streamlineWorker.postMessage( {data:GameSkeleton.__eventBuildObject.imd.data, c:GameSkeleton.__eventBuildObject.c} );
+		} catch(e) {
+			window.console.log(e);
+			window.document.body.getElementsByTagName("div")[8].innerHTML += e+"";
+		}
+	};
+
 	//construcs ImageData pixel by pixel and applies it to the canvas to be drawn from.
-	GameSkeleton.__buildColors = function(w,h,c) {
+	GameSkeleton.__buildColors = function(w,h,c) {//this brute force method is not used.
 		var i,j,d;
 		try {
 			var ca = new tabageos.CanvasObject(null,w,h);
 			var imd = ca.context.createImageData(w,h);
 			var data = imd.data;
 			
-			for (i = 0, j=0; j < c.length; j=j+4) {
+			for (i = 0, j=0; j < c.length; j=j+4) {//very memory intensive and heavy, millions of iterations.
 				data[i] = c[j];
 				data[i+1] = c[j+1];
 				data[i+2] = c[j+2];
 				data[i+3] = c[j+3];
 				i+=4;
-			}
+			}//a worker is used to do this, see __streamWorker
 			
 			GameSkeleton.__sprites = ca;
 			GameSkeleton.__sprites.context.putImageData(imd,0,0);
@@ -1829,6 +1871,7 @@
 		ev.initEvent("GameSkeleton", true, true);
 		window.dispatchEvent(ev);
 	};
+	//end steamlining methods
 	
 	GameSkeleton.establish = function(gameInstance, spriteSheetImage,containerDivId, rootDivId, controllerDivId, gameScale, useScreenOrganizer, startWidth,startHeight) {
             
@@ -1842,7 +1885,6 @@
 					GameSkeleton.game.basicInitialize(containerDivId, rootDivId, GameSkeleton.game.gameWidth,GameSkeleton.game.gameHeight, GameSkeleton.game.cameraWidth,GameSkeleton.game.cameraHeight, controllerDivId,useScreenOrganizer, startWidth,startHeight,GameSkeleton.game.useSceneChanger === 0 ? 1 : 0, GameSkeleton.game._manuelControllerUse);
 					GameSkeleton.game.gameScale = gameScale || 0;
 					GameSkeleton.game._basicTwoLayerResize(GameSkeleton.game.cameraLayer,GameSkeleton.game.display,GameSkeleton.game.charLayer, GameSkeleton.game.cameraWidth,GameSkeleton.game.cameraHeight,GameSkeleton.game.controllerHeight,GameSkeleton.game.containerDiv,GameSkeleton.game.controller, GameSkeleton.game.gameScale);
-					
 					
 					if(GameSkeleton.game.gameScale >= 1 || GameSkeleton.game.gameScale === 0) {
 						
@@ -1944,7 +1986,5 @@
 		
 	};
 	tabageos.GameSkeleton = GameSkeleton;
-	
-    
 	
 })();
