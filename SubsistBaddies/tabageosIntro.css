@@ -1,0 +1,35 @@
+
+@font-face { font-family: 'gmefnt';src: url('gmefnt2.ttf') format('truetype');font-weight: normal;font-style: normal; }
+body { background: #212121;color: #ffffff;font-family:'gmefnt' }
+#phld {position:absolute;left:37.5%;width:25%;height:10%;font-size:32px;color:#6495ed;font-family:'gmefnt';top:120px;text-align:center;}
+#liner {position:absolute;left:0%;width:1%;height:2px;border:thin solid #6495ED;border-radius:25%;background:#6495ED;animation-name:bckfrth; animation-timing-function:linear;animation-iteration-count:infinite;animation-duration:12s;}
+#ls1 {animation-name: rtate, details;animation-timing-function: linear; animation-iteration-count:infinite;animation-duration:3s;}
+@keyframes bckfrth { 0% {width:1%;} 10% { width:5%; } 30% {width:9%; } 50% {width:14%;} 70% {width:19%; } 90% {width:21%;} 100% {width:25%;} }
+@keyframes rtate { from { transform: rotateY(0deg); } to { transform: rotateY(-360deg); } }
+@keyframes details {
+	0% { text-shadow:0 0 #6495ed;}
+	25% { text-shadow: 1px 0 #6495ed, 2px 0 #6495ed, 4px 0 #6495ed, 5px 0 #6495ed}
+	50% { text-shadow: 0 0 #6495ed;}
+	75% { text-shadow: -1px 0 #6495ed, -2px 0 #6495ed, -3px 0 #6495ed, -4px 0 #6495ed, -5px 0 #6495ed;}
+	100% { text-shadow: 0 0 #6495ed;}
+}
+
+/*
+*
+*
+*   <table id="phld"><tr>
+*		<td><div id="ls1">T</div></td><td>
+*		<div id="ls1">A</div></td><td>
+*		<div id="ls1">B</div></td><td>
+*		<div id="ls1">A</div></td><td>
+*		<div id="ls1">G</div></td><td>
+*		<div id="ls1">E</div></td><td>
+*		<div id="ls1">O</div></td><td>
+*		<div id="ls1">S</div></td></tr><tr><td>
+*		<div id="liner"></div></td></tr>
+*	</table>
+*
+*
+*
+*
+*/
