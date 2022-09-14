@@ -497,7 +497,8 @@
 					}
 				}
             }
-			
+			this.title.floor.canvas.setAttribute("style","image-rendering: -moz-crisp-edges;image-rendering: -webkit-crisp-edges;image-rendering: pixelated;image-rendering: crisp-edges;");
+			this.gameOverContainer.floor.canvas.setAttribute("style","image-rendering: -moz-crisp-edges;image-rendering: -webkit-crisp-edges;image-rendering: pixelated;image-rendering: crisp-edges;");
 			
 			if(this.horizontalCameraMove) {
 				
@@ -751,7 +752,10 @@
 	
 	GameSkeleton.prototype.tweenLimitX = 0;
 	GameSkeleton.prototype.tweenLimitY = 0;
-	
+	GameSkeleton.prototype.screenRightExitOffset = 1;
+	GameSkeleton.prototype.screenLeftExitOffset = 1;
+	GameSkeleton.prototype.screenUpExitOffset = 1;
+	GameSkeleton.prototype.screenDownExitOffset = 1;
 	GameSkeleton.prototype._shakesToInclude = 0;
 	
 	
@@ -839,7 +843,7 @@
 					GameSkeleton.game.charLayer.context.clearRect(GameSkeleton.game.camera.v.x,GameSkeleton.game.camera.v.y,GameSkeleton.game.camera.v.width,GameSkeleton.game.camera.v.height);
 				}
 				var lsce;
-				if(GameSkeleton.game.sceneChanger && GameSkeleton.game.player.x >= ((GameSkeleton.game.gameWidth) - GameSkeleton.game.tileWidth + 1)) {
+				if(GameSkeleton.game.sceneChanger && GameSkeleton.game.player.x > ((GameSkeleton.game.gameWidth) - this.screenRightExitOffset) ) {
 					
 					lsce = GameSkeleton.game.sceneChanger.currentScene + 1; if (lsce > GameSkeleton.game.sceneChanger._totalScenes.length-1) lsce = 1;
 					if(!GameSkeleton.game.sceneChanger._totalScenes[lsce]) lsce = GameSkeleton.game.sceneChanger.currentScene;
@@ -851,7 +855,7 @@
 					GameSkeleton.game.camera.renderB2();
 				
 				}
-				if(GameSkeleton.game.sceneChanger && GameSkeleton.game.player.x <= (GameSkeleton.game.tileWidth - 1)) {
+				if(GameSkeleton.game.sceneChanger && GameSkeleton.game.player.x <= ((GameSkeleton.game.tileWidth) - this.screenLeftExitOffset) ) {
 					
 					lsce = GameSkeleton.game.sceneChanger.currentScene - 1; if (lsce == 0) lsce = GameSkeleton.game.sceneChanger._totalScenes.length-1;
 					if(!GameSkeleton.game.sceneChanger._totalScenes[lsce]) lsce = GameSkeleton.game.sceneChanger.currentScene;
@@ -864,7 +868,7 @@
 				}
 				
 				
-				if(GameSkeleton.game.topDownSceneChange && GameSkeleton.game.sceneChanger && GameSkeleton.game.player.y >= ((GameSkeleton.game.gameHeight))) {
+				if(GameSkeleton.game.topDownSceneChange && GameSkeleton.game.sceneChanger && GameSkeleton.game.player.y >= ((GameSkeleton.game.gameHeight) - this.screenDownExitOffset) ) {
 					
 					lsce = GameSkeleton.game.sceneChanger.currentScene + 1; if (lsce > GameSkeleton.game.sceneChanger._totalScenes.length-1) lsce = 1;
 					if(!GameSkeleton.game.sceneChanger._totalScenes[lsce]) lsce = GameSkeleton.game.sceneChanger.currentScene;
@@ -876,7 +880,7 @@
 					GameSkeleton.game.camera.renderB2();
 				
 				}
-				if(GameSkeleton.game.topDownSceneChange && GameSkeleton.game.sceneChanger && GameSkeleton.game.player.y <= (1)) {
+				if(GameSkeleton.game.topDownSceneChange && GameSkeleton.game.sceneChanger && GameSkeleton.game.player.y <= (this.screenUpExitOffset)) {
 					
 					lsce = GameSkeleton.game.sceneChanger.currentScene - 1; if (lsce == 0) lsce = GameSkeleton.game.sceneChanger._totalScenes.length-1;
 					if(!GameSkeleton.game.sceneChanger._totalScenes[lsce]) lsce = GameSkeleton.game.sceneChanger.currentScene;
@@ -1334,13 +1338,13 @@
 	GameSkeleton.prototype.gotoSceneByDoor = function(sceneToGoTo) {
 		
 		//lsce = GameSkeleton.game.sceneChanger.currentScene - 1; if (lsce == 0) lsce = GameSkeleton.game.sceneChanger._totalScenes.length-1;
-					//if(!GameSkeleton.game.sceneChanger._totalScenes[lsce]) lsce = GameSkeleton.game.sceneChanger.currentScene;
-					if(GameSkeleton.game.priorToSceneChange) GameSkeleton.game.priorToSceneChange(sceneToGoTo);
-					GameSkeleton.game.sceneChanger.changeScene(0,0,GameSkeleton.game.camera,"sceneChangeSpecifics",GameSkeleton.game,sceneToGoTo,0,0,0,GameSkeleton.game.frameTime, GameSkeleton.game._ts,GameSkeleton.game.cameraTweenType); 
-					if(GameSkeleton.game.afterSceneChange) GameSkeleton.game.afterSceneChange(sceneToGoTo);
-					
-					GameSkeleton.game.camera.renderB1();
-					GameSkeleton.game.camera.renderB2();
+		//if(!GameSkeleton.game.sceneChanger._totalScenes[lsce]) lsce = GameSkeleton.game.sceneChanger.currentScene;
+		if(GameSkeleton.game.priorToSceneChange) GameSkeleton.game.priorToSceneChange(sceneToGoTo);
+		GameSkeleton.game.sceneChanger.changeScene(0,0,GameSkeleton.game.camera,"sceneChangeSpecifics",GameSkeleton.game,sceneToGoTo,0,0,0,GameSkeleton.game.frameTime, GameSkeleton.game._ts,GameSkeleton.game.cameraTweenType); 
+		if(GameSkeleton.game.afterSceneChange) GameSkeleton.game.afterSceneChange(sceneToGoTo);
+		
+		GameSkeleton.game.camera.renderB1();
+		GameSkeleton.game.camera.renderB2();
 		
 		
 	};
@@ -1355,6 +1359,7 @@
 		
 		
 	};
+	GameSkeleton.prototype._endLevelTime = 1000;
 	
 	GameSkeleton.prototype.endLevel = function(e) {
 			
@@ -1369,7 +1374,7 @@
 				} else {
 					GameSkeleton.game._aid = window.requestAnimationFrame(GameSkeleton.game._loop);
 				}
-			}, 1000);
+			}, GameSkeleton.game._endLevelTime);
     };
 	
 	GameSkeleton.prototype._pixelTypeSpecs = {
