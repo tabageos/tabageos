@@ -843,7 +843,7 @@
 					GameSkeleton.game.charLayer.context.clearRect(GameSkeleton.game.camera.v.x,GameSkeleton.game.camera.v.y,GameSkeleton.game.camera.v.width,GameSkeleton.game.camera.v.height);
 				}
 				var lsce;
-				if(GameSkeleton.game.sceneChanger && GameSkeleton.game.player.x > ((GameSkeleton.game.gameWidth) - this.screenRightExitOffset) ) {
+				if(GameSkeleton.game.sceneChanger && GameSkeleton.game.player.x > ((GameSkeleton.game.gameWidth) - GameSkeleton.game.screenRightExitOffset) ) {
 					
 					lsce = GameSkeleton.game.sceneChanger.currentScene + 1; if (lsce > GameSkeleton.game.sceneChanger._totalScenes.length-1) lsce = 1;
 					if(!GameSkeleton.game.sceneChanger._totalScenes[lsce]) lsce = GameSkeleton.game.sceneChanger.currentScene;
@@ -855,7 +855,7 @@
 					GameSkeleton.game.camera.renderB2();
 				
 				}
-				if(GameSkeleton.game.sceneChanger && GameSkeleton.game.player.x <= ((GameSkeleton.game.tileWidth) - this.screenLeftExitOffset) ) {
+				if(GameSkeleton.game.sceneChanger && GameSkeleton.game.player.x <= ((GameSkeleton.game.tileWidth) - GameSkeleton.game.screenLeftExitOffset) ) {
 					
 					lsce = GameSkeleton.game.sceneChanger.currentScene - 1; if (lsce == 0) lsce = GameSkeleton.game.sceneChanger._totalScenes.length-1;
 					if(!GameSkeleton.game.sceneChanger._totalScenes[lsce]) lsce = GameSkeleton.game.sceneChanger.currentScene;
@@ -868,7 +868,7 @@
 				}
 				
 				
-				if(GameSkeleton.game.topDownSceneChange && GameSkeleton.game.sceneChanger && GameSkeleton.game.player.y >= ((GameSkeleton.game.gameHeight) - this.screenDownExitOffset) ) {
+				if(GameSkeleton.game.topDownSceneChange && GameSkeleton.game.sceneChanger && GameSkeleton.game.player.y >= ((GameSkeleton.game.gameHeight) - GameSkeleton.game.screenDownExitOffset) ) {
 					
 					lsce = GameSkeleton.game.sceneChanger.currentScene + 1; if (lsce > GameSkeleton.game.sceneChanger._totalScenes.length-1) lsce = 1;
 					if(!GameSkeleton.game.sceneChanger._totalScenes[lsce]) lsce = GameSkeleton.game.sceneChanger.currentScene;
@@ -880,7 +880,7 @@
 					GameSkeleton.game.camera.renderB2();
 				
 				}
-				if(GameSkeleton.game.topDownSceneChange && GameSkeleton.game.sceneChanger && GameSkeleton.game.player.y <= (this.screenUpExitOffset)) {
+				if(GameSkeleton.game.topDownSceneChange && GameSkeleton.game.sceneChanger && GameSkeleton.game.player.y <= (GameSkeleton.game.screenUpExitOffset)) {
 					
 					lsce = GameSkeleton.game.sceneChanger.currentScene - 1; if (lsce == 0) lsce = GameSkeleton.game.sceneChanger._totalScenes.length-1;
 					if(!GameSkeleton.game.sceneChanger._totalScenes[lsce]) lsce = GameSkeleton.game.sceneChanger.currentScene;
