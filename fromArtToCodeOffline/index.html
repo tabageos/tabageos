@@ -1,0 +1,957 @@
+<html>
+<head>
+<script type="text/javascript" src="tbgs_min.js"></script>
+		<script type="text/javascript" src="ControllerPad.js"></script>
+		<link rel="stylesheet" href="ControllerPad.css" />
+		<link rel="stylesheet" href="indexer.css" />
+
+		
+		<meta name="Description" content="Tabageos Array and Animation Object Maker"/>
+		<meta name="keywords" content="Tabageos, Array, Animation">
+</head>
+<title>Array / Animation Object Maker</title>
+
+<body>
+
+
+<h1>Array / Animation Object Maker</h1>
+
+<input id="fileToLoad" type="file" accept="image/*" title="choose spritesheet or tileset to use"/>
+
+<table>
+	<tbody>
+		<tr> 
+			
+            <td>
+			TileWidth: <input id="tileWidth" type="text" value="16" title="tileWidth" style="width:30px"/>
+			TileHeight: <input id="tileHeight" type="text" value="16" title="tileHeight" style="width:30px"/>
+			Columns: <input id="Columns" type="text" value="40" title="Columns, going up and down horizontaly" style="width:30px" />
+			Rows: <input id="Rows" type="text" value="40" title="Rows, going left to right verticaly"  style="width:30px" />
+			<input id="reconf" type="button" value="update" title="update display grid, will also clear it" />
+			</td>
+		</tr>
+	</tbody>
+</table>
+<input id="specif" type="button" value="specific" title="get an array of specific style [y,x] values. For use with the BlitMath.specificPatternBlit method" />
+<input id="decim" type="button" value="decimal" title="get an array of decimal x.y values. For use with the BlitMath.patternBlit method"  />
+<input id="combin" type="button" value="combined" title="get an array of bitwise combined xy number values. For use with the BlitMath.patternBlit or BlitMath.combinedPatternBlit method" />
+<input id="intege" type="button" value="integer" title="get an array of just the integer x values. For use with the patternBlit method or when just drawing squares." />
+<input id="clearb" type="button" value="clear" title="clear drawing"/>
+<input id="drawab" type="button" value="drawFromArray" title="load a spritesheet, put a specific style Array in the results field, then press this to draw it"/>
+
+<br /><br />
+
+<div id="tileSheet" style="position:absolute;width:30%;height:350px;left:0px;overflow:scroll;z-index:1;border:thin solid white">  </div>
+<div id="tileSheetGrid" style="position:absolute;width:30%;height:350px;left:0px;overflow:scroll;z-index:-1;border:thin solid white"> </div>
+<div id="grid" style="position:absolute;width:40%;height:350px;left:31%;overflow:scroll;z-index:1;border:thin solid white"> </div>
+<div style="position:absolute;width:200px;height:175px;left:72%">
+    <textarea id="resultsField" style="width:258px;height:175px;overflow:scroll;border:thin solid white" > </textarea>
+
+			<table id="animationCorner">
+				<tbody>
+					<tr>
+					<td>
+						<div id="selectionpaint" style="height:32px">
+							<input id="sX" type="text" style="width:20px" title="starting x index of the selection to paint" /><input id="sY" type="text" style="width:20px" title="starting y index" /><input id="eX" type="text" style="width:20px" title="ending x index of the selection to paint" /><input id="eY" type="text" style="width:20px" title="ending y index" />
+							<input id="aX" type="text" style="width:20px" title="starting x index of tile to draw to" /><input id="aY" type="text" style="width:20px" title="starting y index of tile to draw to" />
+							
+							<input id="selectionPaint" type="button" style="width:33px;padding:0px;margin:0px" value="draw" title="draw a selection of tiles, also updates the array with each tile" />
+							
+							<input id="tileFill" type="button" style="width:20px;padding:0px" value="fill" title="use starting x and starting y to denote which tile to fill the whole map with, useful for starting backgrounds" />
+							<input id="selectionToPlace" type="button" style="width:34px;padding:0px" value="paint" title="press this button to paint with the selection of tiles" />
+						
+						</div>
+					
+					</td></tr>
+				
+				
+				
+					<tr>
+						<td>
+							<input id="animationName" type="text" value="animationName" title="create/choose animation name then press changeAni" />
+							<input id="changeAni" type="button" style="width:75px" value="changeAni" />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<div id="animationDisplay" style="width:256px;height:100px;border:thin solid black;overflow:scroll" 
+								 title="This corner is for making animations from your tile sheet. You need to load a tilesheet first. &#13 Then you can press changeAni and frames will be ready for you to place tiles in. &#13 Click on a tile in your tilesheet and then click on a frame to place it, and build the animation that way, you'll see it as you go. &#13 Use the animationName box to create/change animations. &#13 Use getAnis to get the animationSpecs Object of all animations made. &#13 To make new animations first set the width and height you want, and then just type a different name, press changeAni and start placing tiles. &#13 To go back to an animation type it in the box and press change animation. &#13 the animation shown is running at .5 throttle; .animate(.5) &#13 The animationSpecs Object holds Arrays of frame indexes [y1, [x,y,x,y,x,y,x,y,...]] for each animation. "></div>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<input id="clearAni" type="button" style="width:58px;padding:0px" value="clearAni" title="clear current animation" />
+							<input id="getAni" type="button" style="width:55px;padding:0px" value="getAnis" title="get the animationSpecs Object of all animations" />
+							<input id="addFrame" type="button" value="+" style="width:20px;padding:0px" title="add a frame" />
+							<input id="removeFrame" type="button" value="-" style="width:20px;padding:0px" title="remove a frame from the end" />
+							
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<input id="aniWidth" type="text" style="width:30px;padding:0px" title="animation width" value="16"/>
+                            <input id="aniHeight" type="text" style="width:30px;padding:0px" title="animation width" value="16"/>
+                            <input id="changeAniWH" type="button" style="width:58px;padding:0px" title="change width/height of animations, use this first before creating your animation if it will be other than 16x16" value="set w/h"/>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+</div>
+
+
+<br />
+
+</body>
+
+<script type="text/javascript">
+//CopyRight 2022 (t)ad  
+//This is part of the functionality of the editor that is still in the making.
+//The editor will take art and strings as input and output full complete games using tabageos, it will output for android apk and to html5.
+//behind the scenes im already using it but its still very pre alpha, this code is a javascript version of some of the editors functionality.
+//unlike my other code, please do not reuse this code or upload it to your site, this is tabageos centered code outputting more tabageos cetnered code.
+//its possible to use the integer arrays with other game making tools, but the other array outputs are tabageos specific.
+//also the animation code output is tabageos specific.
+//The code that this page outputs is yours, but not the pages code itself.
+
+//this offline version is available such that you can make your games without having to be online.
+//just copy the whole 'fromArtToCodeOffline' folder contents to a folder and lauch the index file. 
+
+(function () {
+
+	var drawCanvas;
+	var gridCanvas;
+	var cursorCanvas;
+	var tileWidth;
+	var tileHeight;
+	var columns;
+	var rows;
+	var cC; var cR; var tW; var tH;
+	var tileSet;
+	var tileGrid;
+	var _rect;
+	var _point;
+	var helperArray;
+	var currentBlitYX = [0,0];
+	var _aid;
+	var _thrott = 0;
+	
+	function ArrayMaker() {
+        
+		
+		document.getElementById("reconf").removeEventListener("click", this.initialize, false);
+		document.getElementById("reconf").addEventListener("click", this.initialize, false);
+		document.getElementById("fileToLoad").removeEventListener("change", this.loadTileSheet, false);
+		document.getElementById("fileToLoad").addEventListener("change", this.loadTileSheet, false);
+		_rect = new tabageos.Rectangle();
+		_point = new tabageos.MoverPoint();  
+		document.getElementById("specif").addEventListener("click", this.giveSpecificResult, false);
+		document.getElementById("decim").addEventListener("click", this.giveDecimaledResult, false);
+		document.getElementById("combin").addEventListener("click", this.giveCombinedResult, false);
+		document.getElementById("intege").addEventListener("click", this.giveIntegerResult, false);
+		document.getElementById("clearb").addEventListener("click", this.clear, false);
+		ArrayMaker._self = this;
+		
+		
+		
+		document.getElementById("changeAni").addEventListener("click", this.changeAnimation);
+		document.getElementById("removeFrame").addEventListener("click", this.removeAnimationFrame);
+		document.getElementById("addFrame").addEventListener("click", this.addAnimationFrame);
+		document.getElementById("getAni").addEventListener("click", this.showAniObject);
+		document.getElementById("clearAni").addEventListener("click", this.clearAnimation);
+		
+		document.getElementById("changeAniWH").addEventListener("click", this.aniWHChange, false);
+		
+		document.getElementById("drawab").removeEventListener("click", this.drawFromArray, false);
+		document.getElementById("drawab").addEventListener("click", this.drawFromArray, false);
+		
+		
+		document.getElementById("selectionPaint").addEventListener("click", function(e) { 
+				var sx = Number(document.getElementById("sX").value);
+				var sy = Number(document.getElementById("sY").value);
+				var ex = Number(document.getElementById("eX").value);
+				var ey = Number(document.getElementById("eY").value);
+				var ax = Number(document.getElementById("aX").value);
+				var ay = Number(document.getElementById("aY").value);
+				if(sx && sy && ex && ey) {
+					ArrayMaker._self.paintASelectionOfTiles(sx,sy,ex,ey,ay,ax);
+				}
+			
+		}, false);
+		
+		
+		document.getElementById("tileFill").addEventListener("click", function(e) {
+				
+				var vx = Number(document.getElementById("sX").value);
+				var vy = Number(document.getElementById("sY").value);
+				
+				ArrayMaker._self.fillWithTile(vx,vy);
+				
+		}, false);
+		
+		
+		document.getElementById("selectionToPlace").addEventListener("click", function(e) {
+				var sx = Number(document.getElementById("sX").value);
+				var sy = Number(document.getElementById("sY").value);
+				var ex = Number(document.getElementById("eX").value);
+				var ey = Number(document.getElementById("eY").value);
+				
+				if(sx && sy && ex && ey) {
+					ArrayMaker._self.readySelectionForPlace(sx,sy,ex,ey);
+				}
+				
+		}, false);
+		
+		this.initialize();
+	}
+	
+	ArrayMaker._self;
+	ArrayMaker.prototype.readyAnimationSpecs = {};
+	ArrayMaker.prototype._animations = {};
+	ArrayMaker.prototype._aFrames = 8;
+	ArrayMaker.prototype._animationNames = [];
+	ArrayMaker.prototype._ignoredValues = [];
+	
+	
+	ArrayMaker.prototype.initialize = function() {
+	
+		tileWidth = Number(document.getElementById("tileWidth").value); tileHeight = Number(document.getElementById("tileHeight").value);
+		columns = Number(document.getElementById("Columns").value); rows = Number(document.getElementById("Rows").value);
+		cC = columns+1-1; cR = rows+1-1;
+		tW = tileWidth+1-1; tH = tileHeight+1-1;
+		
+		
+		if(gridCanvas) {
+		
+			document.getElementById("grid").removeChild(drawCanvas.canvas);
+			document.getElementById("grid").removeChild(gridCanvas.canvas);
+			gridCanvas = null; drawCanvas = null;
+		
+		}
+		
+		gridCanvas = new tabageos.CanvasObject(null,columns*tileWidth,rows*tileHeight);
+		drawCanvas = new tabageos.CanvasObject(null,columns*tileWidth,rows*tileHeight);
+			
+		document.getElementById("grid").appendChild(drawCanvas.canvas);
+		document.getElementById("grid").appendChild(gridCanvas.canvas);
+		
+		
+		gridCanvas.canvas.setAttribute("style","position:absolute;top:0px;left:0px;z-index:-1;");
+		drawCanvas.canvas.setAttribute("style","position:absolute;top:0px;left:0px;z-index:1;");
+	
+		
+		if(cursorCanvas) {
+			document.body.removeChild(cursorCanvas.canvas);
+            cursorCanvas = null;
+		} 
+        cursorCanvas = new tabageos.CanvasObject(null,tW,tH);
+		
+		
+		document.body.appendChild(cursorCanvas.canvas);
+		
+		gridCanvas.context.clearRect(0,0,columns*tileWidth,rows*tileHeight);
+		drawCanvas.context.clearRect(0,0,columns*tileWidth,rows*tileHeight);
+		var i = 0; var j = 0;
+		for (i; i < rows; i++) { j = 0;
+			for (j; j < columns; j++) {
+				gridCanvas.context.strokeStyle =  "#c8c8c8";
+				gridCanvas.context.strokeRect(j * tileWidth, i * tileHeight, tileWidth, tileHeight);
+			}
+		}
+        
+        if(tileSet && tileGrid) {
+            var tgw = tileSet ? tileSet.width : 280;
+            var tgh = tileSet ? tileSet.height : 350;
+            tileGrid.context.clearRect(0,0,tgw,tgh);
+					
+				var i = 0;var j = 0;
+				for(i;i<tgw;i+=tW) {
+				    j = 0;
+				    for(j;j<tgh;j+=tH) {
+							
+				        tileGrid.context.strokeStyle = "#c8c8c8";
+				        tileGrid.context.strokeRect(i, j, tW, tH);
+				    }
+						
+				}
+        }
+        
+	
+		ArrayMaker._self.resetHelperArray();
+	};
+
+	ArrayMaker.prototype.loadTileSheet = function(e) {
+		try {
+			var filesSelected = document.getElementById("fileToLoad").files;
+			if (filesSelected.length > 0) {
+			  var fileToLoad = filesSelected[0];
+			  
+			  var fileReader = new FileReader();
+
+			  fileReader.onload = function(e) {
+				var srcData = e.target.result;
+				var newImage = document.createElement('img');
+				
+				newImage.onload = function(e) {
+					if(tileSet) { tileSet.context.clearRect(0,0,tileSet.width,tileSet.height); 
+						document.getElementById("tileSheet").removeChild(tileSet.canvas);
+					}
+					tileSet = new tabageos.CanvasObject(null,newImage.width,newImage.height);
+					tileSet.copyPixels(newImage, new tabageos.Rectangle(0,0,newImage.width,newImage.height),new tabageos.MoverPoint(),newImage.width,newImage.height);
+					document.getElementById("tileSheet").appendChild(tileSet.canvas);
+					
+					tileSet.canvas.removeEventListener("click",ArrayMaker._self.selectTile, false);
+					tileSet.canvas.addEventListener("click",ArrayMaker._self.selectTile, false);
+					
+					
+					tileSet.canvas.removeEventListener("mousemove",ArrayMaker._self.showTile, false);
+					tileSet.canvas.addEventListener("mousemove",ArrayMaker._self.showTile, false);
+					
+					
+					var tgw = tileSet ? tileSet.width : 280;
+					var tgh = tileSet ? tileSet.height : 350;
+					if(!tileGrid) tileGrid = new tabageos.CanvasObject(null,tgw,tgh);
+					tileGrid.context.clearRect(0,0,tgw,tgh);
+					
+					var i = 0;var j = 0;
+					for(i;i<tgw;i+=tW) {
+						j = 0;
+						for(j;j<tgh;j+=tH) {
+							
+							tileGrid.context.strokeStyle = "#c8c8c8";
+							tileGrid.context.strokeRect(i, j, tW, tH);
+						}
+						
+					}
+					document.getElementById("tileSheetGrid").appendChild(tileGrid.canvas);
+				}; newImage.src = srcData; 
+			  };
+			  fileReader.readAsDataURL(fileToLoad);
+			}
+		
+		} catch(e) {
+			alert(e);
+		}
+	};
+
+	ArrayMaker.prototype.updateRectPoint = function(x,y,w,h,px,py) {
+		_rect.x = x;
+		_rect.y = y;
+		_rect.width = w;
+		_rect.height = h;
+		_point.x = px; _point.y = py;
+	};
+	ArrayMaker.prototype.showTile = function(e) {
+		
+		var x = Math.floor(e.offsetX/tW);
+		var y = Math.floor(e.offsetY/tH);
+		var loca = " x: "+(x*tW)+" y: "+(y*tH)+" , ix: " + x + " iy: " + y +  " , ["+y+","+x+"]";
+		tileSet.canvas.setAttribute("title", loca);
+		
+		
+	};
+	ArrayMaker.prototype.selectTile = function(e) {
+		ArrayMaker._self._piecesToPlace.length = 0;
+		cursorCanvas.canvas.setAttribute("style", "width:"+tileWidth+"px;height:"+tileHeight+"px");
+		cursorCanvas.context.clearRect(0,0,tileWidth,tileHeight);
+		currentBlitYX[0] = Math.floor(e.offsetY/tH);   // /tH
+		currentBlitYX[1] = Math.floor(e.offsetX/tW);   // /tW
+		ArrayMaker._self.updateRectPoint(currentBlitYX[1]*tW,currentBlitYX[0]*tH,tW,tH,0,0);
+		cursorCanvas.copyPixels(tileSet.canvas,_rect, _point,tileWidth,tileHeight);
+		document.body.removeEventListener("mousemove",ArrayMaker._self.moveCursor,false);
+		document.body.addEventListener("mousemove",ArrayMaker._self.moveCursor,false);
+		drawCanvas.canvas.removeEventListener("mousedown", ArrayMaker._self.beginPlacePiece,false);
+		drawCanvas.canvas.addEventListener("mousedown", ArrayMaker._self.beginPlacePiece,false);
+	};
+	ArrayMaker.prototype.moveCursor = function(e) {
+		cursorCanvas.canvas.setAttribute("style", "position:absolute;width:"+tileWidth+"px;height:"+tileHeight+"px;left:"+(e.pageX+7)+"px;top:"+(e.pageY+7)+"px");
+	};
+	ArrayMaker.prototype.beginPlacePiece = function(e) {
+		if(e) ArrayMaker._self.placePiece(e);
+		drawCanvas.canvas.removeEventListener("mousemove", ArrayMaker._self.placePiece,false);
+		drawCanvas.canvas.addEventListener("mousemove", ArrayMaker._self.placePiece,false);
+		drawCanvas.canvas.removeEventListener("mouseup", ArrayMaker._self.stopPlacePiece,false);
+		drawCanvas.canvas.addEventListener("mouseup", ArrayMaker._self.stopPlacePiece,false);
+	};
+	ArrayMaker.prototype.stopPlacePiece = function(e) {
+		drawCanvas.canvas.removeEventListener("mousemove", ArrayMaker._self.placePiece,false);
+		drawCanvas.canvas.removeEventListener("mouseup", ArrayMaker._self.stopPlacePiece,false);
+	};
+	ArrayMaker.prototype._piecesToPlace = [];
+	
+	ArrayMaker.prototype.placePiece = function(e) {
+		var indexX = Math.floor(e.offsetX / tW);
+		var indexY = Math.floor(e.offsetY / tH);
+		
+		var etx = indexX * tW;
+		var ety = indexY * tH;
+		if(tileSet && drawCanvas) {
+			
+			if(ArrayMaker._self._piecesToPlace.length) {
+				var i = 0; var j = 0;var piea; var oix; var oiy; var oetx; var oety;
+				for (i; i < ArrayMaker._self._piecesToPlace.length;i++) {
+					piea = ArrayMaker._self._piecesToPlace[i];
+					for(j = 0; j < piea.length; j++) {
+						oix = indexX + j;
+						oiy = indexY + i;
+						if(oix >= cC) oix = cC-1;
+						if(oiy >= cR) oiy = cR-1;
+						oetx = oix * tW;
+						oety = oiy * tH;
+						drawCanvas.context.clearRect(oetx,oety,tW,tH);
+						ArrayMaker._self.updateRectPoint(ArrayMaker._self._piecesToPlace[i][j][1]*tW,ArrayMaker._self._piecesToPlace[i][j][0]*tH,tW,tH,oetx,oety);
+						drawCanvas.copyPixels(tileSet.canvas, _rect, _point, tW, tH);
+						helperArray[oiy][oix] = [ ArrayMaker._self._piecesToPlace[i][j][0]+1-1, ArrayMaker._self._piecesToPlace[i][j][1]+1-1 ];
+						
+					}
+					
+				}
+			
+			} else { 
+				drawCanvas.context.clearRect(etx,ety,tW,tH);
+				ArrayMaker._self.updateRectPoint(currentBlitYX[1]*tW,currentBlitYX[0]*tH,tW,tH,etx,ety);
+				drawCanvas.copyPixels(tileSet.canvas, _rect, _point, tW, tH);
+				helperArray[indexY][indexX] = [ currentBlitYX[0]+1-1, currentBlitYX[1]+1-1 ];
+				
+				
+			
+			}
+		}
+	};
+	ArrayMaker.prototype.clear = function(rdrawc) {
+		if (drawCanvas) {
+			drawCanvas.context.clearRect(0,0,columns*tW,rows*tH);
+		}
+		ArrayMaker._self.resetHelperArray();
+	};
+	ArrayMaker.prototype.resetHelperArray = function() {
+	
+		var ar = [];var i = 0; var r;var ri = 0;
+		for (i; i < cR; i++) {
+			ar.push([]);
+		} i = 0;
+		for (i;i<ar.length;i++) {
+			r = ar[i]; ri = 0;
+			for(ri;ri < cC;ri++) {
+				r.push([0,0]);
+			}
+		}  helperArray = ar;
+	};
+	ArrayMaker.prototype.giveSpecificResult = function() { 
+		var s = "";
+		var sp = "";
+		var ins = 0;
+		var ai = 0;
+		var inai = 0;
+		var a;
+		var innerA;
+		for (ai; ai < helperArray.length;ai++) {
+			ins = 0; a = helperArray[ai]; inai = 0;
+			if(a) {
+				s += "[ ";
+				for (inai; inai < a.length; inai++) {
+					ins += 1; innerA = a[inai];
+					if(innerA) {
+						sp = "[" + innerA[0] + "," + innerA[1] + "]";
+						s += sp + (ins < a.length ? ", " : "");
+					}
+				} 
+				s += " ]" + (helperArray.indexOf(a) < helperArray.length - 1 ? ",":"") +"\n"; 
+			}
+		} 
+		var result = "[  \n" + s + "  ];"; 
+		document.getElementById("resultsField").value = result;
+	};
+	ArrayMaker.prototype.giveDecimaledResult = function() { 
+		var s = "";
+		var sp = "";
+		var ins = 0;
+		var ai = 0;
+		var inai = 0;
+		var a;
+		var innerA;
+		for (ai; ai < helperArray.length;ai++) {
+			ins = 0; a = helperArray[ai]; inai = 0;
+			if(a) {
+				s += "[ ";
+				for (inai; inai < a.length; inai++) {
+					ins += 1; innerA = a[inai];
+					if(innerA) {
+						sp = innerA[1] + "." + innerA[0] + "";
+						s += sp + (ins < a.length ? ", " : "");
+					}
+				} 
+				s += " ]" + (helperArray.indexOf(a) < helperArray.length - 1 ? ",":"") +"\n"; 
+			}
+		} 
+		var result = "[  \n" + s + "  ];"; 
+		document.getElementById("resultsField").value = result;
+	};
+	ArrayMaker.prototype.giveIntegerResult = function() { 
+		var s = "";
+		var sp = "";
+		var ins = 0;
+		var ai = 0;
+		var inai = 0;
+		var a;
+		var innerA;
+		for (ai; ai < helperArray.length;ai++) {
+			ins = 0; a = helperArray[ai]; inai = 0;
+			if(a) {
+				s += "[";
+				for (inai; inai < a.length; inai++) {
+					ins += 1; innerA = a[inai];
+					if(innerA) {
+						sp = innerA[1];
+						s += sp + (ins < a.length ? "," : "");
+					}
+				} 
+				s += "]" + (helperArray.indexOf(a) < helperArray.length - 1 ? ",":"") +"\n"; 
+			}
+		} 
+		var result = "[  \n" + s + "  ];"; 
+		document.getElementById("resultsField").value = result;
+	};
+	ArrayMaker.prototype.giveCombinedResult = function() { 
+		var s = "";
+		var sp = "";
+		var ins = 0;
+		var ai = 0;
+		var inai = 0;
+		var a;
+		var innerA;
+		for (ai; ai < helperArray.length;ai++) {
+			ins = 0; a = helperArray[ai]; inai = 0;
+			if(a) {
+				s += "[ ";
+				for (inai; inai < a.length; inai++) {
+					ins += 1; innerA = a[inai];
+					if(innerA) {
+						sp = tabageos.combineTwoNumbers(innerA[1], innerA[0]);
+						s += sp + (ins < a.length ? ", " : "");
+					}
+				} 
+				s += " ]" + (helperArray.indexOf(a) < helperArray.length - 1 ? ",":"") +"\n"; 
+			}
+		} 
+		var result = "[  \n" + s + "  ];"; 
+		document.getElementById("resultsField").value = result;
+	};
+	
+	/*
+	*
+	*  Animations
+	*
+	*/
+	
+	ArrayMaker.prototype.aniWHChange = function(e) {
+        aTw = Number(document.getElementById("aniWidth").value);
+        aTh = Number(document.getElementById("aniHeight").value);
+    };
+    ArrayMaker.prototype.setAnimationWidthHeight = function(w,h) {
+        aTw = w +1-1;
+        aTh = h +1-1;
+    };
+	
+	
+	ArrayMaker.prototype.displayAnimation = function(ts) {
+		if(_thrott == 0) _thrott = ts;pr = ts - _thrott;
+		if(pr >= 15) {
+			var ani = document.getElementById("animationName").value;
+			var ca = ArrayMaker._self._animations[ani];
+           // window.console.log(ca.animationSpecs[ca.currentAnimation]);
+			if(ca && ca.animationSpecs[ca.currentAnimation]) {
+				
+				ca._canvas.context.clearRect(ca.x,ca.y,ca.width*84,ca.height*84);
+				ca.animate(.5);
+				ca.blit();
+				
+				
+			} 
+			_thrott = ts;
+		}
+		_aid = window.requestAnimationFrame(ArrayMaker._self.displayAnimation);
+	};
+	ArrayMaker.prototype._defaultPlayerAnimationNames = [
+		"left","right", "up","down","upleft",
+		"upright","downleft","downright","rightidle",
+		"leftidle", "upidle","downidle","idle"
+	];
+	ArrayMaker.prototype._dpanI = 0;
+	ArrayMaker.prototype.readyPlayerAnimationNames = function(e) {
+		
+		var schoi = document.getElementById("stringChoice").value;
+		var cochoi = document.getElementById("codeChoice").value;
+		document.getElementById("animationName").value = 
+		schoi+ArrayMaker._self._defaultPlayerAnimationNames[ArrayMaker._self._dpanI] + ( cochoi.length ? ","+cochoi : "");
+		ArrayMaker._self.changeAnimation(e);
+		
+		if(ArrayMaker._self._dpanI < 12) { ArrayMaker._self._dpanI += 1;
+		} else { ArrayMaker._self._dpanI = 0; }
+		
+	};
+    ArrayMaker.prototype._animationDimensions = {};
+	ArrayMaker.prototype.changeAnimation = function(e) {
+		if(tileSet) { if(_aid) window.cancelAnimationFrame(_aid);
+			var ani = document.getElementById("animationName").value;
+			ArrayMaker._self.aniWHChange(null);var i = 0;
+            
+			if(!ArrayMaker._self._caCanvasObject) { 
+					ArrayMaker._self._caCanvasObject = new tabageos.CanvasObject(null, aTw*24, aTh*24);
+					document.getElementById("animationDisplay").appendChild(ArrayMaker._self._caCanvasObject.canvas);
+					i = 0; 
+				for (i; i < aTw*8; i+=aTw) { 
+					ArrayMaker._self._caCanvasObject.context.strokeStyle = "#c8c8c8";
+					ArrayMaker._self._caCanvasObject.context.strokeRect(i, 0, aTw, aTh);	
+				}
+				ArrayMaker._self._caCanvasObject.canvas.removeEventListener("mouseup", ArrayMaker._self.placeAnimationPiece, false);
+				ArrayMaker._self._caCanvasObject.canvas.addEventListener("mouseup", ArrayMaker._self.placeAnimationPiece, false);
+			}
+			
+			
+			
+			if(ArrayMaker._self._animationNames.indexOf(ani) < 0) {
+				ArrayMaker._self._animationNames.push(ani);
+                ArrayMaker._self._animationDimensions[ani] = {width:aTw+1-1,height:aTh+1-1};
+			} else {
+				
+				aTw = ArrayMaker._self._animationDimensions[ani].width;
+				aTh = ArrayMaker._self._animationDimensions[ani].height;
+				
+			}
+			var co;var ca;var anar;
+			if(ArrayMaker._self._animations[ani]) { 
+				ca = ArrayMaker._self._animations[ani];
+				ArrayMaker._self._caCanvasObject.context.clearRect(0,0,aTw*24, aTh*24);
+				i = 0; 
+				for (i; i < aTw*8; i+=aTw) { 
+					ArrayMaker._self._caCanvasObject.context.strokeStyle = "#c8c8c8";
+					ArrayMaker._self._caCanvasObject.context.strokeRect(i, 0, aTw, aTh);	
+				}
+				i = 0;
+				anar = ca.animationSpecs[ani][1];
+				if((anar.length-1) % 2 === 0) {
+					for(i;i<anar.length;i+=2) { 
+						ArrayMaker._self.updateRectPoint(anar[i]*tW,anar[i+1]*tH,aTw,aTh,(i > 0 ? i-1 : i)*aTw,0);
+						ArrayMaker._self._caCanvasObject.copyPixels(tileSet.canvas, _rect, _point, aTw, aTh);
+					}
+
+				} else {
+					for(i;i<anar.length/4;i++) { //need for updated x,y values, this is for onlyHorizontal
+						ArrayMaker._self.updateRectPoint(anar[i*4]*tW,ca.animationSpecs[ani][0]*tH,aTw,aTh,i*aTw,0);
+						ArrayMaker._self._caCanvasObject.copyPixels(tileSet.canvas, _rect, _point, aTw, aTh);
+					}
+				}
+				_aid = window.requestAnimationFrame(ArrayMaker._self.displayAnimation);
+			} else { //create animation
+				
+				
+				ArrayMaker._self._caCanvasObject.context.clearRect(0,0,aTw*24, aTh*24);
+				ca = new tabageos.CanvasAnimation(tileSet.canvas, ArrayMaker._self._caCanvasObject, new tabageos.Rectangle(0,0,aTw,aTh),aTw*2,aTh*2,tW,tH);
+				
+                ca.fromHeightOffset = aTh - tH;
+                ca.fromWidthOffset = aTw - tW;
+                
+				/*if(ani.indexOf(",") >= 0) { //legacy width and height definition for enemy
+					var extrd = ani.split(",");
+					ca.fromWidthOffset = Number(extrd[1]);
+					ca.fromHeightOffset = Number(extrd[2]);
+					ca.x += ca.fromWidthOffset+aTw;
+					ca.y += ca.fromHeightOffset+aTh;
+				}*/
+				
+				ArrayMaker._self._animations[ani] = ca;
+				
+				i = 0; 
+				for (i; i < aTw*8; i+=aTw) { 
+					ArrayMaker._self._caCanvasObject.context.strokeStyle = "#c8c8c8";
+					ArrayMaker._self._caCanvasObject.context.strokeRect(i, 0, aTw, aTh);	
+				}
+			}
+			ca._canvas.canvas.removeEventListener("mouseup", ArrayMaker._self.placeAnimationPiece, false);
+			ca._canvas.canvas.addEventListener("mouseup", ArrayMaker._self.placeAnimationPiece, false);
+		}
+	};
+	
+	
+	
+	
+	ArrayMaker.prototype.removeAnimationFrame = function(e) {
+		
+		var ani = document.getElementById("animationName").value;
+		if(ArrayMaker._self._animations[ani]) {
+			if(ArrayMaker._self.readyAnimationSpecs[ani] && ArrayMaker._self.readyAnimationSpecs[ani][1].length) {
+				
+				var alen = (ArrayMaker._self.readyAnimationSpecs[ani][1].length / 4) - 1;
+				
+				if(alen == ArrayMaker._self._aFrames-1) {
+					ArrayMaker._self._aFrames -= 1;
+				}
+				ArrayMaker._self._animations[ani]._canvas.context.clearRect(alen*aTw,0,atW+1,aTh+1);
+				ArrayMaker._self._animations[ani]._canvas.context.strokeStyle = "#c8c8c8";
+				ArrayMaker._self._animations[ani]._canvas.context.strokeRect(alen*aTw, 0, aTw, aTh);
+				
+				ArrayMaker._self.readyAnimationSpecs[ani][1].pop();
+				ArrayMaker._self.readyAnimationSpecs[ani][1].pop();
+				ArrayMaker._self.readyAnimationSpecs[ani][1].pop();
+				ArrayMaker._self.readyAnimationSpecs[ani][1].pop();
+				
+			} else {
+				
+				ArrayMaker._self._animations[ani]._canvas.context.clearRect((ArrayMaker._self._aFrames-1)*aTw,0,aTw+1,aTh+1);
+				ArrayMaker._self._aFrames -= 1;
+			}
+		}
+	};
+	ArrayMaker.prototype.addAnimationFrame = function(e) {
+		var ani = document.getElementById("animationName").value;
+		if(ArrayMaker._self._animations[ani]) { ArrayMaker._self._aFrames += 1;
+			ArrayMaker._self._animations[ani]._canvas.context.strokeStyle = "#c8c8c8";
+			ArrayMaker._self._animations[ani]._canvas.context.strokeRect((ArrayMaker._self._aFrames-1)*aTw, 0, aTw, aTh);
+		}
+	};
+	
+	
+	ArrayMaker.prototype.showAniObject = function(e) {
+		var ani = document.getElementById("animationName").value;
+		var rs = "{ ";var i = 0;
+		for(i; i < ArrayMaker._self._animationNames.length;i++) {
+			var n = ArrayMaker._self._animationNames[i];
+			var a = ArrayMaker._self.readyAnimationSpecs[n];
+			if(a) {
+				rs +=  "\"" +n + "\":["+a[0]+", ["+a[1].toString()+"] ]" +
+				((i < ArrayMaker._self._animationNames.length - 1) ? ",\n" : " }");
+			}
+		}
+		document.getElementById("resultsField").value = rs;
+	};
+	
+	
+	
+	
+	
+	ArrayMaker.prototype.clearAnimation = function(e) {
+		
+		var ani = document.getElementById("animationName").value;
+		if(ArrayMaker._self._animationNames.indexOf(ani) ) {
+			ArrayMaker._self._animationNames.splice(ArrayMaker._self._animationNames.indexOf(ani), 1);
+		}
+		ArrayMaker._self._caCanvasObject.context.clearRect(0,0,aTw*24,aTh*24);
+		ArrayMaker._self._animations[ani] = null;
+		ArrayMaker._self.readyAnimationSpecs[ani] = null;
+	};
+	
+	ArrayMaker.prototype.placeAnimationPiece = function(e) {
+		var indexX = Math.floor(e.offsetX / aTw);
+		var indexY = Math.floor(e.offsetY / aTh);
+		var etx = indexX * aTw;
+		var ety = indexY * aTh;
+		var ani = document.getElementById("animationName").value;
+		var aca = ArrayMaker._self._animations[ani] ? ArrayMaker._self._animations[ani]._canvas : ArrayMaker._self._caCanvasObject;
+		var i;var npcalrd = -1;var toret = false;
+		
+		
+		
+		
+		
+		if(tileSet && aca && ety == 0 && etx < ArrayMaker._self._aFrames*aTw) {
+			aca.context.clearRect(etx,ety,aTw,aTh);
+			ArrayMaker._self.updateRectPoint(currentBlitYX[1]*tW,currentBlitYX[0]*tH,aTw,aTh,etx,ety);
+			aca.copyPixels(tileSet.canvas, _rect, _point, aTw, aTh);
+		} else { return; }
+		
+		if(toret) { return; }
+		
+		if(!ArrayMaker._self.readyAnimationSpecs[ani] || indexX == 0) {
+			
+			ArrayMaker._self.readyAnimationSpecs[ani] = [ currentBlitYX[0], [currentBlitYX[1],currentBlitYX[0],currentBlitYX[1],currentBlitYX[0],currentBlitYX[1],currentBlitYX[0],currentBlitYX[1],currentBlitYX[0]] ];
+		} else {
+			indexX = indexX*8;
+			ArrayMaker._self.readyAnimationSpecs[ani][1][indexX] = currentBlitYX[1];
+			ArrayMaker._self.readyAnimationSpecs[ani][1][indexX+1] = currentBlitYX[0];//currentBlitYX[1];
+			ArrayMaker._self.readyAnimationSpecs[ani][1][indexX+2] = currentBlitYX[1];//currentBlitYX[1];
+			ArrayMaker._self.readyAnimationSpecs[ani][1][indexX+3] = currentBlitYX[0];//currentBlitYX[1];
+			ArrayMaker._self.readyAnimationSpecs[ani][1][indexX+4] = currentBlitYX[1];
+			ArrayMaker._self.readyAnimationSpecs[ani][1][indexX+5] = currentBlitYX[0];//currentBlitYX[1];
+			ArrayMaker._self.readyAnimationSpecs[ani][1][indexX+6] = currentBlitYX[1];//currentBlitYX[1];
+			ArrayMaker._self.readyAnimationSpecs[ani][1][indexX+7] = currentBlitYX[0];//currentBlitYX[1];
+		}
+		
+		ArrayMaker._self._animations[ani].animationSpecs = ArrayMaker._self.readyAnimationSpecs;
+		ArrayMaker._self._animations[ani].currentAnimation = ani;
+		ArrayMaker._self._animations[ani].y = aTh*2;//+ArrayMaker._self._animations[ani].fromWidthOffset+aTw;
+		ArrayMaker._self._animations[ani].x = aTw*2;//+ArrayMaker._self._animations[ani].fromHeightOffset+aTh;
+		
+		if(_aid) window.cancelAnimationFrame(_aid);
+		_aid = window.requestAnimationFrame(ArrayMaker._self.displayAnimation);
+	};
+	
+	
+	ArrayMaker.prototype.drawFromArray = function(e) { 
+		var ar = [];
+		var origS = document.getElementById("resultsField").value.replace(/[\n]/g,"");
+		var i = 0;
+		for (i; i < cR; i++) { ar.push([]); }
+		
+		var rowReg = /[\[]{1}[ ]{1}[\[]{1}[0-9]{1,}[\,]{1}[ 0-9\[\]\,]{1,}[\]]{1}[ ]{1}[\]]{1}[\,]{1}/;
+		var lastRow = /[\[]{1}[ ]{1}[\[]{1}[0-9]{1,}[\,]{1}[ 0-9\[\]\,]{1,}[\]]{1}[ ]{1}[\]]{1}[ ]{1,}[\]]{1}/;
+		var reg = /[\[]{1}[0-9]{1,}[\,]{1}[0-9]{1,}[\]]{1}/g;
+		var syms = /[\[]{1,}/g;
+		var syms2 = /[\]]{1,}/g;
+		var stringRows,whole,ri,rj,r,mtch,matches,aString,noSymString,splitString,newA,a,row,ex,ey;
+		
+		try {
+			stringRows = [];
+			whole = origS.match(rowReg)[0];
+			stringRows = whole.split(" ],"); stringRows.pop();
+			origS = origS.replace(whole, "");
+			stringRows.push(origS.match(lastRow)[0]);
+		} catch (e) {
+			document.getElementById("resultsField").value =
+			"The Array should be formated as follows:\n" +
+						"[  [ [y,x],[y,x],[y,x] ],\n" +
+						"	[ [y,x],[y,x],[y,x] ]  ];"+"\n"+e.message;
+			return;
+		}
+		ri = 0; rj = 0;
+		for (ri; ri < stringRows.length; ri++) {
+			 r = ar[ri];
+			 mtch = String(stringRows[ri]);
+			 matches = mtch.match(reg); rj = 0;
+			for(rj;rj<cC;rj++) {
+				if (matches && matches.length) {
+					 aString = matches.shift();
+					 noSymString = aString.replace(syms, "").replace(syms2,"");
+					 splitString = noSymString.split(",");
+					 newA = [Number(splitString[0]), Number(splitString[1])];
+					try {
+                        r.push(newA);
+                    } catch(e) {
+                       alert("Error while drawing from Array. \n Be sure that the columns and rows values match the Arrays columns and rows lengths. \n"+ e.message);
+                        
+                    }
+				} else {
+					r.push([0, 0]);
+				}
+			}
+		}
+		helperArray = ar; ri = 0; rj = 0;
+		if (tileSet) {
+			
+			ArrayMaker._self.doFrameDraw();
+		} else {
+			document.getElementById("resultsField").value += "You need to load the tile set before an Array can be drawn from.";
+			return;
+		}
+	};
+	
+	
+	ArrayMaker.prototype._activeFrameDraw = 0;
+	ArrayMaker.prototype._fdRaf;
+	ArrayMaker.prototype.doFrameDraw = function(e) {
+		if(ArrayMaker._self._activeFrameDraw == 0) {
+			ArrayMaker._self._rl = helperArray.length;
+			ArrayMaker._self._ri =  0;
+			ArrayMaker._self._rj = 0;
+			ArrayMaker._self._ex =  -tW;
+			ArrayMaker._self._ey =  -tH;
+			ArrayMaker._self._activeFrameDraw = 1;
+			ArrayMaker._self._fdRaf = window.requestAnimationFrame(ArrayMaker._self._frameDraw);
+		}
+	};
+	ArrayMaker.prototype._rj = 0;
+	ArrayMaker.prototype._ri = 0;
+	ArrayMaker.prototype._rl = 0;
+	ArrayMaker.prototype._ex = 0;
+	ArrayMaker.prototype._ey = 0;
+	ArrayMaker.prototype._frameDraw = function(ts) {
+		var rj = 0;
+		var row;var a;var al;
+		a = helperArray[ArrayMaker._self._ri]; rj = 0;
+		ArrayMaker._self._ey = ArrayMaker._self._ey + tH; ArrayMaker._self._ex = -tW;al = a.length;
+		for(rj;rj<al;rj++) {
+			row = a[rj];
+			ArrayMaker._self._ex = ArrayMaker._self._ex + tW;
+			ArrayMaker._self.updateRectPoint(row[1] * tW,row[0]*tH,tW,tH,ArrayMaker._self._ex,ArrayMaker._self._ey);
+			drawCanvas.copyPixels(tileSet.canvas, _rect, _point, tW, tH);
+		}
+		if(ArrayMaker._self._ri < ArrayMaker._self._rl-1) {
+			ArrayMaker._self._ri += 1;
+			ArrayMaker._self._fdRaf = window.requestAnimationFrame(ArrayMaker._self._frameDraw);
+		} else {
+			window.cancelAnimationFrame(ArrayMaker._self._fdRaf);
+			ArrayMaker._self._activeFrameDraw = 0;
+		}
+	};
+	
+	
+	ArrayMaker.prototype.paintASelectionOfTiles = function(startX, startY, endX, endY, arrayIndexI, arrayIndexJ) {
+		
+		var hi = arrayIndexI || 0; var hj = arrayIndexJ || 0;
+		
+		var i = startY;
+		var j = startX;
+		var a;
+		for(i; i <= endY; i++) {
+			a = helperArray[hi];hi++;
+			hj = arrayIndexJ || 0;
+			
+			for(j = startX; j <= endX; j++) {
+				a[hj] = [i,j];hj++;
+			}
+		}
+		ArrayMaker._self.doFrameDraw(null);
+	};
+	
+	ArrayMaker.prototype.fillWithTile = function(valueX, valueY, arrayIndexI, arrayIndexJ) {
+		var hi = arrayIndexI || 0; var hj = arrayIndexJ || 0;
+		var i =0;
+		var j = 0;
+		var il = Number(cR);
+		var jl = Number(cC);
+		
+		for(i; i < il; i++) {
+			
+			
+			for(j = 0; j < jl; j++) {
+				helperArray[i][j] = [valueY,valueX];
+			}
+		}
+		ArrayMaker._self.doFrameDraw(null);
+		
+	};
+	
+	ArrayMaker.prototype.readySelectionForPlace = function(startX,startY,endX,endY) {
+		
+		
+		try {
+			ArrayMaker._self._piecesToPlace.length = 0;
+			var hi = 0; var hj = 0;
+			var i = startY;
+			var j = startX;
+			var a;
+			for(i; i <= endY; i++) {
+				ArrayMaker._self._piecesToPlace[hi] = [];
+				hj = 0;
+				for(j = startX; j <= endX; j++) {
+					ArrayMaker._self._piecesToPlace[hi][hj] = [i,j];hj++;
+				}
+				hi++;
+			}
+		
+		} catch (e) {
+			window.console.log(e);
+			
+		}
+		
+		ArrayMaker._self.beginPlacePiece();
+	};
+	
+	
+	new ArrayMaker();
+	
+})();
+
+</script>
+
+
+</html>
