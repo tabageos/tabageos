@@ -1,1 +1,24 @@
-
+<!DOCTYPE html>
+<html style="overflow:hidden">
+	<head>
+		<title></title>
+		<script type="text/javascript" src="tbgs_min.js"></script>
+		<script type="text/javascript" src="ControllerPad.js"></script>
+		<link rel="stylesheet" href="ControllerPad.css" />
+        <script type="text/javascript" src="maps.js"></script>
+		<style>
+			#hudBack { 
+				image-rendering:pixelated; image-rendering:crisp-edges; width:96px;height:16px;
+				background: no-repeat url("smallBasicHud.png");
+			}
+		</style>
+	</head>
+	<body>
+		<div id="container" style="position:absolute;width:544px;height:320px;top:0px;margin:0px">
+			<div id="root" style="width:544px;height:320px;top:0px;left:0px;"> </div>
+			<div id="controller" > </div>
+		</div>
+		
+		<script type="text/javascript" src="game.js"></script>
+	</body>	
+</html>
