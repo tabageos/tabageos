@@ -759,6 +759,8 @@ this.tabageos = this.tabageos || {};
 							tx = touches.pageX * tabageos.MouseController._oX;//oX/Y defined during resize
 							ty = touches.pageY * tabageos.MouseController._oY;
 						}
+						//window.console.log([tx,ty]);
+						
 						this.rotateWithPoint(tx,ty);
 					}
 					
@@ -843,12 +845,18 @@ this.tabageos = this.tabageos || {};
 		ControllerPad.prototype.handleTouches = function(e) {
 			e.preventDefault();var tstri = "";//touchstart 
 			if((e && e.targetTouches && e.targetTouches.length) || e.type == "mousedown" || (e.pointerType && e.pointerType == "touch")) {
-				//var i = 0;
-				//for (i; i < e.targetTouches.length; i++) {
-					//var touches = e.targetTouches[i];
-					//var tx = touches.pageX * tabageos.MouseController._oX;//oX/Y defined during resize
-					//var ty = touches.pageY * tabageos.MouseController._oY;
-					
+				
+					if(e.target == this.rotationPad && e.type == "touchstart" && this.buttons.start == 1) {
+						var i = 0;
+						for (i; i < e.targetTouches.length; i++) {
+							var touches = e.targetTouches[i];
+							var tx = touches.pageX * tabageos.MouseController._oX;//oX/Y defined during resize
+							var ty = touches.pageY * tabageos.MouseController._oY;
+							this.centerRotationX = tx+1-1;
+							this.centerRotationY = ty+1-1;
+							
+						}
+					}
 					if(e.target == this.dRight) {
 						this.buttons.right = 1; this.buttons.left = 0;
 					} 
@@ -879,7 +887,7 @@ this.tabageos = this.tabageos || {};
 					if(e.target == this.backButton) {
 						if(this.buttons.a == 0 && this.buttons.right == 0 && this.buttons.left == 0) { this.buttons.back = 1; tstri = "Back"; }
 					} 
-				//}
+				
 			}
 			
 			if(tstri != "") { ControllerPad.instance.dispatchEvent(new tabageos.Event("touch"+tstri)); }
@@ -986,7 +994,9 @@ this.tabageos = this.tabageos || {};
 		};
 		ControllerPad.prototype.handleKeys = function(e) {
 			if (typeof e == 'undefined') e = window.event;
-			//e.preventDefault();
+			if([37,38,39,40,32].indexOf(e.keyCode) != -1) {
+				e.preventDefault();
+			}
 			//var oe = new tabageos.Event("touchstart");
 			var inst = ControllerPad.instance; inst._preHandleKeys(e);
 			if(e.keyCode == inst.keyboardEquivalents.right) { inst.buttons.right = 1; inst.buttons.left = 0;

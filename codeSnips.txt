@@ -1,0 +1,96 @@
+//for index.html
+<!DOCTYPE html>
+<html style="overflow:hidden">
+	<head>
+		<title></title>
+		<script type="text/javascript" src="tbgs_min.js"></script>
+		<script type="text/javascript" src="ControllerPad.js"></script>
+		<link rel="stylesheet" href="ControllerPad.css" />
+		<style>
+			
+		</style>
+	</head>
+	<body>
+		<div id="container" style="position:absolute;width:544px;height:320px;top:0px;margin:0px">
+			<div id="root" style="width:544px;height:320px;top:0px;left:0px;"> </div>
+			<div id="controller" > </div>
+		</div>
+		
+		<script type="text/javascript" src="game.js"></script>
+	</body>	
+</html>
+
+
+//for game.js
+(function() {
+	
+	//vars
+	
+	class Game extends tabageos.GameSkeleton {
+        constructor() {
+            super();
+            
+             var gameSpecs = { 
+                gWidth:1088, gHeight:320,cameraWidth:544, cameraHeight:320, 
+                cameraFollowOffsetX:-272, cameraFollowOffsetY:0,  tileW:16, tileH:16, 
+                spriteSheetImage: "", containerDivId:"container", rootDivId:"root", startLocations: new tabageos.MoverPoint(208,176),
+                controllerDivId:"controller", gameScale:0, useScreenOrganizer:true,startWidth:128, startHeight:32,
+                controllerHeight:144, initialLives:3, initPlayerPosition:new tabageos.MoverPoint(64,104), onSelectLevel:this.whenSelectLevel,
+                gameLoop:this.loop,initializationSpecifics:this.initialSetup, beforeStartGameLoop: this.beforeStartGame,
+                addedResizeMethod:null, afterSceneChange:this.levelHasChanged, priorToSceneChange:this.levelChanging, sceneChangeSpecifics:this.levelSetup, 
+                sceneResetSpecifics:null,fullResetSpecifics:this.backToTitle, additionalSceneResetSpecifics:null, 
+                positionResetSpecifics:this.scenePositionReset, cameraType:1, backgroundColor:"#6495ed" 
+            };
+            this.dontEstablishWorkers();
+            this.initialConstruction(gameSpecs);
+            this.enableGamePad = 1;
+            this.establishKeyEventsForReset();
+        }
+		
+		initialSetup = function() {
+			
+			
+			
+		};
+		
+		backToTitle = function() {
+		
+		};
+		
+		beforeStartGame = function() {
+			
+			
+		};
+		scenePositionReset = function() {
+			
+		
+		};
+		whenSelectLevel = function() {
+			
+			
+		};
+		
+		levelSetup = function() {
+			
+			
+		};
+		
+		levelChanging = function() {
+			
+		};
+		
+		levelHasChanged = function() {
+			
+		};
+		
+		
+		loop = function() {
+			
+		};
+		
+		
+	}
+	
+	// new Game();
+	
+})();
