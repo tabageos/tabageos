@@ -242,8 +242,7 @@
   
   
 		
-	}
+	};
 	
-
 
 window.LevelMaps = LevelMaps;

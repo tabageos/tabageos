@@ -117,6 +117,8 @@
 			}
 
 			this.setupLevelSelect(176,272,192,32, currentLevel, new tabageos.Rectangle(544,768,544,320),"levelSetup", 0);
+
+			this.autoPause = 0;
 			
 		};
 		setupSounds = function() {
@@ -142,10 +144,13 @@
 		};
 		
 		backToTitle = function() {
+			this.disableAutoPause();
 			this.removeStandardButtons();
 		};
 		
-		beforeStartGame = function() {
+		beforeStartGame = function() { 
+			this.enableAutoPause();
+
 			this.setupSounds();
 			this.showCustomHud(0,0,0,0, "position:absolute;left:448px;top:2px;width:96px;height:16px");
 			this.appendStandardButtons();
@@ -167,7 +172,8 @@
 
 		
 		};
-		whenSelectLevel = function() {
+		whenSelectLevel = function() { 
+			this.enableAutoPause();
 			
 			coins = []; spikes = []; resetCoins = [];
 			
@@ -232,6 +238,11 @@
 
 		levelCompleting = function() {	
 			this.callCamera();
+
+			if(this.sceneChanger.currentScene == 10) {
+				this.pixelParagraph(32,32,10,"Well Done!. You have completed all 10 levels!. Thank You For Playing!.", this.cameraLayer);
+			}
+
 			if(leTween && leTween.length) {
 
 				this._helperRect.x = 880;
@@ -248,6 +259,12 @@
 
 				leTime -= 33.3;
 				if(leTime > 0) {
+					this._helperRect.x = 880;
+					this._helperRect.y = 272;
+					this._helperRect.width = 80;
+					this._helperRect.height = 80;
+					this._helperPoint.y = 120;
+					this._helperPoint.x = 232;
 					this.cameraLayer.copyPixels(this._image, this._helperRect, this._helperPoint);
 					this.cameraLayer.copyPixels(this._image, new tabageos.Rectangle(864,256,16,16), new tabageos.MoverPoint(232 + 8,120 + 56));
 					levelStars[this.sceneChanger.currentScene] = 1;
@@ -260,14 +277,19 @@
 						levelStars[this.sceneChanger.currentScene] = 3;
 					}
 
+					
+
 
 				} else {
 
 					this.charLayer.clearRect(0,0,1088,320);
 					this.player.move(0,1,0,0);
 					if(this.player.x > 1088) {
-						this._doAlternate = 0;
-						
+						if(this.sceneChanger.currentScene < 10) {
+							this._doAlternate = 0;
+						} else {
+							this.fullResetToTitle(); return;
+						}
 					}
 
 
@@ -348,6 +370,9 @@
 	
 	new NinjaGame();
 	
+	
+	setTimeout(function() {document.getElementById("phld").setAttribute("style", "display:none")}, 1000);
+
 })();
 
 
