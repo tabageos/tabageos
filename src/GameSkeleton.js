@@ -804,6 +804,23 @@
 			
 			if(this.autoPause) {
 				
+				this.enableAutoPause();
+			}
+			
+			
+            if(!this.player) {
+                window.console.log("a player has not been created, set this.player to some new Character Class");
+            }
+			
+			if(this.__worker === null) { 
+				this.initWorkerLoop();
+			} else if(this.__worker === 1) {
+				this.__worker = 0;
+				
+			}
+			
+	};
+	GameSkeleton.prototype.enableAutoPause = function() {
 				window.onblur = function(e) {
 					if(!tabageos.GameSkeleton.game.paused) {
 						tabageos.GameSkeleton.game.pause();
@@ -820,20 +837,14 @@
 						tabageos.GameSkeleton.game.muteUnmute();
 					}
 				};
-			}
-			
-			
-            if(!this.player) {
-                window.console.log("a player has not been created, set this.player to some new Character Class");
-            }
-			
-			if(this.__worker === null) { 
-				this.initWorkerLoop();
-			} else if(this.__worker === 1) {
-				this.__worker = 0;
-				
-			}
-			
+	};
+	GameSkeleton.prototype.disableAutoPause = function() {
+				window.onblur = function(e) {
+					
+				};
+				window.onfocus = function(e) {
+					
+				};
 	};
 	
 	
@@ -1281,6 +1292,7 @@
 						GameSkeleton.game.alternateLoopMethod(ts);
 						GameSkeleton.game._thrott = ts;
 						if(!GameSkeleton.game.paused && !GameSkeleton.game.__workLoop) {
+							window.cancelAnimationFrame(GameSkeleton.game._aid); 
 							GameSkeleton.game._aid = window.requestAnimationFrame(GameSkeleton.game._loop);
 						}
 						return;
@@ -1696,7 +1708,7 @@
 			window.setTimeout( function() { GameSkeleton.game._doReset = 0;
 				if(GameSkeleton.game.__worker && GameSkeleton.game.__worker != 1) {
 					GameSkeleton.game.__workLoop = 1;
-				} else {
+				} else { window.cancelAnimationFrame(GameSkeleton.game._aid); 
 					GameSkeleton.game._aid = window.requestAnimationFrame(GameSkeleton.game._loop);
 				}
 				
@@ -1721,7 +1733,7 @@
 			window.setTimeout( function() { GameSkeleton.game._doReset = 0; 
 				if(GameSkeleton.game.__worker) {
 					GameSkeleton.game.__workLoop = 1;
-				} else {
+				} else { window.cancelAnimationFrame(GameSkeleton.game._aid); 
 					GameSkeleton.game._aid = window.requestAnimationFrame(GameSkeleton.game._loop);
 				}
 			}, 1000);
@@ -1815,7 +1827,7 @@
 			window.setTimeout( function() { GameSkeleton.game._doReset = 0;  GameSkeleton.game._doAlternate = 1;
 				if(GameSkeleton.game.__worker) {
 					GameSkeleton.game.__workLoop = 1;
-				} else {
+				} else { window.cancelAnimationFrame(GameSkeleton.game._aid); 
 					GameSkeleton.game._aid = window.requestAnimationFrame(GameSkeleton.game._loop);
 				}
 			}, GameSkeleton.game._endLevelTime);
