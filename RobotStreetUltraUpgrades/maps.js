@@ -1,4 +1,4 @@
-var gameClasses = gameClasses || {};
+let gameClasses = {};
 (function() {
 	
 	function AreaMaps() {

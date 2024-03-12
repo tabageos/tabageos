@@ -1,4 +1,3 @@
-var gameClasses = gameClasses || {};
 (function() {
 	
 	var centhead;
