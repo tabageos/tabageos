@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html style="overflow:hidden">
+<head>
+	<title> Robot Street Ultra Upgrades </title>
+	<link rel="stylesheet" href="tabageosIntro.css" />
+	<style>
+	
+		@font-face { font-family: 'gmefnt';src: url('8-bit Arcade In.ttf') format('truetype');font-weight: normal;font-style: normal; }
+		
+		div#goldhudback {
+			image-rendering: -moz-crisp-edges;image-rendering: -webkit-crisp-edges;image-rendering: pixelated;image-rendering: crisp-edges;
+			position:absolute;top:0px;left:0px;width:320px;height:96px;
+			background: no-repeat url(   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABgCAYAAACtxXToAAAEEElEQVR4Xu1cPW8TQRC9S0MBoiEI04AUKW7cUNPwoSAKlAryC/gLFIgfgCj4C/wCoIooEIiPhpomjZGQoCER0CAoaGI063vHu8me7bUt53Z2r3HOvnM8b9/szLydvbK3vjkqjBz7Pz6VoaaUAsD1nbuh93Xy+jdPnxShIDgAOmlN4I/auHSt+PzxbZoAzGu8YBw9AxYxvgbg9LmLgYTrzuW/Dr4E055/ffQMCJ309NB1FoBFDZuVo50Ng/OEtFmN9rpA/8Kgcf/w694837eUexad2EJ+hGOAGP/i3pni5Pauu/fP7nZx6/HP4rhAOBYA3r3/0ADu6pXLGYCkGJCsC/QHW64W6J041XCB/b+/Q+aSpV4ryY0cqwiFncwDVmE4RkzqZ64G9fmRxEld79LppQ7/ir/MGdxb3xS61f9azvXh+7x6L34A3BygjNYFEvySgbECgNjkWFBNPBNJ6LnODgNk1Id7rx0bvn0fFmU5tm00GhXnz/adm/QHW0VVgkbv/zCgHn0AIAa7DwkAnCsAogehngTh88KAaQCI1VZYkAHABJgZUOmCSboA8oCQKEAhM/owWOcBAGBSImAyCnAmOE0ip0ot+hB4JA/gkZ+WClNtEL0LeNPgWQoiK7WAXhwNLYnjZwBRP9T46OeBrAdA4cl6QKUH6NlfMkM+zOsBOgnS+oB5PcAHgJTH0AZMZoJC67YMEMWRACDG4zCrB4iB2u/BgKQAgC4ogLAemAwDIIvBYNMuwHoAXGASAyxVhMjjXUHEsphPE8AcQBOgjVQ46wGetcCsB8ywQJr1gPFEkZQe4Jsb4wcg9wfk/oD//QHTcgGETFOqsM4EkQ3ef/ayeHj7RsPv18o11z9gCgCoPBz7URFqEMwC4FsWa2OAJVWo0R8goy5GP7pz070y/R88f+XOhQGmATgcHRYwFs4v5wBFXs0DwLMejOf3zAHAoU0YoEdezrUcJu+ZqgUQ2hgAMRIMaNED7dQCOh3WST+LIVZGH6NXL4+z0VkPSFgP8JW8/J6vxX7aPZ39PHS/QNYDWEA1FwZDJkErkaCxLiBGTeoVRAZIxtvKA9h4XhlyVlat82aXx3n0tfFwDawPmlsZ0stivF8Af+sVYrP9AdwbwExgFxBGmAUAdPe1zSfTIAFRVGsAfG6KAUhu2naN8MiD/pbygPHmadUfoLfKtYy+rTygLRGyqgZlPaBa2s77BQKL9aT1AN9+gtwfEMigTl1ej2jeL6CeIoHcgJ8c4VGDbOUBYqx+doBYmMzzAwQA7hGWClCfmxVEWA3SjdJaETJbDrPSo0dejDZfDkMMSZYBLIKA9r45wJwLcMibNQpY0gNcpPMtj4vP6/1DJqMAJzj5+QFVpp77AxLuDwjdQh91OfwPM77ujt/MtAIAAAAASUVORK5CYII=" );
+		}
+		div#coinamount {
+			position:absolute;top:9px;left:8px;height:10px;width:64px;
+		}
+		div#timedisplay {
+			position:absolute;top:2px;left:225px;width:100px;height:12px;
+		}
+		div#healthba {
+			background: no-repeat url(   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAACm53kpAAAAbElEQVRYR2NkGOGAcYT7nwEcAFIBZ/4P9YB4tsGErMgcFgFArudBkQ4OABPvtiGbAs5srSIr5mEpniLNQz3bwFPAcPAIuX4YTQHkhtxw0TeaAoZLTJLrj9EUQG7IDRd9oylguMQkuf4Y8SkAAMLEDBElpxkAAAAAAElFTkSuQmCC");
+		}
+		.hoverable {
+			image-rendering: -moz-crisp-edges;image-rendering: -webkit-crisp-edges;image-rendering: pixelated;image-rendering: crisp-edges;
+		}
+		.hoverable:hover {
+			background:url(  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAAAcCAYAAACpmrfzAAAAwklEQVRoQ+3boRGDYBQE4Z+mImLTAmWmBSwiVWUGCWL9vkU/c3ffDAa237G/V8/YBrYAjN3+Ch6A2fsHYPj+TwCvz/ecXoo5//2V/3gFBMA8/1oBcO+L6QKAFbkPAuDeF9MFACtyHwTAvS+mCwBW5D4IgHtfTBcArMh9EAD3vpguAFiR+yAA7n0xXQCwIvdBANz7YroAYEXugwC498V0AcCK3AcBcO+L6QKAFbkPEIA7funuDfRZ+HATAQhAv4ZNNvAHbd6Kabm+tHMAAAAASUVORK5CYII=") no-repeat;
+		}
+		
+	</style>
+	<script type="text/javascript" src="tbgs_min.js"></script>
+	<script type="text/javascript" src="ControllerPad.js"></script>
+	<link rel="stylesheet" href="ControllerPad.css" />
+	<script type="text/javascript" src="maps.js"></script>
+	<script type="text/javascript" src="upgrades.js"></script>
+	<script type="text/javascript" src="enemies.js"></script>
+</head>
+<body style="margin:0px;padding:0px;font-family:'gmefnt';font-size:8px">
+
+	<table id="phld"><tr>
+		<td><div id="ls1">T</div></td><td>
+		<div id="ls1">A</div></td><td>
+		<div id="ls1">B</div></td><td>
+		<div id="ls1">A</div></td><td>
+		<div id="ls1">G</div></td><td>
+		<div id="ls1">E</div></td><td>
+		<div id="ls1">O</div></td><td>
+		<div id="ls1">S</div></td></tr><tr><td>
+		<div id="liner"></div></td></tr>
+	</table>
+	
+	<div id="container" style="position:absolute;width:320px;height:200px;">
+		<div id="root" style="width:320px;height:200px;"> </div>
+		<div id="controller" > </div>
+	</div>
+	<script type="text/javascript" src="game.js"></script>
+</body>
+</html>
