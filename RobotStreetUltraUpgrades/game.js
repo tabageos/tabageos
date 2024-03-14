@@ -106,18 +106,19 @@
 			this.enableGamePad = 1;
 			now = window.performance.now();
 			
-		}
+			
+		};
 		
 		
 		
-		turnOnSlowLight = function(off) {
+		turnOnSlowLight(off) {
 			slowLight = off ? 0 : 1;
 		};
-		turnOnFireLight = function(off) {
+		turnOnFireLight(off) {
 			fireLight = off ? 0 : 1;
 		};
 		
-		initialSetup = function(e) {
+		initialSetup(e) {
 			document.body.addEventListener('contextmenu', function(e) { e.preventDefault(); return false;});
 			
 			var playerAni = new tabageos.CanvasAnimation(this._image, this.charLayer,null,0,0,16,16);
@@ -291,7 +292,7 @@
 		
 		
 		
-		titleScreenLoop = function(ts) {
+		titleScreenLoop(ts) {
 			
 			
 			titleBackLoopTime -= 33.3;
@@ -310,7 +311,7 @@
 			
 		};
 		
-		showOptions = function() { 
+		showOptions() { 
 			
 			var ths = tabageos.GameSkeleton.game;
 			//ths.playMusic("newfactory");
@@ -351,7 +352,7 @@
 				
 		};
 			
-		readyToChangeGameDarkness = function() {
+		readyToChangeGameDarkness() {
 				
 			tabageos.GameSkeleton.game._sliderForOtherThanVolume = 1;
 			var ths = tabageos.GameSkeleton.game;
@@ -360,14 +361,14 @@
 			ths.title.floor.copyPixels(ths._image, new tabageos.Rectangle(1264,960 - 16,112,16), new tabageos.MoverPoint(32,32));
 				
 		};
-		readyToChangeVolume = function() {
+		readyToChangeVolume() {
 			tabageos.GameSkeleton.game._sliderForOtherThanVolume = 0;
 			var ths = tabageos.GameSkeleton.game;
 			ths._sliderValue = ths.soundSystem._globalVolume+1-1;
 			ths.title.floor.copyPixels(ths._image, new tabageos.Rectangle(1264,960,112,16), new tabageos.MoverPoint(32,32));
 			ths.title.floor.copyPixels(ths._image, new tabageos.Rectangle(1392,960 -16,128,16), new tabageos.MoverPoint(160,32));
 		};
-		changeGameDarkness = function(e) {
+		changeGameDarkness(e) {
 				
 			var dec = e.potato;//e is a tabageos.Event 
 			gameDarkness = dec * 1.1;
@@ -390,7 +391,7 @@
 				
 		};
 			
-		optionsLoop = function(ts) {
+		optionsLoop(ts) {
 			var ths = tabageos.GameSkeleton.game;
 			
 			if(showingOptions == 1) {
@@ -399,7 +400,7 @@
 			}
 		};
 			
-		showCredits = function() {
+		showCredits() {
 				
 			var ths = tabageos.GameSkeleton.game;
 			ths._doAlternate = 0;
@@ -422,7 +423,7 @@
 				
 				
 		};
-		showTitle = function() { 
+		showTitle() { 
 				
 			var ths = tabageos.GameSkeleton.game;
 			ths.removeVolumeSliderAnimation();
@@ -443,7 +444,7 @@
 				
 		};
 		
-		pauseTimer = function(e) {
+		pauseTimer(e) {
 			
 			if(this.paused) {
 				pauseTime = window.performance.now();
@@ -457,7 +458,7 @@
 			
 		};
 		
-		beforeStartGame = function(e) { 
+		beforeStartGame(e) { 
 			
 			this.appendStandardButtons();
 			
@@ -474,13 +475,13 @@
 			
 		};
 		
-		levelChanging = function(s) {
+		levelChanging(s) {
 			enemies = this.sceneChanger.changeSceneEnemies(s);
 			coins = this.sceneChanger.changeSceneryObjects(s);
 			avoids = [];
 		};
 		
-		showGrenadeInfo = function(ts) {
+		showGrenadeInfo(ts) {
 			
 			this.callCamera(ts);
 			this.applyLights();
@@ -493,22 +494,22 @@
 				this.appendButton("closeGrenInfo");
 			}
 		};
-		finishGrenadeInfo = function() {
+		finishGrenadeInfo() {
 			this.removeButton("closeGrenInfo");
 			this.trashButton("closeGrenInfo");
 			tabageos.GameSkeleton.game._doAlternate = 0;
 		};
 		
-		baughtGrenades = function() {
+		baughtGrenades() {
 			if(grenadeInfo < 500) {
 				grenadeInfo = 1;
 			}
 		};
-		toggleStatsShown = function() {
+		toggleStatsShown() {
 			showStats = showStats ? 0 : 1;
 		};
 		
-		scenePositionReset = function(e) {
+		scenePositionReset(e) {
 			
 			this.player.setX(48);
 			this.player.setY(48);
@@ -521,7 +522,7 @@
 			}
 			
 		};
-		levelHasChanged = function(lv) {
+		levelHasChanged(lv) {
 			
 			var bdrw;
 			if(lv == 1) {
@@ -548,7 +549,7 @@
 		
 		};
 		
-		spawnCoinAt = function(x,y, h) {
+		spawnCoinAt(x,y, h) {
 			
 			var coin = new tabageos.BlittedTraveler(this._image, this.charLayer, null,x,y,16,16);
 			coin.animationSpecs = coinAnimation; coin.currentAnimation = "spin";
@@ -558,7 +559,7 @@
 			
 		};
 		
-		spawnEnemyAt = function(ex,ey,e) {
+		spawnEnemyAt(ex,ey,e) {
 			if(enemies.length >= 78) {
 				return;
 			}
@@ -586,7 +587,7 @@
 			
 		};
 		
-		levelSetup = function(e) {
+		levelSetup(e) {
 			if(!e.spawn) {
 				this.player._map[e.y/16][e.x/16] = [0,0];
 				this.sceneChanger.currentMap[e.y/16][e.x/16] = [0,0];
@@ -615,7 +616,7 @@
 			}
 		};
 		
-		backToTitle = function(e) {
+		backToTitle(e) {
 			this.sceneChanger.clearAllArrays();
 			enemies = [];
 			bullets = [];
@@ -645,7 +646,7 @@
 			
 		};
 		
-		spawnCoins = function(en, max, rs) {
+		spawnCoins(en, max, rs) {
 			max = max || 25;
 			var ranfc = Math.floor(Math.random() * max) + 10;
 			var cio = 0;rs = rs || 75;
@@ -654,13 +655,13 @@
 			}
 		};
 		
-		checkCoinsAndUpgrade = function(a,g) {
+		checkCoinsAndUpgrade(a,g) {
 			upgrader.checkCoinsAndUpgrade(a,g);
 			now += ( window.performance.now() - upgrader.upgradeTime );
 			
 		};
 		
-		doGameOver = function(victory) { //on seeming one loss life went to reset upgrades err
+		doGameOver(victory) { //on seeming one loss life went to reset upgrades err
 			
 			if(this.lives <= 1 || victory == 2) {
 				timeCount = window.performance.now();
@@ -693,7 +694,7 @@
 			
 		};
 		
-		loop = function(ts) {
+		loop(ts) {
 			
 			var cb = this.controller.buttons;
 			
