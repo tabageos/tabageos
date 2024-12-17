@@ -145,6 +145,7 @@
 	
 	GameSkeleton.prototype.screenOrganizer = null;
 	GameSkeleton.prototype._image = null;
+	GameSkeleton._loadedSpriteSheet = null;
 	
 	GameSkeleton.prototype.resizeRootForNoTouch = 0;
 	GameSkeleton.prototype.dontResizeVertical = 0;
@@ -197,7 +198,8 @@
 	GameSkeleton.prototype.soundSystem = null;
 	GameSkeleton.prototype._mute = 0;
 	GameSkeleton.prototype.autoPause = 1;
-	
+	GameSkeleton.prototype._lhelperPoint = null;
+	GameSkeleton.prototype._lhelperRect = null;
 	
 	GameSkeleton.prototype._lightCanvas = null;
 	/**
@@ -212,7 +214,8 @@
 	*/
 	GameSkeleton.prototype.initializeLights = function(dim, color, composition) {
 		var ths = tabageos.GameSkeleton.game;
-		
+		ths._lhelperPoint = new tabageos.MoverPoint();
+		ths._lhelperRect = new tabageos.Rectangle();
 		ths._lightCanvas = new tabageos.CanvasObject(null,ths.gameWidth, ths.gameHeight);
 		ths._lightCanvas.context.fillStyle = color;
 		ths.changeLightShade(dim,color);
@@ -248,8 +251,8 @@
 	GameSkeleton.prototype.turnOnLights = function(fromRect,toX,toY, apply) {
 		if(!tabageos.GameSkeleton.game._lightCanvas) return;
 		var ths = tabageos.GameSkeleton.game;
-		ths._helperPoint.x = toX; ths._helperPoint.y = toY;
-		ths._lightCanvas.copyPixels(ths._image, fromRect, ths._helperPoint);
+		ths._lhelperPoint.x = toX; ths._lhelperPoint.y = toY;
+		ths._lightCanvas.copyPixels(ths._image, fromRect, ths._lhelperPoint);
 		
 		if(apply) {
 			ths.applyLights();
@@ -311,16 +314,16 @@
 	//happens in _loop after the cameras tweenedBlitLayerRender method 
 	//cameras globalCompositeOperation is changed then it copys the _lightCanvas
 	//then its globalCompositeOperation is changed back.
-	GameSkeleton.prototype._actualApplyLights = function() {
+	GameSkeleton.prototype._actualApplyLights = function(to) {
 		var ths = tabageos.GameSkeleton.game;
 		
 		if(ths._doLights) {
 		
-			ths._helperRect.x= 0;ths._helperRect.y = 0;ths._helperRect.width = ths.gameWidth; ths._helperRect.height = ths.gameHeight;
-			ths._helperPoint.x = 0; ths._helperPoint.y = 0;
-			ths.cameraLayer.context.globalCompositeOperation = ths._lightComp;//'multiply';//'destination-in';
-			ths.cameraLayer.copyPixels(ths._lightCanvas.canvas, ths._helperRect, ths._helperPoint );
-			ths.cameraLayer.context.globalCompositeOperation = 'source-over';
+			ths._lhelperRect.x= 0;ths._lhelperRect.y = 0;ths._lhelperRect.width = ths.gameWidth; ths._lhelperRect.height = ths.gameHeight;
+			ths._lhelperPoint.x = 0; ths._lhelperPoint.y = 0;
+			(to || ths.cameraLayer).context.globalCompositeOperation = ths._lightComp;//'multiply';//'destination-in';
+			(to || ths.cameraLayer).copyPixels(ths._lightCanvas.canvas, ths._lhelperRect, ths._lhelperPoint );
+			(to || ths.cameraLayer).context.globalCompositeOperation = 'source-over';
 			ths._doLights = 0;
 		} 
 		
@@ -449,6 +452,7 @@
 	GameSkeleton._volumeSliderFront = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAAAQCAYAAACBSfjBAAAA00lEQVRYR2NkYGD4zzAKyA4BRg4evv+hwelYDVi9diZYfFQed/jAA9DLVRclELftvsyAHICj8tjDZzQAoTmM3AQyGoCUBqCmgMB/E/9UBmwxcGbjbHC2HpXHHT6MowFIWQIZDUAKcxjWALx19TLDzkNnGd5fPYc1C4/KI8IHIwBBgQMCuAJwVB41fFACEBY4uAJwVB4SeMjhAw5AQW0jBnc7Y5SGNHIKHJXHHT6jAcjAwEBJAhkNQGoFILbRBFgtDIqhUXnMEACFD+PocBbZI1lgjQDrfnmQJjfmSAAAAABJRU5ErkJggg==";
 	GameSkeleton._volumeSliderBack = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAAAQCAYAAADpunr5AAABb0lEQVRYR+2YsUoDQRCG57oIEiLCYashQoKVIBYhjTaSNu/gQ+Ud0oqNNpJCBCu5gKK2ISAGEUx38l8yce8yE8ztlrPd7r93xf/NzuxOREQp2fBxIPL6uLJdTU9bR+I/7pOnbN103Z/Z99cSwE68lwXz52QsQpH0iAE0DnZzEF7ePsgFYLrsDwOAuaPLY3p/HVL3ZmsFAvSr8x/ar7ep2X9c6gZgccLLBhgAsPkcwUUIrvm8hyEYgEAAOLqLEDDXNKSqqFmrpfFhi6QImDwn2f9M1/0ZTadZvpeiHCcBA2lHOx0GwDPAGIAGwS2sUn0wAAEBrIOgFWcRwOD2gXpnJzS8vhNTkOl//rgnIAgAmIuhATA970/QFMTmagBMn5vv+hOkCLcvOuSaWwRguu4PAGg3IDzI/nUNNYPLByADwCu41EMM7wAD4AeAi2+pVgQDyDWCFhO+BQGQ6asOwJ9iEcaujZpx1o4WY2uTRa929C8sYfw+WfhqmQAAAABJRU5ErkJggg==";
 	GameSkeleton._volumeSliderCords = {x:0,y:0};
+	GameSkeleton.prototype._sliderForOtherThanVolume = 0;
 	
 	GameSkeleton.prototype.volumeSliderPosition = function(x,y) {
 		
@@ -458,11 +462,13 @@
 	};
 	GameSkeleton.prototype._volumeSliderAnimation = null;
 	GameSkeleton.prototype._volumeSliderDiv = null;
+	
+	GameSkeleton.prototype._sliderValue = 1;
 	GameSkeleton._volumeSliderHandler = function(e) {
 		
 		var xoff = e.offsetX;
 		
-		if(xoff > 85) { 
+		if(xoff > 85 && !GameSkeleton.game._volumeSliderAnimation.nox) { 
 			if(GameSkeleton.game._volumeSliderDiv && GameSkeleton.game.container.contains(GameSkeleton.game._volumeSliderDiv)) {
 				GameSkeleton.game._volumeSliderDiv.removeEventListener("click", GameSkeleton._volumeSliderHandler);
 				GameSkeleton.game.container.removeChild(GameSkeleton.game._volumeSliderDiv);
@@ -478,8 +484,13 @@
 		
 		if(xoff > 80) { xoff = 80; }
 		if(xoff < 0) { xoff = 0; }
-		GameSkeleton.game.soundSystem.changeVolume( (xoff/8)/10 );
-		
+		GameSkeleton.game._topota = (xoff/8)/10;
+		GameSkeleton.game._sliderValue = (xoff/8)/10;
+		if(!GameSkeleton.game._sliderForOtherThanVolume) {
+			GameSkeleton.game.soundSystem.changeVolume( (xoff/8)/10 );
+		} else {
+			GameSkeleton.game.dispatchEvent(    new tabageos.Event('volumeSliderEvent', (xoff/8)/10 )    );
+		}
 	};
 	GameSkeleton.prototype.removeVolumeSliderAnimation = function() {
 		
@@ -490,9 +501,10 @@
 		
 	};
 	
-	GameSkeleton.prototype.initVolumeSliderAnimation = function(x,y, clayer, nox) {
+	GameSkeleton.prototype.initVolumeSliderAnimation = function(x,y, clayer, nox, dontChangeVolume) {
 		var ths = GameSkeleton.game;
 		if(GameSkeleton.game._volumeSliderDiv) {
+			GameSkeleton.game._volumeSliderAnimation.nox = 0;
 			GameSkeleton._volumeSliderHandler({offsetX:90});
 			GameSkeleton.game._volumeSliderAnimation = null;
 		}
@@ -510,23 +522,48 @@
 		ths._volumeSliderAnimation.x= x;
 		ths._volumeSliderAnimation.y= y;
 		
+		if(dontChangeVolume) {
+			GameSkeleton.game._sliderForOtherThanVolume = 1;
+		}
+		
 	};
 	
 	//new
+	GameSkeleton.prototype._topota = 0;
+	
 	GameSkeleton.prototype.volumeSliderLoop = function(ts) {
 		
 		var ths = GameSkeleton.game;
+		
 		if(ths.controller) {
-			if(ths.controller.buttons.left) {ths.controller.buttons.left = 0;
-				if(ths.soundSystem._globalVolume > 0.1) {
-					ths.soundSystem.changeVolume(ths.soundSystem._globalVolume - .1);
+			
+			if(!GameSkeleton.game._sliderForOtherThanVolume) {
+				if(ths.controller.buttons.left) {ths.controller.buttons.left = 0;
+					if(ths.soundSystem._globalVolume > 0.1) {
+						ths.soundSystem.changeVolume(ths.soundSystem._globalVolume - .1);ths._sliderValue = ths.soundSystem._globalVolume+1-1;
+					}
 				}
+				if(ths.controller.buttons.right) {ths.controller.buttons.right = 0;
+					if(ths.soundSystem._globalVolume < .9) {
+						ths.soundSystem.changeVolume(ths.soundSystem._globalVolume + .1);ths._sliderValue = ths.soundSystem._globalVolume+1-1;
+					}	
+				}
+				
+			} else {
+				if(!ths._topota) ths._topota = ths.soundSystem._globalVolume+1-1;
+				
+				
+				if(ths.controller.buttons.left && ths._topota > 0.1 ) {ths.controller.buttons.left = 0;
+					ths._topota -= .1;GameSkeleton.game.dispatchEvent(    new tabageos.Event('volumeSliderEvent', ths._topota )    );ths._sliderValue = ths._topota+1-1;
+				} 
+				if(ths.controller.buttons.right && ths._topota < .9) {ths.controller.buttons.right = 0;
+					ths._topota += .1;GameSkeleton.game.dispatchEvent(    new tabageos.Event('volumeSliderEvent', ths._topota )    );ths._sliderValue = ths._topota+1-1;
+				}
+				
+				
 			}
-			if(ths.controller.buttons.right) {ths.controller.buttons.right = 0;
-				if(ths.soundSystem._globalVolume < .9) {
-					ths.soundSystem.changeVolume(ths.soundSystem._globalVolume + .1);
-				}	
-			}
+			
+			
 		}
 		
 		if(!GameSkeleton.game._volumeSliderDiv) {
@@ -558,7 +595,7 @@
 		ths._volumeSliderAnimation.blit();
 			
 		ths._volumeSliderAnimation._source = GameSkeleton._volumeSliderFimg;
-		ths._volumeSliderAnimation.fromRect.width = (GameSkeleton.game.soundSystem._globalVolume * 80);
+		ths._volumeSliderAnimation.fromRect.width = (ths._sliderValue * 80);
 		ths._volumeSliderAnimation.blit();
 		
 		//ths.pixelParagraph(GameSkeleton._volumeSliderCords.x,GameSkeleton._volumeSliderCords.y + 17,10,"Arrows to change.A to go back.");
@@ -752,9 +789,11 @@
 				this.startButton.addEventListener((tabageos.seekTouch() ? (tabageos._pointerEvents ? "pointerdown" : "touchstart") : "mouseup"), GameSkeleton.game.changeToMainCamera, false);
 				
 				this.title.div.appendChild(this.startButton);
-				
-				this.screenOrganizer = new tabageos.IrisScreenOrganizer(this.root, [this.title, this.cameraLayer, this.gameOverContainer], null);
-				
+				if(this.__specs.screenOrganizerType) {
+					this.screenOrganizer = new tabageos[this.__specs.screenOrganizerType](this.root, [this.title, this.cameraLayer, this.gameOverContainer], null);
+				} else {
+					this.screenOrganizer = new tabageos.IrisScreenOrganizer(this.root, [this.title, this.cameraLayer, this.gameOverContainer], null);
+				}
 				this.screenOrganizer.changeScreen(0);
 				
 				
@@ -769,8 +808,13 @@
             this.createHud();
 			if(!this.soundSystem) {//changes volume back to full when new
 			
-				this.soundSystem = new tabageos.SoundSystem();
+				if(tabageos.GameSkeleton.__preloadSoundSystem != null) {
+					this.soundSystem = tabageos.GameSkeleton.__preloadSoundSystem;
+				} else {
+					this.soundSystem = new tabageos.SoundSystem();
+				}
 			
+				tabageos.GameSkeleton.__preloadSoundSystem = null;
 			}
 			this.useClintBlockFont();
 			
@@ -862,19 +906,274 @@
 	
 	GameSkeleton.prototype.playSound = function(soundString, poolAmount, stype) {
 		if(this.soundSystem._soundNames.indexOf(soundString) === -1) {
-			this.soundSystem.addSound(soundString+(stype||".ogg"),soundString,1,poolAmount || 2);
+			this.soundSystem.addSound(soundString+(stype||".ogg"),soundString,this.soundSystem._globalVolume,poolAmount || 2);
 		}
 		
 		if(!this._mute) {
 			this.soundSystem.playSound(soundString, 1);
 		}
 	};
-	GameSkeleton.prototype.playMusic = function(soundString, loop, stype) {
-		this.soundSystem.clearMusicTracks();
-		this.soundSystem.addMusic(soundString+(stype||".ogg"),1,loop === 0 || loop === -1 ? 0 : 1);
-		if(!this._mute) {
-			this.soundSystem.playMusic(0);
+	GameSkeleton.prototype.playMusic = function(soundString, loop, stype, index) {
+		if(soundString) {
+			this.soundSystem.clearMusicTracks();
+			this.soundSystem.addMusic(soundString+(stype||".ogg"),this.soundSystem._globalVolume,loop === 0 || loop === -1 ? 0 : 1);
 		}
+		if(!this._mute) {
+			this.soundSystem.playMusic(index || 0);
+		}
+	};
+	
+	
+	GameSkeleton.basicPlatformerSceneryRoutine = function(player, checkToThrowMethod, checkToPickUpMethod, thePickUpMethod, tileValuesArray, sceneryObjects, sceneryObjectLayer, landLayer, source, map, tw, th, maxThrowSpeed, minThrowSpeed, gameWidth, gameHeight, hp, sceneChanger) {
+		
+		
+		var i = 0;var obj;var ttw = tw||16; var tth = th||16;var re = false;
+						
+						if(player.holding && checkToThrowMethod()) {
+							
+							obj = player.throwSceneryObjectTraveler(16,16,1,1);
+							obj.xDirection = player._leftRightFace == 1 ? 1 : 0;
+							obj._jumpSpeed = 10;
+							obj._fromEnemyAi = 0;
+							obj._map = player._map;
+							obj._walkSpeed = Math.abs(player._veloc.x) >= player._walkSpeed ? maxThrowSpeed||14 : minThrowSpeed||4;
+							obj._veloc.y = -(Math.abs(player._veloc.y) < player._walkSpeed ? 2 : 3);obj._state = 3;
+							obj._solidSit = 0;obj._eHit = 0;obj._grounded = 0;
+							sceneryObjects.push(obj);
+						}
+						
+						
+						for(i;i < sceneryObjects.length;i++) {//move and interact with sceneryObejcts
+							obj = sceneryObjects[i];
+							
+							if(sceneChanger) {
+								sceneChanger.sceneryObjectSceneChange(obj,sceneryObjects,ttw-4,gameWidth-ttw,0,0);
+							}
+							if(!obj) break;//
+							
+							if(!obj._grounded) { //until it lands on the ground, move the scenery object
+									//no longer try to move horizontally once it reaches a horizontal collision
+								if(obj._pLeft || obj._pRight) { obj.xDirection = -2; }
+								
+								//move applies velocity ._veloc, in the desired direction.
+								obj.move(obj.xDirection != -2 ? (obj.xDirection ? 0 : 1) : 0,  obj.xDirection != -2 ? obj.xDirection : 0,  0, 0, 1);
+							} else {
+								obj._eHit = 0;
+								obj._fromEnemyAi = 0;
+							
+							}
+							sceneryObjectLayer.copyPixels(source,obj.tileRect, obj._pos,ttw,tth);//
+							
+							var exrec = obj.getRectangle(); exrec.x -= 2; exrec.width += 4;
+							//
+							var checkToPickUp = checkToPickUpMethod();
+							if(!player.holding && (checkToPickUp) && tabageos.GeometricMath.rectanglesOverlapAmount(exrec, player.getRectangle())/ttw > 0) {
+								
+								
+								if(!thePickUpMethod) {
+									player.pickUp(obj);
+								} else {
+									
+									thePickUpMethod(obj);
+									
+								}
+								sceneryObjects.splice(sceneryObjects.indexOf(obj),1);
+								sceneryObjectLayer.context.clearRect(obj.x,obj.y,ttw,tth);
+								re = true;
+								
+								break;
+								
+							}
+							
+							
+						
+						}
+						
+						
+						if(player.holding) {
+						
+							sceneryObjectLayer.copyPixels(source,player.holding.tileRect, player._pos,ttw,tth);
+							
+						}
+		
+		return re;
+		
+		
+	};
+	
+	GameSkeleton.basicTopDownSceneryRoutine = function(player, checkToThrowMethod, checkToPickUpMethod, thePickUpMethod, tileValuesArray, sceneryObjects, sceneryObjectLayer, landLayer, source, map, tw, th, maxThrowSpeed, minThrowSpeed, gameWidth, gameHeight, hp) {
+		
+		var i = 0;var obj;var objtile;//move and interact with sceneryObejcts.
+		var ttw = tw||16; var tth = th||16;
+		var xts = maxThrowSpeed || 14; var mts = minThrowSpeed || 4;
+		var throwSpeed = (xts - mts) / 2;
+		
+		var helperPoint = hp || (tabageos.GameSkeleton.game ? tabageos.GameSkeleton.game._helperPoint : new tabageos.MoverPoint());
+		
+		if(!gameWidth) {
+			
+			gameWidth = tabageos.GameSkeleton.game.gameWidth;
+		}
+		if(!gameHeight) {
+			gameHeight = tabageos.GameSkeleton.game.gameHeight;
+		}
+		if(!tileValuesArray) {
+			tileValuesArray = [];
+		}
+		var re = false;
+		
+                if(player.holding && checkToThrowMethod()) {//throw what the player is holding when q is pressed
+                    
+					
+                    obj = player.throwSceneryObjectTraveler(ttw,tth,1, player.holding.setX ? 1 : 0);
+					
+                    obj.xDirection = player._leftRightFace == 1 ? 1 : 0;
+                    obj._fromEnemyAi = 0;
+                    obj._jumps = 0;
+                    obj._map = player._map;
+                    obj._walkSpeed = Math.abs(player._veloc.x) >= player._walkSpeed ? xts : mts;
+                    obj._veloc.y = -(Math.abs(player._veloc.y) < player._walkSpeed ? 2 : 3);obj._state = 3;
+                    obj._solidSit = 0;obj._eHit = 0;obj._grounded = 0;
+                    sceneryObjects.push(obj);
+                }
+                
+              
+                
+                for(i;i < sceneryObjects.length;i++) {
+                    obj = sceneryObjects[i];//sceneryObjects is a reference to the stored array in the sceneChanger holding the SceneryObjects for the currentScene.
+                    
+                    
+                    if(!obj) break;//objects can be thrown quickly into other scenes, its remotely possible for them to be thrown fast enough to cause this, when transfering from sceneryObejcts to an array stored in the TileSceneChanger.
+                    
+                    if(!obj._grounded) { //_grounded is being used to run this block once.
+                                    
+                        obj.maxSpeed = 25; obj.maxForce = 50;
+                        obj._veloc.x = player._veloc.x*throwSpeed;//set the veloctity to throwSpeed times players velocity that will send it foward.
+                        obj._veloc.y = player._veloc.y*throwSpeed;
+                        if(obj._veloc.x == 0 && obj._veloc.y == 0) {//if player is not moving determine veloc based on players animation direction, and use less velocity.
+                            obj._veloc.x = player._canvasAnimation.currentAnimation.indexOf("right") != -1 ? throwSpeed : (player._canvasAnimation.currentAnimation.indexOf("left") != -1 ? -(throwSpeed) : 0);
+                            obj._veloc.y = player._canvasAnimation.currentAnimation.indexOf("down") != -1 ? throwSpeed : (player._canvasAnimation.currentAnimation.indexOf("up") != -1 ? -(throwSpeed) : 0);
+                        }
+                        obj.update();//apply velocity and handle collisions.
+                        obj._grounded = 1;//manually set grounded, which is a setting normally for objects with gravity, but we are not using gravity, we've set _jumps to 0 for all objects and the player.
+                    } else {//if grounded is 1.
+                      
+                      
+                        if(!obj._solidSit) {//if the obejct is not stopped.
+                            obj._veloc.x *= .9;//apply friction.
+                            obj._veloc.y *= .9;//friction causes veloc to reach 0 eventually.
+                            obj.update();//update applies veloc to position and potentially collides.
+                            obj._grounded = 1;//keep grounded at 1.
+                        }
+                        if(obj._veloc.x < 1 && obj._veloc.y < 1 && obj._veloc.x > -1 && obj._veloc.y > -1 && !obj._solidSit) {
+                            //if it has basically stopped, make the tile position it is in solid. And mark it to not move anymore.
+                            objtile = tabageos.BlitMath.checkTileValueAt(obj.x,obj.y,map,ttw,tth,helperPoint);
+                            if(objtile[0] == 0 && objtile[1] == 0) {
+                                player._map[helperPoint.y][helperPoint.x] = obj.tileValue;//checkTilveValueAt is a loose check returning the tile closest to the x,y given, and placing the index of the exact tile found into _helperPoint.
+                                obj.setX(helperPoint.x*ttw);obj.setY(helperPoint.y*tth);
+                                obj._solidSit = 1;
+                                obj._eHit = 0;
+                          
+                            }
+                        }
+                    
+                    }
+                    //draw the SceneryObject.
+                    sceneryObjectLayer.copyPixels(source,obj.tileRect, obj._pos,ttw,tth);
+                    
+                    var exrec = obj.getRectangle(); exrec.x -= 2; exrec.width += 4; exrec.y -= 2; exrec.height += 4;
+					var checkToPickUp = checkToPickUpMethod();
+                    //picking up a SceneryObject that has been picked up before and thrown or that is a RPGSceneryObject added above
+                     if(!player.holding && (checkToPickUp) && tabageos.GeometricMath.rectanglesOverlapAmount(exrec, player.getRectangle())/ttw > 0) {
+                      
+                        
+                      
+                        if(!thePickUpMethod) {
+                            player.pickUp(obj);
+                        } else {
+							
+							thePickUpMethod(obj);
+							
+						}
+                        //remove scenery object
+                        sceneryObjects.splice(sceneryObjects.indexOf(obj),1);
+                        sceneryObjectLayer.context.clearRect(obj.x,obj.y,ttw,tth);
+                        objtile = tabageos.BlitMath.checkTileValueAt(obj.x,obj.y,player._map,ttw,tth,helperPoint);
+                        if(objtile[0] != 0 || objtile[1] != 0) {
+                            if(player._map[helperPoint.y] && player._map[helperPoint.y][helperPoint.x]) {
+                                player._map[helperPoint.y][helperPoint.x] = [0,0];
+                            }
+                        }
+						re = true;
+                        break;
+                      
+                    } else if (!player.holding && (!checkToPickUp) && tabageos.GeometricMath.rectanglesOverlapAmount(exrec, player.getRectangle())/ttw > 0) {
+                        
+                        if(obj.description) {
+                          
+                          re = obj.abilityDescription;
+                          
+                          
+                        }    
+                        
+                        
+                    }
+                
+                }
+              
+              
+                if(player.holding) {//draw what the player is holding.
+                    helperPoint.x = player.x +8;
+                    helperPoint.y = player.y +4;
+                    sceneryObjectLayer.copyPixels(source,player.holdingRect,helperPoint,ttw,tth);
+                }
+                var svn = ttw+2;
+				
+                var tileRight = tabageos.BlitMath.checkTileValueAt(player.x + svn,player.y,map,ttw,tth, helperPoint);
+                var tileLeft = tabageos.BlitMath.checkTileValueAt(player.x - 2,player.y,map,ttw,tth, helperPoint);
+                var tileUp = tabageos.BlitMath.checkTileValueAt(player.x ,player.y - 2,map,ttw,tth, helperPoint);
+                var tileDown = tabageos.BlitMath.checkTileValueAt(player.x,player.y + svn,map,ttw,tth, helperPoint);
+                //the optional last param of checkTileValueAt lets us do the above, therefpre helperPoint will only be populated if the result is the value we gave.
+				
+				i = 0;var tileNextTo = 0;
+				for(i; i < tileValuesArray.length; i++) {
+					
+					if(tabageos.BlitMath.valuesMatch(tileValuesArray[i],tileRight)) {
+						
+						tileNextTo = tileRight; break;
+					}
+					if(tabageos.BlitMath.valuesMatch(tileValuesArray[i],tileLeft)) {
+						
+						tileNextTo = tileLeft; break;
+					}
+					if(tabageos.BlitMath.valuesMatch(tileValuesArray[i],tileUp)) {
+						
+						tileNextTo = tileUp; break;
+					}
+					if(tabageos.BlitMath.valuesMatch(tileValuesArray[i],tileDown)) {
+						
+						tileNextTo = tileDown; break;
+					}
+				}
+				
+              
+                //if any tile around the player is a SceneryObject, one of the throwable tiles, and the b button is pressed, pick it up from the map.
+                if(!player.holding && tileNextTo && checkToPickUpMethod() && tabageos.BlitMath.valuesMatch(player._map[helperPoint.y][helperPoint.x], tileNextTo) ) {//because of checkTileValueAt behavior, we can check all the values together
+					//create a TileData Object to be picked up.
+                    var td = tabageos.TileData.make(helperPoint.x*ttw,helperPoint.y*tth,tileNextTo);//and still we know that helperPoint is only set to the matching value found.
+					//picking up TileData.
+                    player.pickUpTileData(td);
+					//remove TileData from the currentMap, this method also redraws for the spot the tile was at.
+                    tabageos.BlitMath.removeTileData(td,map,landLayer,source,ttw,tth,gameWidth,gameHeight,1);
+					//update the players map to be able to walk past the spot
+                    player._map[helperPoint.y][helperPoint.x] = [0,0];
+					re = true;
+                }
+		
+		
+		return re;
+		
+		
 	};
 	
 	
@@ -1060,7 +1359,10 @@
 	GameSkeleton.prototype.startGameLoop = function(gameFunc) {
 		GameSkeleton.game.screenOrganizer.removeEventListener(tabageos.ScreenChangeEvent.COVER, "startGameLoop", GameSkeleton.game);
 		if(GameSkeleton.game.beforeStartGameLoop) {
-			
+			if(GameSkeleton.game.__specs.transitionBackgroundColor) {
+				
+				GameSkeleton.game.container.style.backgroundColor = GameSkeleton.game.__specs.transitionBackgroundColor;
+			}
 			GameSkeleton.game.beforeStartGameLoop();
 		}
 		
@@ -1291,6 +1593,7 @@
 						
 						GameSkeleton.game.alternateLoopMethod(ts);
 						GameSkeleton.game._thrott = ts;
+						
 						if(!GameSkeleton.game.paused && !GameSkeleton.game.__workLoop) {
 							window.cancelAnimationFrame(GameSkeleton.game._aid); 
 							GameSkeleton.game._aid = window.requestAnimationFrame(GameSkeleton.game._loop);
@@ -1389,6 +1692,15 @@
 						GameSkeleton.game.camera.tweenedBlitLayerRender(GameSkeleton.game.cameraPoint, GameSkeleton.game.tweenLimitX || 0,GameSkeleton.game.tweenLimitY || 0, ftcalc ,GameSkeleton.game.cameraTweenType,0,0);
 					}
 					
+					if(GameSkeleton.game._cameraType === 0 && GameSkeleton.game.initForISO) {
+						
+						
+						GameSkeleton.game.camera.isoTweenedBlitLayerRender(GameSkeleton.game.tileWidth,GameSkeleton.game.tileHeight,GameSkeleton.game.player.scene,GameSkeleton.game.player, 
+							GameSkeleton.game.camera.cameraFollowOffsetX,GameSkeleton.game.camera.cameraFollowOffsetY, 0,0,60 / GameSkeleton.game._ts,"Linear",0,0);
+						
+						
+					}
+					
 					if(GameSkeleton.game._doLights) {
 						
 						GameSkeleton.game._actualApplyLights();
@@ -1406,6 +1718,26 @@
 						GameSkeleton.game.controller.handleGamePad();
 						
 					}
+					
+					
+					if(GameSkeleton.game.exitToTitleScreen == 2 && GameSkeleton.game.screenOrganizer) {
+							
+						if(GameSkeleton.game.screenOrganizer.transitionForward()) {
+							GameSkeleton.game.root.removeChild(GameSkeleton.game.screenOrganizer.coverShape);
+							GameSkeleton.game.exitToTitleScreen = 0;
+							GameSkeleton.game._fullResetToTitle(1);
+							return;
+						}
+					}
+					if(GameSkeleton.game.exitToTitleScreen == 1 && GameSkeleton.game.screenOrganizer) {
+						
+						GameSkeleton.game.root.addChild(GameSkeleton.game.screenOrganizer.coverShape);
+						GameSkeleton.game.screenOrganizer.initializeTransition();
+						GameSkeleton.game.exitToTitleScreen = 2;
+					}
+					
+					
+					
 
 			} 
 			
@@ -1460,11 +1792,15 @@
 				}
 			}
 		}
+		
+		if(GameSkeleton.game) {
+			GameSkeleton.game.dispatchEvent(new tabageos.Event("pauseEvent"));
+		}
 	};
     GameSkeleton.prototype._justGamePad = function(ts) {
     
         if(GameSkeleton.game._thrott === 0) GameSkeleton.game._thrott = ts;GameSkeleton.game._pr = ts - GameSkeleton.game._thrott;
-		if(GameSkeleton.game.__worker || GameSkeleton.game._pr >= 15 ) {
+		if(GameSkeleton.game.controller && (GameSkeleton.game.__worker || GameSkeleton.game._pr >= 15) ) {
 			if(!GameSkeleton.game.controller.gamePadButtonsUserDefined && GameSkeleton.game.enableGamePad) {
 				GameSkeleton.game.controller.configureGamePadButtons();
 			} else if(GameSkeleton.game.controller.gamePadButtonsUserDefined && GameSkeleton.game.enableGamePad) {  
@@ -1587,32 +1923,32 @@
 		
 	};
 	GameSkeleton.prototype.waitForStart = function(ts) {
-		if(this.controller.buttons.start) {
+		if(GameSkeleton.game.controller.buttons.start) {
 			
-			this.controller.buttons.start = 0;
+			GameSkeleton.game.controller.buttons.start = 0;
 			GameSkeleton.game._doAlternate = 0;
 			
-			GameSkeleton.game.fullResetToTitle(0);
+			GameSkeleton.game._fullResetToTitle(0);
 			
 		}
 		
 	};
 	GameSkeleton.prototype.gameOver = function(onlyRestPositionOnLooseLife, waitTime) { 
-			if(this.lives > 1) {
-				this.lives -= 1;
+			if(GameSkeleton.game.lives > 1) {
+				GameSkeleton.game.lives -= 1;
 				GameSkeleton.game._doReset = 1;GameSkeleton.game.__workLoop = 0;
 				GameSkeleton.game.reset({keyCode:onlyRestPositionOnLooseLife ? 82 : 299});
 				
 				
 				return;
 			} else {
-				if(this.lives == 1) { this.lives = 0; 
+				if(GameSkeleton.game.lives == 1) { GameSkeleton.game.lives = 0; 
 				//this.lives = this._initLives+1-1;
 					window.cancelAnimationFrame(GameSkeleton.game._aid);
 					GameSkeleton.game._doReset = 1;GameSkeleton.game.__workLoop = 0;
 					GameSkeleton.game.alternateLoopMethod = GameSkeleton.game.waitForStart;
-					this.screenOrganizer.addEventListener(tabageos.ScreenChangeEvent.SCREEN_CHANGE, "endLevel", GameSkeleton.game);
-					this.screenOrganizer.switchScreen(2);
+					GameSkeleton.game.screenOrganizer.addEventListener(tabageos.ScreenChangeEvent.SCREEN_CHANGE, "endLevel", GameSkeleton.game);
+					GameSkeleton.game.screenOrganizer.switchScreen(2);
 					
 					
 					return;
@@ -1632,15 +1968,21 @@
 				}
 			}
 	};
-	GameSkeleton.prototype.fullResetToTitle = function(e) {
-		
+	GameSkeleton.prototype.exitToTitleScreen = 0;
+	GameSkeleton.prototype._fullResetToTitle = function() {
 		window.cancelAnimationFrame(GameSkeleton.game._aid);
 		GameSkeleton.game._doReset = 1;
 			GameSkeleton.game.__workLoop = 0;
 		//window.setTimeout( function() {
 			GameSkeleton.game._theReset();
 		//}, 700); return;
-
+		
+	};
+	GameSkeleton.prototype.fullResetToTitle = function(e) {
+		if(GameSkeleton.game.paused) { GameSkeleton.game.pause(); }
+		if(GameSkeleton.game.exitToTitleScreen == 0) {
+			GameSkeleton.game.exitToTitleScreen = 1;
+		}
 	};
 	GameSkeleton.prototype.simpleReset = function() {
 		GameSkeleton.game._doReset = 1;GameSkeleton.game.__workLoop = 0;
@@ -1861,7 +2203,7 @@
 		bttn.setAttribute("id", name );
 		bttn.setAttribute("name", (forTitle ? "ForTitleScreen" : ""));
 		bttn.setAttribute("alt", altString);
-		if(methodCallString && methodCallString.indexOf("()") == -1) {
+		if(methodCallString && methodCallString.indexOf("(") == -1) {
 			throw "the makeButton methodCallString param needs to be in the with parens 'methodName()' format";
 			return;
 		}
@@ -1961,6 +2303,11 @@
 	GameSkeleton.prototype.appendStartButton = function() {
 		if(!this.title.div.contains(this.startButton)) { 
 			this.title.div.appendChild(this.startButton);
+			if(this.startLocations) {
+				this.startButton.style.left = this.startLocations.x +"px";
+				this.startButton.style.top = this.startLocations.y +"px";
+			}
+			
 		}
 	};
 	
@@ -2166,38 +2513,7 @@
 		}
 		
 		
-			/*for(i; i <= latestLevel; i++) { 
-				xi = i > 7 ? i - 7 : i;
-				yi = i > 7 ? 720 : 656;
-				cplyr.copyPixels(this.___levelSelectSpriteSheet, new tabageos.Rectangle(64 * xi,yi,48,32), new tabageos.MoverPoint(64 * xi, yi == 656 ? 96 : 160));
-				
-				if(!levelSelectDivs[i]) {
-					
-					levelSelectDivs[i] = document.createElement("div");
-					levelSelectDivs[i].setAttribute("style", "position:absolute;width:32px;height:32px;top:"+(yi == 656 ? 96 : 160)+"px;left:"+(64 * xi)+"px;cursor:pointer");
-					levelSelectDivs[i].setAttribute("id", "l"+i);
-					
-					
-				}
-				
-				
-				lstrs = levelStars[i];
-				if(lstrs) {
-					
-					cplyr.copyPixels(this._image, new tabageos.Rectangle(832,256,16,16), new tabageos.MoverPoint((64 * xi) - 8, (yi == 656 ? 96 : 160) + 32 ) );
-					if(lstrs > 1) {
-						cplyr.copyPixels(this._image, new tabageos.Rectangle(832,256,16,16), new tabageos.MoverPoint((64 * xi) + 16 - 8, (yi == 656 ? 96 : 160) + 32 ) );
-						
-					}
-					if(lstrs > 2) {
-						cplyr.copyPixels(this._image, new tabageos.Rectangle(832,256,16,16), new tabageos.MoverPoint((64 * xi) + 32 - 8, (yi == 656 ? 96 : 160) + 32 ) );
-						
-					}
-					
-				}
 			
-			}*/
-			//this.placeLevelSelectDivs();
 			
 		
 		
@@ -2281,6 +2597,35 @@
 	};
 	GameSkeleton.prototype.saveError = "";
 	
+	//new
+	GameSkeleton.prototype.cookieSave = function(saveName, saveData) {
+		
+		var d = new Date();
+		d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000));
+		var expires = "expires="+d.toUTCString();
+		document.cookie = saveName + "=" + saveData + ";" + expires + ";path=/";
+		//window.console.log(document.cookie);
+		return true;
+	};
+	GameSkeleton.prototype.getCookieSaved = function(saveName) {
+		
+		var ck = saveName + "=";
+			var data = "";
+			var co = document.cookie.split(';');
+			//window.console.log(co);
+			for(var i = 0; i < co.length; i++) {
+				var c = co[i];
+				while (c.charAt(0) == ' ') {
+					c = c.substring(1);
+				}
+				if (c.indexOf(ck) == 0) {
+					data = c.substring(ck.length, c.length);
+				}
+			}
+			return data;
+		
+	};
+	
 	GameSkeleton.prototype.localSave = function(saveName, saveData) {
 		var ret = 1;
 		try {
@@ -2325,12 +2670,54 @@
 	};
 	
 	GameSkeleton.prototype.__alphabet = {a0:"a",a1:"b",a2:"c",a3:"d",a4:"e",a5:"f",a6:"g",a7:"h",a8:"i",a9:"j",a10:"k",a11:"l",a12:"m",a13:"n",a14:"o",a15:"p",a16:"q",a17:"r",a18:"s",a19:"t",a20:"u",a21:"v",a22:"w",a23:"x",a24:"y",a25:"z"};
-	GameSkeleton.prototype.__ClintBlockLine = "data:image/png;base64,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";
+	GameSkeleton.prototype.__ClintBlockLine = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAqgAAAAKCAYAAAB486yQAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH6AcUAh0MrsbbzgAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAPRSURBVHja7VzrjiohDJ6e+P6v3P2xa3YWgX69AXraxERnKvRG+xUZ6fpL3Hym65X4GhMl8M3uW+fU6OuxDTnG0sq3m0ayanxyYvx9Gl9W/EXFqjcG0Ng73W/0ZnFviQFOkA/Ny8i1Vfbz2Dhr3pX6krN+ZGEEVuqgzW0RuCQ6H+/AOUN6vIzI32MSjce68wz4WeDju7DPe380uY13v/+8zsxdGaWxLPr29AHH41HQA3wa+c5AqANZNT7R2FgaT8s3iefUeVfzaeIqcH2gQAxaGz1d0dg73W8jvXfLJ60PS75C1hu6LpV5ufu99tqqfGBZu1nzRvpDqgmSP4zjhfhthD08tXk2ngUfBOTuCJzjxkMj+pcNVmbvewFCRF2l2yRy+8w9JTtjMNBpuR3SLhCNbQBZPTrw4BXiboQpCmQ/YwTxBcK3a36tfNF8kb5Hk9r9pVhDLNkY9dkOO2viRcodGfGftU5ObqIlG0v3s+JF44OI+Guv74gDja1X5m+lrSNqIE/wgddIrPFFZK0WcM5LTbi/f3gmnSnSdjto5y11SL0E08pzV1Dacd2RlDX2iAycwU4NGtDkBSiLExp9s3L0uEgXrOLLlG9FUe34nhxz0nVdfF/HSMOq6eaj7az0LUXFwc+8tKrYBAEJdup71DraCcQscX9aE4I0DKOaPuPR1FZvHb/lKPau7x5uGeVAg3wqOVbUrBYjtvo/sgDbbAe1naMFkTMgdefp8UoKn7IoUeCskF8ElJYg1STA1TZGADayKzU6TmLl6zUiAlBhTcKJkC/St2iiBhskdcOTseOp8a8ymbuLWOc4FdIQUJSfVwEro51ZyoGj2pGha0BtnfpX28QNclDosw7a2ivZulfTZyA1Om9kgUBEpsmY0JEpq0yRO6hozerNaTmDSlrBNGf7OsrQ7y2GizAY1BQdiGiiz+hoDwLjtHpHAj1rtHIHZPX8GT+VRYK1iHOJvZzQ8EKxt2tHO/Jc12o9snbPVuWDrEYlUg9pM+cEv2ryAXqsxdkQ0KU4425ZRx1dkIfqPD4RHwATcppJvmjA7cQk5H0KE+1krbtHml0m1CEUpAsZ+XgQgO5/GUB/+jPqbH1S7/Sn+NH5P2ne7H+b0MQBGdeaN/ay7XwKn8ZnK+Jqh13QurAiXjz/SvEOfkPWsKZOn6yHukYH4RFNPl2BcyhL37SHpAKNtmK8rPlocI0mn+1C/icPOhQdF/cE8vRep631XXOeKMM7yJSlB33Q+twtFwXpUcXtveOJPiXAi/zdT/m2qKioqKioqKioqKioqKioqKjIS1//bNCh2YPFTQAAAABJRU5ErkJggg==";
 	GameSkeleton.prototype.__dialogBack = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANIAAAAyCAYAAAAp3YXAAAABk0lEQVR4Xu3ToXECYRhF0V2TWlARqDjog14Q9EIf4KIQUdQSQ+bPBCaSnbmOgwDE7hNnvjtPf5/Nan27//dLgMBzAufrZR5P/n6NiI777XNveooAgYfA7nCaRkzzPaK39w88BAgsFPj++pxGTEJaCOdxAv8FhOQeCAQCQgoQTRAQkhsgEAgIKUA0QUBIboBAICCkANEEASG5AQKBgJACRBMEhOQGCAQCQgoQTRAQkhsgEAgIKUA0QUBIboBAICCkANEEASG5AQKBgJACRBMEhOQGCAQCQgoQTRAQkhsgEAgIKUA0QUBIboBAICCkANEEASG5AQKBgJACRBMEhOQGCAQCQgoQTRAQkhsgEAgIKUA0QUBIboBAICCkANEEASG5AQKBgJACRBMEhOQGCAQCQgoQTRAQkhsgEAgIKUA0QUBIboBAICCkANEEASG5AQKBgJACRBMEhOQGCAQCQgoQTRAQkhsgEAgIKUA0QeAR0qDYrNa3435LhQCBhQK7w2k6Xy/zfH9vxLRww+MEXl5gRDQQfgCimXOSRF7rtQAAAABJRU5ErkJggg==";
 	GameSkeleton.prototype.__OldSchoolLine = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAdsAAAAHCAYAAABA8efUAAAEE0lEQVRoQ81a2W7cMAzs/v9Hb7BFFBCTuWhv0vZlW1uiKGoOWujjz+ef5/P5fDweD/z3fH7+rsa+5r7evX5nrPmcvTvvzxyMj+9Pjv/i9+wP98FqcvKb+8JnWLMZf47FddtxTe1/qo6sVs0z3JuqHxvH6sL294rJaooc2NSGzWU8SOMmzxQGJv4SNlj93L6a/Bj+N8/U+lgvlydqDdMNnP+uMSyvFFtpo9LguYaL7TR3U88N1t81NtXsXeu0cVrvuZL3N3PFg09mq8QNCe6MdJppAtURSfb706bsGhIUv0aw0l4aEs4xrdhdaWoSuFwDhg3FlZzbveE4hQnVHLGGM+GKiZ0TwJOja9yu7neTC8NXW5c7+alGPDUmzuBmg5IMZovlO0K95XDKXeXSmkS7l98al87it/JwHFc5bnOXZoubdKaakmmJ0CQ/Y50clUC+86BQxFAomyZh5sPiTfPFsY6Eqr5KeLeExoYL68rM24k2YqlpTBoTdQbXCLlrGNL5smbLCaDDcWuYd8YpfN0x29QAN/VgutNg/w7XGZdnPHczxbCc4rFmi+XPbl+YhqAOOr2dmGEYRBzP2Iq3zBtm7u3NCtO/Oxh3c5mGJR/bYvPbGlc6LyW+zvQ2RuqIww5WjWckVcBIa6av0PagEOxJJJBwaDpKHBVpmGk1e095Ohwh+RXJ3Tk6oZ5rKxKheKp4TSPBSKfEOZm8Ez/WhKR9OHyjCbAzu2u2r5jNWeE4pw9X37WYZQZ2pQFU4q5MpFnD3UIp3Dc3V8jBJhemPeoZ0x+lx8k32nWTRjNsusak8cbG106cW1+2eKgqcSW2TLTSVxcT6vbLdlMYJUQIogbYjPRM1FxzwPaYYrSih2LjDCKJeZrbNA8NuRRxWDOR6nDFhJxAOwInM3O5uL0l8WzOpa2pahDUl60TuUbQlIG75xujdZg+azS4YnHOvG1zt21GmC453Ce8OBP9Mo/P/+OT6seaAqWbiR/qPOY8FYPl3XiH8o2tn3yZbQNOZppzHnZwTDhSgu69Mm1X6GQkbt8bM9uMbcQHAfoTZptMaFO7dK5KGO+Q66opb0yFicLVnDfrXtmbMvl0zkmo1BfDNBIUMmcWKR/Fyavzthxvaj8bDsfV+c59SKh4/zv+sLZsH6z+DKuuBkn71XuWH7tpUPr0rud/82vBMBdNxsLANwuZhPk3SOUAkAo8hWU2FI7U+EWnvjQw3iQbCpqqExvHxFAB0e1j+04Z0xRqdoU111E1YLVS5+FuDTa5KINx+8SaNVd2DC+KN8gtZRaspgzrs4aq828bDmUWCkfpZmvOc8LOcKBiJw4nDmJdFS4Z51FLEhc2+GswlAzO5ac0FPF3MObwN+c4DXQfHcqXEM8OG633OC4qfn8AOLtMi72b33wAAAAASUVORK5CYII=";
 	GameSkeleton.prototype.__GoodNeighborsLine = "data:image/png;base64,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";
+	GameSkeleton.prototype.__SuperPowersLine = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAvgAAAAICAYAAACML4vTAAAABmJLR0QAtwByAEaTbjfgAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH6AkIAhYXYqidrwAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAP/SURBVHja7VzbssMgCIxn+v+/nPOUGccRWBZRm+pTW+OFq7CSlqtq933f13VdpZRyJbX7vu92/t667W/P9+j+NBpn0D+rafxj6NfGt329OTxzW3O0/ch4i36EP98gb5a+UfJlxlvyi8pXsoVSSmHmbp/T5md8DjPfSvlZz6DyHU0vO7/lOy0eaXtB7Fd6duX51Du3d5hrlzWt+VfQfNppfx4FfhxM/TnSLznO3ljE4Uprow4SnZ9Ze2WwV9Mt0YjQrI1H+q1Wmqbtoe7XxiH7R+kbIRdWR7Sx1m/P4VI3hv4o/zz9mn6w+onM2VtD07lRQVjtG72+Z7X8erap8cqS827N8i8IMGDpoycBYH3TLufTt4Ak7DOn/S7frPiT6Yu0z2jh9QKLFjFrAwwECdlJQXdG+hn+RRUrmw8efmfKxpobvaVA0M/2udpmJDRICr6kW7AsVCk6JxtE7WJ77P5O8JAXoLcHaFRG6HjEbr1rPrS8DRGO+NcRsQMy5qDw7w3Ma/tibvgj/r/2Ucjc6Fp/rAF4P2tokGWgkavTrKClTUraoMpzWN9CmxHcS7KQ+q0gFik5QPjg7e/JoKc/vb30+lcnXZYOtnNa8qlRfAZ90Pg3A/3wyEdD17ODaJYvzzgPkhvhLxtoIvYzmsetbjM0aOcSav8s79ByL3b/o3QT9b8Z42v/JPl3tD/iX6JJ+IjbFe1GNlK9EJGfVp3h3YPFN+RG2uK79j1aXZANzmgVGN51PiMcTG8DPfRRc9AIwmllOTMybIbJM9GPTB54SpzQTFSSd2+8Nr+keygC5qkJzwrusuXjDaQY+WYGx54bHCuQy+JrhC8I/RHf4+WfZCOI/exWZ63Rhdj/CNtikXzttm6UDkg3fZL9SAACipCywXOkvEvbf0ZgxuqIdLuK9Gn0ofKzkjDW983wB6xsUd+6+uZMi3PMAD9yfeg5HNpAXUJbUYc0k7lI4OC9YvSW0qA3H7OCe+ZFstHyiyKTnv0z8tUOd+YlY++h36u7X5UIZo5fmYAjAMTuzXuA7ARwaOiulqBES0NmBPm/0CIJ/g7AW3YCsVpfUABi5cvMEb8WSXBG6p8VH3ro/0QdWa/GXkJEWAOWaigZJMSLLr/BQVo1qJ6XmtFacgsd9/xLR7SG1ho/skY363Bn/2WjtpMoTVH+efrZwJpNmhEeIv5B8zEj/qmpd5Bk2weDXI5e35JBDb549YjRX+0ZJhCNll5FA0KEb5r+a+/VIfNHE0sEgfYkiO35NDK5yz5fmEQ1GqAiwTOqH8gthZZcMDccyO0EysPI+T5cL2ahKztmpKtQpoPVHPmu2Nuv299pp532bv+b5de+HfzznE2/Gqe86W/Sn/YP830UK/Bwk8cAAAAASUVORK5CYII=";
+	GameSkeleton.prototype.__SolarLine = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAkAAAAAHCAYAAADgWPLLAAAABmJLR0QAtwByAEaTbjfgAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH6AoWFSEGdhDy4AAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAJwSURBVGje7VrZjsMwCEyk/P8vZ192pdYyMMPhOFp4a+sSc3gYcI5jA7nv+z5aWlpaWlpaWhbJKZGR8zzN32ZrP79DdH1tRtCj7WvUM3uWZVfWGnTP6LOeJKMVfrZirpFhS59Xj2VXlp4ncjUjz6z/IzHN8o/3WRK2ROPuzY1qrNPOBovhmv7Z/irsysqxyvzJ8PMua7IwE8WmDDz04ti1YqqjHYzZQWKLcgaJQHX97Xm278/fEJDaTVA/S/Zbk7zZ+lEPCsTo1DBKIhAbEf+gPlwRTwbstHxHYzr7HPEP42ckNxj7KnIM7laNplJaW0mOx4KKkqXquFfmD9LgvnIa4vQDUyM1P1r5EcFLaU9XxEnaIdMO60gUJDJhBWI0ygpadaJKxVFj2d5DxExKMglgFHStyQ1CbmZTRu+z0DWajxDiO1vjKajomsyzgAAaGtPzVyLX3isbjIr8iZL6anKcgUNP2pZBMt/UxHrxp3LigpIgJkczSND43cUAI9MhaROg0RhroiCRG/S6bVUSz4DdQ+yQRGTsQa8xVviI7Sy0Q6TlGDKZYCYB7NWnRuqZridCcFDfWXkV6Qa9tkcnNxVdcWQNQtiRjjiL1GQUKHTPUcKb1aigelD8WUm2GLywbihW1YJojkXrHiJXlQM0Z4+FS1tjge44AYo4G/l/RiHcSVg/ox2sdUVmvaOAkEgkfyw9Gd0eogd9/6AKYDUfZhRVZFKLPJ8ZizOTNvYdMilubMyYyR9DADKu4FmSXDEdZvacVQuQK7Co3ahdFikZpx6V9QTB52iN3m0q+Fhh3p0YvIGYtHRutDdaWlr+OxZ6SesPEJwwXoMxODsAAAAASUVORK5CYII=";
+	GameSkeleton.prototype.__SolarLineBlack = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAkAAAAAHCAYAAADgWPLLAAAABmJLR0QAtwByAEaTbjfgAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH6AoWFTYwvCnj7wAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAJ7SURBVGje7VrbbcMwDHQAr5EN+tf9R8hfNsgg7VcBQ5DIO/Eo2yj5l0ShxYeOR8rbdgF5fn3/bCUlJSUlJSUli+QxIiOf98v9rbf2+B2i6ygjPda+Wj29Z3l2qdage0afdSYZzfCzF3OLDHv6ZvV4dqn0nJGrijzz/o/EVOWf2WeNsCUa99ncyMY662ywGG7p7+0vwy5VjmXmj8LPV1mjwkwUmxR4OItj+4qpjnUwegeJLcoKEoHq+ttzb9/H3xCQupqgfh7Z703yeutbPSgQo1PDKIlAbET8g/pwRTwZsLPyHY1p73PEP4yfkdxg7MvIMVS8pnK0NpMctwUVJUvZcc/MH6TBvaPM+oGpkZYfvfyI4OVoT3vESdYhsw5rSxRGZMILRGuUF7TsRB0VR4tlzx4iZlKiJIBR0PUmNwi56U0ZZ5+FrrF8hBDf3pqZgoquUZ4FBNDQmH7erweaJ5GYZpxpVf5ESX02OVbg0Jm2KUjmnZrYWfzJnLigJIjJUQUJar/bGWBkOiRrAtQa400URuQGvW5blcQ9YJ8hdkgiMvag1xgrfMR2FtYhsnIMmUwwkwD26tMi9UzXEyE4qO+8vIp0g7O2Ryc3GV1xZA1C2JGOWEVqFAUK3XOU8KoaFVQPij8ryRaDF94NxapaEM2xaN1DZM9ygOXstnBZazzQbSdAEWcj/1cUwisJ62e0g/WuyLx3FBASieSPp0fR7SF60PcPsgDW8qGiqCKTWuT5zFicmbSx75CN4sbGjJn8MQRAcQXPkuSM6TCzZ1UtQK7AonajdnmkpJ16ZNYTBJ+jNfpqU8HTCvPVicEdiElJ5UZ5o6Sk5L9j4Sxp/QXZujBewFc3IwAAAABJRU5ErkJggg==";
+	
+	GameSkeleton.prototype.__FightBlackLine = "data:image/png;base64,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";
+	GameSkeleton.prototype.__FightGreyLine = "data:image/png;base64,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";
+	GameSkeleton.prototype.__FightWhiteLine = "data:image/png;base64,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";
+	
+	GameSkeleton.prototype.__SaikyoStandardLine = "data:image/png;base64,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";
+	GameSkeleton.prototype.__SaikyoRedLine = "data:image/png;base64,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";
+	GameSkeleton.prototype.__SaikyoBlueLine = "data:image/png;base64,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";
 	
 	
+	
+	GameSkeleton.prototype.useFightFont = function(letterSpacing, canv, blackGreyWhite) {
+		
+		var ctn = blackGreyWhite ? 8 : 7;
+		if(blackGreyWhite && blackGreyWhite >= 2) ctn = 9;
+		
+		this.setPixelTypingSpecs(null,canv || this.charLayer,0,0,17,17,letterSpacing || 10, ctn);
+		this.calibratePixelType(255,544,null,17,17);
+		
+		
+	};
+	
+	GameSkeleton.prototype.useSaikyoFont = function(letterSpacing, canv, standardRedBlue) {
+		
+		var ctn = standardRedBlue ? 11 : 10;
+		if(standardRedBlue && standardRedBlue >= 2) ctn = 12;
+		
+		this.setPixelTypingSpecs(null,canv || this.charLayer,0,0,9,9,letterSpacing || 10, ctn);
+		this.calibratePixelType(135,288,288,9,9);
+		
+		
+	};
+	
+	GameSkeleton.prototype.useSolarFont = function(letterSpacing, canv) {
+		this.setPixelTypingSpecs(null,canv || this.charLayer,0,0,9,7,letterSpacing || 7, 5);
+		this.calibratePixelType(136,288,null,9,7);
+	};
+	GameSkeleton.prototype.useSolarBlackFont = function(letterSpacing, canv) {
+		this.setPixelTypingSpecs(null,canv || this.charLayer,0,0,9,7,letterSpacing || 7, 6);
+		this.calibratePixelType(136,288,null,9,7);
+	};
 	GameSkeleton.prototype.useClintBlockFont = function(letterSpacing, canv) {
 		this.setPixelTypingSpecs(null,canv || this.charLayer,0,0,10,10,letterSpacing || 7, 1);
 		this.calibratePixelType(150,320,null,10,10);
@@ -2342,6 +2729,10 @@
 	GameSkeleton.prototype.useGoodNeighborsFont = function(letterSpacing, canv) {
 		this.setPixelTypingSpecs(null,canv || this.charLayer,0,0,16,16,letterSpacing || 9, 3);
 		this.calibratePixelType(240,1024,512,16,16);
+	};
+	GameSkeleton.prototype.useSuperPowersFont = function(letterSpacing, canv) {
+		this.setPixelTypingSpecs(null,canv || this.charLayer,0,0,8,8,letterSpacing || 5, 4);
+		this.calibratePixelType(120,512,256,8,8);
 	};
 	
 	GameSkeleton.prototype.setPixelTypingSpecs = function(source,canv,lineFromX,lineFromY,tw,th,spacing, font) {
@@ -2356,6 +2747,37 @@
 			if(font == 3) {
 				source.src = GameSkeleton.game.__GoodNeighborsLine;
 			}
+			if(font == 4) {
+				source.src = GameSkeleton.game.__SuperPowersLine;
+			}
+			if(font == 5) {
+				source.src = GameSkeleton.game.__SolarLine;
+			}
+			if(font == 6) {
+				source.src = GameSkeleton.game.__SolarLineBlack;
+			}
+			
+			if(font == 7) {
+				source.src = GameSkeleton.game.__FightBlackLine;
+			}
+			if(font == 8) {
+				source.src = GameSkeleton.game.__FightGreyLine;
+			}
+			if(font == 9) {
+				source.src = GameSkeleton.game.__FightWhiteLine;
+			}
+			
+			if(font == 10) {
+				source.src = GameSkeleton.game.__SaikyoStandardLine;
+			}
+			if(font == 11) {
+				source.src = GameSkeleton.game.__SaikyoRedLine;
+			}
+			if(font == 12) {
+				source.src = GameSkeleton.game.__SaikyoBlueLine;
+			}
+			
+			
 		}
 		if(!GameSkeleton.game._pixelTypeSpecs.dialogBackImage) {
 			GameSkeleton.game._pixelTypeSpecs.dialogBackImage = new Image();
@@ -2432,8 +2854,9 @@
 		}
 		
 	};
-	GameSkeleton.prototype.pixelParagraph = function(startX,startY,lineSpace,paragraphTextByDots,canv,fw,fh) {
-		var pstr = paragraphTextByDots.split(".");
+	GameSkeleton.prototype.pixelParagraph = function(startX,startY,lineSpace,paragraphTextByDots,canv,fw,fh, pDemarc) {
+		var demarc = pDemarc || ".";
+		var pstr = paragraphTextByDots.split(demarc);
 		var i = 0;
 		var l = pstr.length;
 		
@@ -2564,6 +2987,7 @@
 	GameSkeleton.prototype._theReset = function(dontEstablish, terminateWorker) {
         
             GameSkeleton.game._doReset = 1;GameSkeleton.game.__workLoop = 0;
+			GameSkeleton.game.alternateLoopMethod = null;
 			if(GameSkeleton.game.__worker && terminateWorker) {
 				GameSkeleton.game.__worker.terminate();
 				GameSkeleton.game.__worker = null;
@@ -2660,7 +3084,7 @@
 				tabageos.ResizeGame(cameraWidth,cameraHeight+controllerHeight,GameSkeleton.game.dontResizeHorizontal ? 0 : (gameScale || 1), GameSkeleton.game.dontResizeVertical ? 0 : (gameScale || 1),gameScale ? GameSkeleton.game.container : null,GameSkeleton.game._manuelControllerUse ? null : GameSkeleton.game.controller,1,GameSkeleton.game.controller ? GameSkeleton.game.controller._style : 1,GameSkeleton.game._scaleRectRef,1,cameraWidth, controllerHeight);
 				
 			} else { 
-				tabageos.ResizeGame(cameraWidth,cameraHeight,GameSkeleton.game.dontResizeHorizontal ? 0 : (gameScale || 1), GameSkeleton.game.dontResizeVertical ? 0 : (gameScale || 1),gameScale ? (GameSkeleton.game.resizeRootForNoTouch ? ( GameSkeleton.game.screenOrganizer ? GameSkeleton.game.root.div : GameSkeleton.game.root) : GameSkeleton.game.container) : null,GameSkeleton.game._manuelControllerUse ? null : GameSkeleton.game.controller,0,1,GameSkeleton.game._scaleRectRef,1); 
+				tabageos.ResizeGame(cameraWidth,cameraHeight,GameSkeleton.game.dontResizeHorizontal ? 0 : (gameScale || 1), GameSkeleton.game.dontResizeVertical ? 0 : (gameScale || 1),gameScale ? (GameSkeleton.game.resizeRootForNoTouch ? ( GameSkeleton.game.screenOrganizer ? GameSkeleton.game.root.div : GameSkeleton.game.root) : GameSkeleton.game.container) : null,GameSkeleton.game._manuelControllerUse ? null : GameSkeleton.game.controller,0,1,GameSkeleton.game._scaleRectRef,1, cameraWidth,controllerHeight,GameSkeleton.game.camera,1,1); 
 				
 			}
 			
@@ -2725,13 +3149,17 @@
 				self.onmessage = function(e) {
 					var d = e.data.data;
 					var c = e.data.c;
-					var i,j;
+					var i,j; var lo = 0;
 					for (i = 0, j=0; j < c.length; j=j+4) {
 						d[i] = c[j];
 						d[i+1] = c[j+1];
 						d[i+2] = c[j+2];
 						d[i+3] = c[j+3];
 						i+=4;
+						lo+=4;
+						if(lo % 200 == 0) {
+							self.postMessage( { prog:(j/c.length) } );
+						}
 					}
 					self.postMessage( { imd:d } );
 				};
@@ -2741,6 +3169,52 @@
 	};
 	
 	GameSkeleton.__eventBuildCA = null;
+	GameSkeleton.__eventBuildPDiv = null;
+	GameSkeleton.__eProgEvent = null;
+	GameSkeleton.loadingDispatcher = null;
+	GameSkeleton._totalLoad = 0;
+	
+	
+	GameSkeleton.__afterWorkerPreload = function() {
+		
+		if(tabageos.GameSkeleton.__eProgEvent) {
+			var i = 0; var l = tabageos.GameSkeleton.__eProgEvent.potato.length;var pl;
+				var allone = 1;var tot = 0;var ft = l+1-1;
+				for(i; i < l;i++) {
+					pl = tabageos.GameSkeleton.__eProgEvent.potato[i];
+					if(pl) {
+						tot += pl;
+					}
+					if( pl < 0.99 ) {
+						allone = 0;
+					}
+				}
+				
+				tabageos.GameSkeleton.__eProgEvent.totalLoaded = (tot / ft) || tabageos.GameSkeleton.__eProgEvent.totalLoaded;
+				
+				if(allone >= 1) {
+					
+					var ev = document.createEvent("MouseEvents");
+					ev.initEvent("GameSkeleton", true, true);
+					window.dispatchEvent(ev);
+					
+				} else {
+					
+					setTimeout(tabageos.GameSkeleton.__afterWorkerPreload, 50);
+				}
+				
+		} else {
+			var ev = document.createEvent("MouseEvents");
+			ev.initEvent("GameSkeleton", true, true);
+			window.dispatchEvent(ev);
+			
+		}
+		
+	};
+		
+		
+	
+	
 	GameSkeleton.__eventBuildObject = {w:0,h:0,c:0,imd:null};
 	GameSkeleton.__eventBuildColors = function() { 
 		try {
@@ -2752,19 +3226,62 @@
 			}
 			GameSkeleton.__streamlineWorker = GameSkeleton.__streamWorker();
 			GameSkeleton.__streamlineWorker.addEventListener("message", function(e) {
-				
-				GameSkeleton.__sprites = GameSkeleton.__eventBuildCA;
-				//we do it this way because passing a whole ImageData via the worker can cause a memory error.
-				var dt = new ImageData(e.data.imd, GameSkeleton.__eventBuildObject.w, GameSkeleton.__eventBuildObject.h);
-				GameSkeleton.__sprites.context.putImageData(dt,0,0);
-				GameSkeleton.__streamlineWorker.terminate();
-				GameSkeleton.__streamlineWorker = null;
-				var ev = document.createEvent("MouseEvents");
-				ev.initEvent("GameSkeleton", true, true);
-				window.dispatchEvent(ev);
+				if(e.data.imd) { 
+					GameSkeleton.__sprites = GameSkeleton.__eventBuildCA;
+					//we do it this way because passing a whole ImageData via the worker can cause a memory error.
+					var dt = new ImageData(e.data.imd, GameSkeleton.__eventBuildObject.w, GameSkeleton.__eventBuildObject.h);
+					GameSkeleton.__sprites.context.putImageData(dt,0,0);
+					GameSkeleton.__streamlineWorker.terminate();
+					GameSkeleton.__streamlineWorker = null;
+					
+					GameSkeleton.__afterWorkerPreload();
+					
+					
+					
+				}
+				if(e.data.prog) {  
+					if(!tabageos.GameSkeleton.__eProgEvent) {
+						var loadDataArray = new Array(tabageos.GameSkeleton._totalLoad);
+						loadDataArray[tabageos.GameSkeleton._totalLoad-1] = e.data.prog;
+						tabageos.GameSkeleton.__eProgEvent = new tabageos.Event("loading", loadDataArray);
+						tabageos.GameSkeleton.__eProgEvent.totalLoaded = e.data.prog;
+						if(GameSkeleton.loadingDispatcher) {
+							GameSkeleton.loadingDispatcher.dispatchEvent(tabageos.GameSkeleton.__eProgEvent);
+						}
+						
+					} else {
+						tabageos.GameSkeleton.__eProgEvent.potato[tabageos.GameSkeleton._totalLoad-1] = e.data.prog;
+						
+						var i = 0; var l = tabageos.GameSkeleton.__eProgEvent.potato.length;var pl;
+						var allone = 1;var tot = 0;var ft = l+1-1;
+						for(i; i < l;i++) {
+							pl = tabageos.GameSkeleton.__eProgEvent.potato[i];
+							if(pl) {
+								tot += pl;
+							}
+							if( pl < 0.99 ) {
+								allone = 0;
+							}
+						}
+						
+						tabageos.GameSkeleton.__eProgEvent.totalLoaded = (tot / ft) || 0;
+						
+						
+						if(GameSkeleton.loadingDispatcher) {
+							GameSkeleton.loadingDispatcher.dispatchEvent(tabageos.GameSkeleton.__eProgEvent);
+						}
+						
+					}
+					
+					
+					
+				}
 				
 			}, false);
 			GameSkeleton.__streamlineWorker.postMessage( {data:GameSkeleton.__eventBuildObject.imd.data, c:GameSkeleton.__eventBuildObject.c} );
+			
+			
+			
 		} catch(e) {
 			window.console.log(e);
 			window.document.body.getElementsByTagName("div")[8].innerHTML += e+"";
@@ -2815,12 +3332,338 @@
 	};
 	//end streamlining methods
 	
+	
+	GameSkeleton.prototype.dlOut = null;
+	GameSkeleton.prototype.sclrcthld = null;
+	GameSkeleton.prototype.delayedM = function(func, delay) {
+		
+		window.clearTimeout(GameSkeleton.game.dlOut);
+		GameSkeleton.game.dlOut = window.setTimeout(func, delay || 250);
+		
+		
+	}; 
+	GameSkeleton.prototype._delayedInstanceTwoLayerResize = function(e) {
+		if(!GameSkeleton.game.paused) { GameSkeleton.game.pause(); }
+		
+		if(GameSkeleton.game.camera && GameSkeleton.game.cameraPoint && !GameSkeleton.game.sclrcthld) {
+			GameSkeleton.game.sclrcthld = GameSkeleton.game._scaleRectRef.clone();
+		}
+		
+		//if(GameSkeleton.game.dlOut == null) {
+			GameSkeleton.game.delayedM(GameSkeleton.game.__instanceBasicTwoLayerResize, 200);
+		//}
+	};
+	
+	GameSkeleton.__requests = [];
+	GameSkeleton.__reqDest = [];
+	GameSkeleton.__preloadSoundSystem = null;
+	GameSkeleton.__buffs = [];
+	GameSkeleton.__sll = 0;
+	
+	GameSkeleton.__soundLoadLoop = function() {
+		var buffs = tabageos.GameSkeleton.__buffs;
+		var i = 0; var buff;var curl = 0;var sload = 0;
+		if(!tabageos.GameSkeleton.__eProgEvent) {
+			var loadDataArray = new Array(tabageos.GameSkeleton._totalLoad);
+			
+			loadDataArray[tabageos.GameSkeleton._totalLoad-1] = sload;
+			
+			tabageos.GameSkeleton.__eProgEvent = new tabageos.Event("loading", loadDataArray);
+			tabageos.GameSkeleton.__eProgEvent.totalLoaded = 0;
+		}
+		
+		for(i; i < buffs.length; i++) {
+			
+			buff = buffs[i];
+			if(buff.buffered.length) {
+				sload = Number( buff.buffered.end(0) / buff.duration );
+			}
+			curl = tabageos.GameSkeleton.__eProgEvent.potato[ tabageos.GameSkeleton.__requests.indexOf(buff) ];
+			if (!curl || curl < 1) {
+				tabageos.GameSkeleton.__eProgEvent.potato[ tabageos.GameSkeleton.__requests.indexOf(buff) ] = sload;
+			}
+			
+			if(tabageos.GameSkeleton.loadingDispatcher) {
+				tabageos.GameSkeleton.loadingDispatcher.dispatchEvent(tabageos.GameSkeleton.__eProgEvent);
+			}
+			
+			if(curl >= 1) {
+				tabageos.GameSkeleton.__buffs.splice(tabageos.GameSkeleton.__buffs.indexOf(buff),1); break;
+			}
+			
+		}
+		
+		if(tabageos.GameSkeleton.__buffs.length) {
+			tabageos.GameSkeleton.__sll = setTimeout(tabageos.GameSkeleton.__soundLoadLoop, 25);
+		} else {
+			tabageos.GameSkeleton.__sll = null;
+		}
+		
+	};
+	
+	GameSkeleton.loadByXhr = function(itemloc, soundn, stype, music) {
+		var success = false;
+		try {
+			
+			if(soundn) { 
+				var ss = tabageos.GameSkeleton.__preloadSoundSystem ? tabageos.GameSkeleton.__preloadSoundSystem : null;
+				if( ss && ss._soundNames.indexOf(soundn) === -1 ) {
+					
+					if(!music) {
+						ss.addSound(soundn+(stype||".ogg"),soundn,ss._globalVolume,4);
+					} else {
+						ss.addMusic(soundn+(stype||".ogg"), 1, 1);
+					}
+					var newSoundBuffer;
+					if(!music) {
+						newSoundBuffer = ss._sounds[ss._sounds.length-1][0];
+					} else {
+						newSoundBuffer = ss._soundTracks[ss._soundTracks.length-1];
+					}
+					tabageos.GameSkeleton._totalLoad += 1;
+					tabageos.GameSkeleton.__requests.push(newSoundBuffer);
+					tabageos.GameSkeleton.__reqDest.push(function() {});
+					var ptFunc = function(e) {
+						tabageos.GameSkeleton.__eProgEvent.potato[ tabageos.GameSkeleton.__requests.indexOf(e.target) ] = 1;
+						e.target.removeEventListener('canplaythrough', ptFunc,false);
+					};
+					newSoundBuffer.addEventListener('canplaythrough', ptFunc, false);
+					
+					tabageos.GameSkeleton.__buffs.push(newSoundBuffer);
+					if(!tabageos.GameSkeleton.__sll || tabageos.GameSkeleton.__buffs.length <= 1) {
+						tabageos.GameSkeleton.__soundLoadLoop();
+					}	
+				}
+				
+			} else {
+				
+				var stloc = window.location.href.charAt(0);
+				
+				if(stloc == 'h' || stloc == 'l') {
+					var xhr = new XMLHttpRequest();
+					xhr.responseType = "blob";
+					xhr.open("GET", itemloc);
+					xhr.addEventListener("load", tabageos.GameSkeleton.completeXhr);
+					xhr.addEventListener("progress", tabageos.GameSkeleton.progressXhr);
+					xhr.send();
+					tabageos.GameSkeleton.__requests.push(xhr);
+				} else {
+					
+					if(!tabageos.GameSkeleton.__eProgEvent) {
+						var loadDataArray = new Array(tabageos.GameSkeleton._totalLoad);
+						
+						loadDataArray[tabageos.GameSkeleton._totalLoad-1] = 1;
+						
+						tabageos.GameSkeleton.__eProgEvent = new tabageos.Event("loading", loadDataArray);
+						tabageos.GameSkeleton.__eProgEvent.totalLoaded = 0;
+					}
+					tabageos.GameSkeleton.__requests.push({'response':itemloc});
+					return false;
+					
+				}
+				
+			}
+			success = true;
+		} catch(e) {
+			window.console.log("could not load");
+			window.console.log(e);
+			
+		} return success;
+		
+	};
+	
+	GameSkeleton.progressXhr = function(e) {
+		
+		if(!GameSkeleton.__eProgEvent) {
+			var loadDataArray = new Array(tabageos.GameSkeleton._totalLoad);
+			loadDataArray[tabageos.GameSkeleton.__requests.indexOf(e.target)] = (e.loaded / e.total);
+			tabageos.GameSkeleton.__eProgEvent = new tabageos.Event("loading", loadDataArray);
+			tabageos.GameSkeleton.__eProgEvent.totalLoaded = 0;
+			if(GameSkeleton.loadingDispatcher) {
+				GameSkeleton.loadingDispatcher.dispatchEvent(GameSkeleton.__eProgEvent);
+			}
+		
+		} else {
+			tabageos.GameSkeleton.__eProgEvent.potato[tabageos.GameSkeleton.__requests.indexOf(e.target)] = (e.loaded / e.total);
+			
+			var i = 0; var l = GameSkeleton.__eProgEvent.potato.length;var pl;
+				var allone = 1;var tot = 0;var ft = l+1-1;
+				for(i; i < l;i++) {
+					pl = GameSkeleton.__eProgEvent.potato[i];
+					if(pl) {
+						tot += pl;
+					}
+					if( pl < 0.99 ) {
+						allone = 0;
+					}
+				}
+				
+				tabageos.GameSkeleton.__eProgEvent.totalLoaded = (tot / ft) || 0;
+			
+			if(tabageos.GameSkeleton.loadingDispatcher) {
+				tabageos.GameSkeleton.loadingDispatcher.dispatchEvent(tabageos.GameSkeleton.__eProgEvent);
+			}	
+		}
+	};
+	
+	GameSkeleton.assignPreloadMethod = function(meth) {
+		
+		tabageos.GameSkeleton.loadingDispatcher = new tabageos.EventDispatcher();
+		var seep = {};
+		seep.seeProgress = meth;
+		tabageos.GameSkeleton.loadingDispatcher.addEventListener('loading', 'seeProgress', seep);
+		
+	};
+	
+	GameSkeleton.completeXhr = function(e) {
+		
+			if(typeof tabageos.GameSkeleton.__reqDest[ tabageos.GameSkeleton.__requests.indexOf(e.target) ] != 'function') {
+				var allone = 1;
+				if(tabageos.GameSkeleton.__eProgEvent && tabageos.GameSkeleton.__eProgEvent.potato) {
+					var i = 0; var l = GameSkeleton.__eProgEvent.potato.length;var pl;
+					var tot = 0;var ft = l+1-1;
+					for(i; i < l;i++) {
+						pl = GameSkeleton.__eProgEvent.potato[i];
+						if(pl) {
+							tot += pl;
+						}
+						if( pl < 0.99 ) {
+							allone = 0;
+						}
+					}
+					
+					tabageos.GameSkeleton.__eProgEvent.totalLoaded = (tot / ft) || 0;
+					if(tabageos.GameSkeleton.loadingDispatcher) {
+						tabageos.GameSkeleton.loadingDispatcher.dispatchEvent(tabageos.GameSkeleton.__eProgEvent);
+					}
+				
+				}
+				
+				
+				
+				if(allone == 1) {
+					
+					if(tabageos.GameSkeleton.loadingDispatcher && tabageos.GameSkeleton.__eProgEvent) {
+						tabageos.GameSkeleton.loadingDispatcher.dispatchEvent(tabageos.GameSkeleton.__eProgEvent);
+					}
+					
+					var toblob = typeof e.target.response == 'string';
+					
+					tabageos.GameSkeleton.__reqDest[ tabageos.GameSkeleton.__requests.indexOf(e.target) ].src = (toblob == true) ? e.target.response : URL.createObjectURL(e.target.response);
+					
+					tabageos.GameSkeleton.__requests[ tabageos.GameSkeleton.__requests.indexOf(e.target) ] = 0;
+					
+					//URL.revokeObjectURL(unblobed);
+					
+				} else {
+					setTimeout(tabageos.GameSkeleton.completeXhr, 50, e);
+				}
+				
+			} else {
+				
+				
+				
+				
+				
+			}
+	};
+	GameSkeleton.__loadingOfMusic = function() {
+		
+		//game is in under construction, last line is about to happen in constructor
+					//.game has been set to 'this' but only specs have been defined, no methods a loose this at this point
+					if(tabageos.GameSkeleton.game && tabageos.GameSkeleton.game.__specs.preloadMusic) {
+						if(!tabageos.GameSkeleton.__preloadSoundSystem) tabageos.GameSkeleton.__preloadSoundSystem = new tabageos.SoundSystem();//the loading soundsystem gets applied as this.soundSystem once basicInitialize is called.
+						var i = 0; var l = tabageos.GameSkeleton.game.__specs.preloadMusic.length;
+						for(i; i < l; i++) {
+							
+							var inis = tabageos.GameSkeleton.game.__specs.preloadMusic[i];
+							var stype = inis.indexOf(".") != -1 ? ("."+inis.split(".")[1]) : ".ogg";
+							var nme = inis.replace(stype,"");
+							
+							tabageos.GameSkeleton.loadByXhr(0,nme,stype, 1);//when all loading is complete the src will be set to the image loaded, either by xhr or streamline.
+							//that causes basicInitialize to be called.
+							
+						}
+						
+					}
+		
+		
+		
+	};
+	GameSkeleton.__loadingOfSounds = function() {
+		
+		//game is in under construction, last line is about to happen in constructor
+					//.game has been set to 'this' but only specs have been defined, no methods a loose this at this point
+					if(tabageos.GameSkeleton.game && tabageos.GameSkeleton.game.__specs.preloadSounds) {
+						tabageos.GameSkeleton.__preloadSoundSystem = new tabageos.SoundSystem();//the loading soundsystem gets applied as this.soundSystem once basicInitialize is called.
+						var i = 0; var l = tabageos.GameSkeleton.game.__specs.preloadSounds.length;
+						for(i; i < l; i++) {
+							
+							var inis = tabageos.GameSkeleton.game.__specs.preloadSounds[i];
+							var stype = inis.indexOf(".") != -1 ? ("."+inis.split(".")[1]) : ".ogg";
+							var nme = inis.replace(stype,""); 
+							
+							tabageos.GameSkeleton.loadByXhr(0,nme,stype);//when all loading is complete the src will be set to the image loaded, either by xhr or streamline.
+							//that causes basicInitialize to be called.
+							
+						}
+						
+					}
+		
+		
+		
+	};
+	
+	GameSkeleton.__checkFinishPreloadFromStreamline = function() {
+				var allone = 1;
+				if(tabageos.GameSkeleton.__eProgEvent && tabageos.GameSkeleton.__eProgEvent.potato) {
+					var i = 0; var l = tabageos.GameSkeleton.__eProgEvent.potato.length;var pl;
+					var tot = 0;var ft = l+1-1;
+					for(i; i < l;i++) {
+						pl = tabageos.GameSkeleton.__eProgEvent.potato[i];
+						if(pl) {
+							tot += pl;
+						}
+						if( pl < 0.99 ) {
+							allone = 0;
+						}
+					}
+					
+					tabageos.GameSkeleton.__eProgEvent.totalLoaded = (tot / ft) || 0;
+					if(tabageos.GameSkeleton.loadingDispatcher) {
+						tabageos.GameSkeleton.loadingDispatcher.dispatchEvent(tabageos.GameSkeleton.__eProgEvent);
+					}
+				}
+				
+				if(allone == 1) {
+					
+					if(tabageos.GameSkeleton.loadingDispatcher && tabageos.GameSkeleton.__eProgEvent) {
+						tabageos.GameSkeleton.loadingDispatcher.dispatchEvent(tabageos.GameSkeleton.__eProgEvent);
+					}
+					
+					tabageos.GameSkeleton.img.onload(0);
+					
+					setTimeout(function() {
+						tabageos.GameSkeleton.__requests = null;
+						tabageos.GameSkeleton.__reqDest = null;
+					}, 1500);
+					
+				} else {
+					
+					setTimeout(tabageos.GameSkeleton.__checkFinishPreloadFromStreamline, 50);
+					
+				}
+		
+		
+		
+	};
+	
 	GameSkeleton.establish = function(gameInstance, spriteSheetImage,containerDivId, rootDivId, controllerDivId, gameScale, useScreenOrganizer, startWidth,startHeight) {
             
 			if(spriteSheetImage) {
 				GameSkeleton.img = ((spriteSheetImage != "streamline" && !GameSkeleton.__sprites) ? new Image() : GameSkeleton.__sprites.canvas);
 				
-				GameSkeleton.img.onload = function(e) {
+				GameSkeleton.img.onload = function(e) { 
 					GameSkeleton.game = gameInstance;
 					GameSkeleton.game._image = GameSkeleton.img;
 					
@@ -2849,15 +3692,38 @@
 					if(GameSkeleton.game.addedResizeMethod) {
 						GameSkeleton.game.addedResizeMethod();
 					}
-					window.addEventListener('resize', GameSkeleton.game.__instanceBasicTwoLayerResize, false);
-					window.addEventListener('orientationchange', GameSkeleton.game.__instanceBasicTwoLayerResize, false);
+					window.removeEventListener('resize', GameSkeleton.game._delayedInstanceTwoLayerResize, false);
+					window.addEventListener('resize', GameSkeleton.game._delayedInstanceTwoLayerResize, false);
+					
 				}; 
-				if(spriteSheetImage != "streamline") {
-					GameSkeleton.img.src = spriteSheetImage;
+				if(spriteSheetImage != "streamline" && !GameSkeleton.__sprites) {
+					
+					//load each sound in specs.preloadSounds
+					tabageos.GameSkeleton.__loadingOfSounds();
+					tabageos.GameSkeleton.__loadingOfMusic();
+					
+					tabageos.GameSkeleton._totalLoad += 1;
+					tabageos.GameSkeleton.__reqDest.push(  GameSkeleton.img );
+					var aload = tabageos.GameSkeleton.loadByXhr(spriteSheetImage);
+					if ( !aload ) {
+						//offline
+						GameSkeleton.completeXhr( {target:tabageos.GameSkeleton.__requests[tabageos.GameSkeleton._totalLoad-1]}  );
+					}
+					
 				} else {
-					GameSkeleton.img.onload(0);
+					tabageos.GameSkeleton.__loadingOfSounds();
+					tabageos.GameSkeleton.__loadingOfMusic();
+					
+					if(tabageos.GameSkeleton.game.__specs.preloadSounds || tabageos.GameSkeleton.game.__specs.preloadMusic) {
+						
+						var m1 = tabageos.GameSkeleton.game.__specs.preloadSounds ? tabageos.GameSkeleton.game.__specs.preloadSounds.length : 0;
+						var m2 = tabageos.GameSkeleton.game.__specs.preloadMusic ? tabageos.GameSkeleton.game.__specs.preloadMusic.length : 0;
+						tabageos.GameSkeleton.__eProgEvent.totalLoaded = ( m1 + m2 - 1 ) / ( m1 + m2 + 1 );
+					}
+					
+					tabageos.GameSkeleton.__checkFinishPreloadFromStreamline();
+					
 				}
-				
 				
 			} else {
 				GameSkeleton.game = gameInstance;
@@ -2887,8 +3753,9 @@
 				if(GameSkeleton.game.addedResizeMethod) {
 					GameSkeleton.game.addedResizeMethod();
 				}
-				window.addEventListener('resize', GameSkeleton.game.__instanceBasicTwoLayerResize, false);
-				window.addEventListener('orientationchange', GameSkeleton.game.__instanceBasicTwoLayerResize, false);
+				window.removeEventListener('resize', GameSkeleton.game._delayedInstanceTwoLayerResize, false);
+				window.addEventListener('resize', GameSkeleton.game._delayedInstanceTwoLayerResize, false);
+				//window.addEventListener('orientationchange', GameSkeleton.game.__instanceBasicTwoLayerResize, false);
 				
 			}
 			
@@ -2899,12 +3766,12 @@
 		GameSkeleton.game._basicTwoLayerResize(GameSkeleton.game.cameraLayer,GameSkeleton.game.display,GameSkeleton.game.charLayer, GameSkeleton.game.cameraWidth,GameSkeleton.game.cameraHeight,GameSkeleton.game.controllerHeight,GameSkeleton.game.container,GameSkeleton.game.controller, GameSkeleton.game.gameScale);
 		
 		if(GameSkeleton.game.gameScale >= 1 || GameSkeleton.game.gameScale === 0) {
-			
-			
-			var scaw = GameSkeleton.game._scaleRectRef.width || GameSkeleton.game.cameraWidth; 
+			let newrec = GameSkeleton.game.container.getBoundingClientRect();
+			window.console.log(GameSkeleton.game._scaleRectRef.width);
+			var scaw =  GameSkeleton.game._scaleRectRef.width+1-1 || GameSkeleton.game.cameraWidth; 
 			var scah = (GameSkeleton.game._scaleRectRef.height - GameSkeleton.game.tileHeight) >= GameSkeleton.game.gameHeight;
 			
-            GameSkeleton.game.container.style.left = "calc(50% - "+(    (scaw/2)    )+"px)";
+           GameSkeleton.game.container.style.left = "calc(50% - "+(  (scaw/2)  )+"px)";
             
             GameSkeleton.game._HUD.style.left = "calc(50% - "+(  (scaw/2)  - (scaw-160)  )+"px)";
 
@@ -2916,7 +3783,7 @@
 
             var hudupr = GameSkeleton.game._HUD.getBoundingClientRect();
 
-            GameSkeleton.game._HUD.style.left = "calc(50% - "+(  (scaw/2)  - (scaw-hudupr.width)  )+"px)";
+            GameSkeleton.game._HUD.style.left = "calc(50% - "+(  (scaw/2) - (scaw-hudupr.width)  )+"px)";
            
 		}
         
@@ -2925,6 +3792,14 @@
 			
 			GameSkeleton.game.addedResizeMethod();
 		}
+		
+		if(GameSkeleton.game.camera) {
+			//GameSkeleton.game.camera.reset(0,0);
+			
+			
+		}
+		
+		if(GameSkeleton.game.paused) { window.setTimeout(GameSkeleton.game.pause, 250); }
 		
 	};
 	tabageos.GameSkeleton = GameSkeleton;
