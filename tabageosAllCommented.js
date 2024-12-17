@@ -1,13 +1,6 @@
-(function() { 
-		
-	/** 
-	* 
-	* Load this file as part of your project in vscode, select it and scroll all the way down, leaving it open for a bit to be sure it is loaded.
-	* When it is loaded, in your javascript files you have in the same project/workspace you will get tool tips and code completion for the tabageos library.
-	*
-	*
-	*/
-	
+
+'use strict';
+
 	/** 
 	*
 	* @class AISceneryThrower	
@@ -396,9 +389,9 @@
 			this.move(0,0,1,0);
     };
 	tabageos.AISceneryThrower = AISceneryThrower;
-})();
 
-(function() { 
+
+
 
 	'use strict';
     /** 
@@ -408,7 +401,7 @@
     * @classdesc 
     *
     *   A basic camera that will either render multiple CanvasObjects into one renderLayer,
-	*    and/or just move the html canvas elements of each layer added.
+	*    and or just move the html canvas elements of each layer added.
     *
     * @constructor
 	*
@@ -1497,6 +1490,242 @@
         
         
     };
+	
+	
+	/** 
+	*   
+	*    tweens the render of each layer
+	*	 controlled also by .separatedOffset1 .separatedOffset2 ..3 ..4 ..5   by default they are 5 4 3 2 1
+	*
+	*	Useful for 5 layer parallax
+	*
+	*	tweenBlitLayerRender tweens the 5 layers together with two optional below the background parallax layers, 7 total layers but only the bottom two parallaxing.
+	*   this method allows for the 5 layers added during construction to be tweened for a 5 layer possible parallax.
+	*
+	*    
+	* @memberof BasicCamera.prototype  
+	* @method separatedTweenedBlitLayerRender
+	* @param cameraOffsetPosition {MoverPoint} Point the camera should follow
+	* @param limitx {Number}
+	* @param limity {Number}
+	* @param tweenTimes {Array} array holding the time in milliseconds that each layers tween should take, use together with the separatedOffset properties
+	* @param {String} [easeType] default is "Linear"
+	* @param [startingX1] {Number}
+	* @param [startingX2] {Number}
+	* @param [startingX3] {Number}
+	* @param [startingX4] {Number}
+	* @param [startingX5] {Number}
+	* @param [startingY1] {Number}
+	* @param [startingY2] {Number}
+	* @param [startingY3] {Number}
+	* @param [startingY4] {Number}
+	* @param [startingY5] {Number}
+    *  
+	*/
+	BasicCamera.prototype.separatedTweenedBlitLayerRender = function( cameraOffsetPosition, limitX, limitY, tweenTimes, easeType, startingX1, startingX2,startingX3,startingX4,startingX5,startingY1, startingY2,startingY3,startingY4,startingY5 ) {
+		
+		if(!this.tweensLastVXY.v1) {
+		    this.tweensLastVXY.v1 = new tabageos.Rectangle(startingX1 || this.v.width,0,this.v.width+1-1,this.v.height+1-1);
+		    this.tweensLastVXY.v2 = new tabageos.Rectangle(startingX2 || (this.v.width/5),0,this.v.width+1-1,this.v.height+1-1);
+		    this.tweensLastVXY.v3 = new tabageos.Rectangle(startingX3 || (this.v.width/4),0,this.v.width+1-1,this.v.height+1-1);
+		    this.tweensLastVXY.v4 = new tabageos.Rectangle(startingX4 || (this.v.width/3),0,this.v.width+1-1,this.v.height+1-1);
+		    this.tweensLastVXY.v5 = new tabageos.Rectangle(startingX5 || (this.v.width/2),0,this.v.width+1-1,this.v.height+1-1);
+		}
+		
+		this.v = this.separatedV(1);
+		
+		var rawx = (cameraOffsetPosition.x - this.v.width);
+        var rawy = (cameraOffsetPosition.y - this.v.height);
+        var sX = startingX1 != 0 ? startingX1 : 0;
+        var sY = startingY2 != 0 ? startingY2 : 0;
+
+        this.v.x = (rawx > sX && rawx <= (limitX || this.v.width)) ? rawx : this.v.x;
+        this.v.y = (rawy > sY && rawy <= (limitY || this.v.height)) ? rawy : this.v.y;
+		
+		var nomv = (this.lastvx == this.v.x && this.lastvy == this.v.y);
+		
+		this.v.x = this.v.x / this.separatedOffset1;
+		
+		var tt;
+        
+
+        if (this.tweens1.length && this.tweens2.length) {
+            this.v.x = Math.floor(this.tweens1.shift());
+            this.v.y = Math.floor(this.tweens2.shift());
+            this.tweensLastVXY.x1 = this.v.x+1-1;
+            this.tweensLastVXY.y1 = this.v.y+1-1;
+            
+        } else {
+			tt = tweenTimes[0];
+            tabageos.TweenMath.tweenArray(this.tweensLastVXY.x1, this.v.x, tt, easeType || "Linear", this._tweenLoopOptions, this.tweens1);
+            this.trsh = this.tweens1.shift();
+            tabageos.TweenMath.tweenArray(this.tweensLastVXY.y1, this.v.y, tt, easeType || "Linear", this._tweenLoopOptions, this.tweens2);
+            this.trsh = this.tweens2.shift();
+            this.v.x = Math.floor(this.tweens1.shift());
+            this.v.y = Math.floor(this.tweens2.shift());
+            this.tweensLastVXY.x1 = this.v.x+1-1;
+            this.tweensLastVXY.y1 = this.v.y+1-1;
+           
+        }
+		
+		this.renderB1();
+		
+		this.v = this.separatedV(2);
+		
+		rawx = (cameraOffsetPosition.x - this.v.width);
+        rawy = (cameraOffsetPosition.y - this.v.height);
+        sX = startingX2 != 0 ? startingX2 : 0;
+        sY = startingY2 != 0 ? startingY2 : 0;
+
+        this.v.x = (rawx > sX && rawx <= (limitX || this.v.width)) ? rawx : this.v.x;
+        this.v.y = (rawy > sY && rawy <= (limitY || this.v.height)) ? rawy : this.v.y;
+		
+		nomv = (this.lastvx == this.v.x && this.lastvy == this.v.y);
+		
+		this.v.x = this.v.x / this.separatedOffset2;
+		
+		if (this.tweens3.length && this.tweens4.length) {
+            this.v.x = Math.floor(this.tweens3.shift());
+            this.v.y = Math.floor(this.tweens4.shift());
+            this.tweensLastVXY.x2 = this.v.x+1-1;
+            this.tweensLastVXY.y2 = this.v.y+1-1;
+           
+        } else {
+			tt = tweenTimes[1];
+            tabageos.TweenMath.tweenArray(this.tweensLastVXY.x2, this.v.x, tt, easeType || "Linear", this._tweenLoopOptions, this.tweens3);
+            this.trsh = this.tweens3.shift();
+            tabageos.TweenMath.tweenArray(this.tweensLastVXY.y2, this.v.y, tt, easeType || "Linear", this._tweenLoopOptions, this.tweens4);
+            this.trsh = this.tweens4.shift();
+            this.v.x = Math.floor(this.tweens3.shift());
+            this.v.y = Math.floor(this.tweens4.shift());
+            this.tweensLastVXY.x2 = this.v.x+1-1;
+            this.tweensLastVXY.y2 = this.v.y+1-1;
+           
+        }
+		
+		this.renderB2();
+		
+		
+		this.v = this.separatedV(3);
+		
+		rawx = (cameraOffsetPosition.x - this.v.width);
+        rawy = (cameraOffsetPosition.y - this.v.height);
+        sX = startingX3 != 0 ? startingX3 : 0;
+        sY = startingY3 != 0 ? startingY3 : 0;
+
+        this.v.x = (rawx > sX && rawx <= (limitX || this.v.width)) ? rawx : this.v.x;
+        this.v.y = (rawy > sY && rawy <= (limitY || this.v.height)) ? rawy : this.v.y;
+		
+		nomv = (this.lastvx == this.v.x && this.lastvy == this.v.y);
+		
+		this.v.x = this.v.x / this.separatedOffset3;
+		
+		if (this.tweens5.length && this.tweens6.length) {
+            this.v.x = Math.floor(this.tweens5.shift());
+            this.v.y = Math.floor(this.tweens6.shift());
+            this.tweensLastVXY.x3 = this.v.x+1-1;
+            this.tweensLastVXY.y3 = this.v.y+1-1;
+           
+        } else {
+			tt = tweenTimes[2];
+            tabageos.TweenMath.tweenArray(this.tweensLastVXY.x3, this.v.x, tt, easeType || "Linear", this._tweenLoopOptions, this.tweens5);
+            this.trsh = this.tweens5.shift();
+            tabageos.TweenMath.tweenArray(this.tweensLastVXY.y3, this.v.y, tt, easeType || "Linear", this._tweenLoopOptions, this.tweens6);
+            this.trsh = this.tweens6.shift();
+            this.v.x = Math.floor(this.tweens5.shift());
+            this.v.y = Math.floor(this.tweens6.shift());
+            this.tweensLastVXY.x3 = this.v.x+1-1;
+            this.tweensLastVXY.y3 = this.v.y+1-1;
+           
+        }
+		
+		this.renderB3();
+		
+		this.v = this.separatedV(4);
+		
+		rawx = (cameraOffsetPosition.x - this.v.width);
+        rawy = (cameraOffsetPosition.y - this.v.height);
+        sX = startingX4 != 0 ? startingX4 : 0;
+        sY = startingY4 != 0 ? startingY4 : 0;
+
+        this.v.x = (rawx > sX && rawx <= (limitX || this.v.width)) ? rawx : this.v.x;
+        this.v.y = (rawy > sY && rawy <= (limitY || this.v.height)) ? rawy : this.v.y;
+		
+		nomv = (this.lastvx == this.v.x && this.lastvy == this.v.y);
+		
+		this.v.x = this.v.x / this.separatedOffset4;
+		
+		if (this.tweens7.length && this.tweens8.length) {
+            this.v.x = Math.floor(this.tweens7.shift());
+            this.v.y = Math.floor(this.tweens8.shift());
+            this.tweensLastVXY.x4 = this.v.x+1-1;
+            this.tweensLastVXY.y4 = this.v.y+1-1;
+            
+        } else {
+			tt = tweenTimes[3];
+            tabageos.TweenMath.tweenArray(this.tweensLastVXY.x4, this.v.x, tt, easeType || "Linear", this._tweenLoopOptions, this.tweens7);
+            this.trsh = this.tweens7.shift();
+            tabageos.TweenMath.tweenArray(this.tweensLastVXY.y4, this.v.y, tt, easeType || "Linear", this._tweenLoopOptions, this.tweens8);
+            this.trsh = this.tweens8.shift();
+            this.v.x = Math.floor(this.tweens7.shift());
+            this.v.y = Math.floor(this.tweens8.shift());
+            this.tweensLastVXY.x4 = this.v.x+1-1;
+            this.tweensLastVXY.y4 = this.v.y+1-1;
+            
+        }
+		
+		this.renderB4();
+		
+		this.v = this.separatedV(5);
+		
+		rawx = (cameraOffsetPosition.x - this.v.width);
+        rawy = (cameraOffsetPosition.y - this.v.height);
+        sX = startingX5 != 0 ? startingX5 : 0;
+        sY = startingY5 != 0 ? startingY5 : 0;
+
+        this.v.x = (rawx > sX && rawx <= (limitX || this.v.width)) ? rawx : this.v.x;
+        this.v.y = (rawy > sY && rawy <= (limitY || this.v.height)) ? rawy : this.v.y;
+		
+		nomv = (this.lastvx == this.v.x && this.lastvy == this.v.y);
+		
+		this.v.x = this.v.x / this.separatedOffset5;
+		
+		if (this.tweens9.length && this.tweens10.length) {
+            this.v.x = Math.floor(this.tweens9.shift());
+            this.v.y = Math.floor(this.tweens10.shift());
+            this.tweensLastVXY.x5 = this.v.x+1-1;
+            this.tweensLastVXY.y5 = this.v.y+1-1;
+        } else {
+			tt = tweenTimes[4];
+            tabageos.TweenMath.tweenArray(this.tweensLastVXY.x5, this.v.x, tt, easeType || "Linear", this._tweenLoopOptions, this.tweens9);
+            this.trsh = this.tweens9.shift();
+            tabageos.TweenMath.tweenArray(this.tweensLastVXY.y5, this.v.y, tt, easeType || "Linear", this._tweenLoopOptions, this.tweens10);
+            this.trsh = this.tweens10.shift();
+            this.v.x = Math.floor(this.tweens9.shift());
+            this.v.y = Math.floor(this.tweens10.shift());
+            this.tweensLastVXY.x5 = this.v.x+1-1;
+            this.tweensLastVXY.y5 = this.v.y+1-1;
+        }
+		
+		this.renderB5();
+		
+		if(this.shakeTime > 0) {
+			
+			this._shkincer = this._shkincer === -1 ? 1 : -1;
+			var shakeApply = this.shakeForce * this._shkincer;
+			this.shakeContainer.style.left = (Number(this.shakeContainer.style.left.replace("px","")) + shakeApply) + "px";
+			this.shakeContainer.style.top = (Number(this.shakeContainer.style.top.replace("px","")) - shakeApply) + "px";
+			this.shakeTime -= 33.3;
+		} else if( this.shakeTime <= 0 && this._shkincer != 717) {
+			this.shakeTime = 0;this._shkincer = 717; 
+			this.shakeContainer.style.left = this._shakeOriginals.x;//the style is very modern, it becomes 'calc(50% - width)'
+			this.shakeContainer.style.top = this._shakeOriginals.y;
+			
+		}
+		
+	};
+	
+	
     /** 
 	*   
 	*    @private
@@ -1683,9 +1912,9 @@
     };
     
     tabageos.BasicCamera = BasicCamera;
-})();
 
-(function() { 
+
+
 
 	'use strict';
     
@@ -1696,7 +1925,7 @@
 	* @classdesc 
     *  A BasicNinja moves around in a tiled map using velocity, basic jumping and collisions are handled,
     *  and it can wall slide, wall jump, and double jump.
-    *  A BasicNinja is a MapMover/MapTraveler but it does not extend either, rather is directly built from just an extension of TravelerSkeleton
+    *  A BasicNinja is a MapMover, MapTraveler but it does not extend either, rather is directly built from just an extension of TravelerSkeleton
     *
 	*
 	* @see MapMover
@@ -2663,8 +2892,8 @@
     };
     tabageos.BasicNinja = BasicNinja;
     
-})();
-(function() { 
+
+
 	
 	
 	/** 
@@ -2940,31 +3169,33 @@
 	
 	tabageos.BasicPlatformer = BasicPlatformer;
 	
-})();
 
 
 
-(function() { 
+
+
 
 	'use strict';
-	/**
-    * 
+
+    /**
+    *
+    *  @class BlitMath
     *   This constructor does nothing, all methods of this class are static.  
     * 
     * 
-	* @classdesc A class of static methods that aid in drawing a tileset onto a canvas. And aid 2D Array manipulation.
+    *  @classdesc A class of static methods that aid in drawing a tileset onto a canvas. And aid 2D Array manipulation.
     *  One of the core Classes of the library.
     *   
-	*
-	* @class BlitMath
-	* 
-	*
-	*/
+    *
+    *  
+    * 
+    *
+    */
     function BlitMath() {
 		
 		
 		
-	}
+	};
     BlitMath.globalImageSource = null;
     BlitMath.ignoredY = 0;
     BlitMath.pPointPool = [];
@@ -3096,7 +3327,7 @@
 	
 	/** 
 	*   
-	*    Draws squares from a 2D Array pattern of integers/arrays using just a defined area of the pattern, not the whole pattern.
+	*    Draws squares from a 2D Array pattern of integers,arrays using just a defined area of the pattern, not the whole pattern.
 	*    
 	* @memberof BlitMath
 	* @method drawSquaresFromAreaOfPattern
@@ -3356,7 +3587,7 @@
 	* @memberof BlitMath
 	* @method specificPatternAreaBlit
 	* @param subject {CanvasObject} The CanvasObject to draw on.
-	* @param source {Img} The source image to draw from. The spritesheet/tileset.
+	* @param source {Img} The source image to draw from. The spritesheet,tileset.
 	* @param pattern {Array} A 2D Array of [y,x] values that defines the pattern to draw.
 	* @param startC {Number} The column in the pattern to start from.
 	* @param endC {Number} The column in the pattern to end at.
@@ -3861,7 +4092,7 @@
 	* @method replaceAllOfValueFromMultiArray
 	* @param mda {Array} 2D Array to clone.
 	* @param value {Number|Array} The value to replace.
-	* @param rZero {Number} Number to replace interger/first index in [y,x] value with.
+	* @param rZero {Number} Number to replace first index in [y,x] value with.
 	* @param rOne {Number} Number to replace second index with.
     * @returns {Array}
     */
@@ -3918,7 +4149,7 @@
 	* @method replaceValuesFromMultiArray
 	* @param mda {Array} 2D Array to clone.
 	* @param values {Array} 1D Array of the values to replace.
-	* @param rZero {Number} Number to replace interger/first index in [y,x] value with.
+	* @param rZero {Number} Number to replace first index in [y,x] value with.
 	* @param rOne {Number} Number to replace second index with.
     * @returns {Array}
     */
@@ -4015,8 +4246,8 @@
 	* @method fasterCheckTileValueAt
 	* @param x {Number} x position to check.
 	* @param y {Number} y position to check.
-	* @param pattLength {Number} The length of the outer array of the 2D Array; patt.length.
-	* @param innerPattLength {Number} The length of the inner arrays in the 2D Array; patt[0].length.
+	* @param pattLength {Number} The length of the outer array of the 2D Array patt.length.
+	* @param innerPattLength {Number} The length of the inner arrays in the 2D Array patt[0].length.
 	* @param tileWidth {Number} the width of each tile.
 	* @param tileHeight {Number} the eight of each tile.
 	* @param indexHolderPoint {MoverPoint} An optional MoverPoint that would store the index of the result.
@@ -4190,7 +4421,7 @@
 	* @param td {TileData} The TileData to remove from map. You can use TileData.make to create a TileData from your value.
 	* @param value {Array} The [y,x] value to add.
 	* @param map {Array} 2D Array of [y,x] values. 
-	* @param canvasObject {CanvasObject} The CanvasObject to draw on/clear.
+	* @param canvasObject {CanvasObject} The CanvasObject to draw on or clear.
 	* @param img {Img} The image to use.
 	* @param tw {Number} The width of each tile.
 	* @param th {Number} The height of each tile.
@@ -4316,12 +4547,126 @@
         return result;
     };
     tabageos.BlitMath = BlitMath;
-})();
 
-(function() { 
-	'use strict';
-    /** 
-    * @class BlitSpecs
+		/** 
+    *
+    * 
+    *  Returns an Array of MoverPoints that make up the pattern of tiles with the given value.
+    *
+    * @memberof BlitMath
+	* @method getBasicPatternOf
+	* @param thisTile {Number|Array} The value of the tile to make a pattern from.
+	* @param patt {Array} A 2D Array of tile values.
+	* @param tileWidth {Number} The width of each tile.
+	* @param tileHeight {Number} The height of each tile.
+	* @param leftToRight {Boolean} If false the search will begin from the right. Default is false.
+    * @returns {Array}
+    */
+    BlitMath.getBasicPatternOf = function(thisTile, patt, tileWidth, tileHeight, leftToRight) {
+        var i = 0;
+        var j = 0;
+        var txre;
+        var tyre;
+        var l = patt.length;
+        var jl = patt[0].length;
+        var result = [];
+        var nmp;
+        if(!leftToRight) {
+            for (i = 0; i < l; i++) {
+                for (j = 0; j < jl; j++) {
+                    txre = j * tileWidth;
+                    tyre = i * tileHeight;
+                    if(typeof patt[i][j] != 'number') {
+                        if (patt[i][j][0] == thisTile[0] && patt[i][j][1] == thisTile[1]) {
+                            nmp = new tabageos.MoverPoint(txre,tyre);
+                            result.push(nmp);
+
+                        }
+                    } else {
+                        if (patt[i][j] == thisTile) {
+                            nmp = new tabageos.MoverPoint(txre,tyre);
+                            result.push(nmp);
+                        }
+                    }
+                }
+            }
+
+        } else { i = l-1; j = 0;
+            for (i; i >= 0; i--) {
+
+               
+                    txre = j * tileWidth;
+                    tyre = i * tileHeight;
+                    if(typeof patt[i][j] != 'number') {
+                        if (patt[i][j][0] == thisTile[0] && patt[i][j][1] == thisTile[1]) {
+                            nmp = new tabageos.MoverPoint(txre,tyre);
+                            result.push(nmp);
+
+                        }
+                    } else {
+                        if (patt[i][j] == thisTile) {
+                            nmp = new tabageos.MoverPoint(txre,tyre);
+                            result.push(nmp);
+                        }
+                    }
+               
+               if(i === 0 && j < jl-1) {
+                   j++; i = l-1;
+               }
+            }
+        }
+
+        return result;
+    };
+	/** 
+    *
+    * 
+    *  Returns an Array of MoverPoints that make up the path of tiles with the given value.
+    *
+    * @memberof BlitMath
+	* @method getPathOfTile
+	* @param thisTile {Number|Array} The value of the tile to make a path from.
+	* @param patt {Array} A 2D Array of tile values.
+	* @param tileWidth {Number} The width of each tile.
+	* @param tileHeight {Number} The height of each tile.
+	* @param leftToRight {Boolean} If false the search will begin from the right. Default is false.
+    * @returns {Array}
+    */
+	BlitMath.getPathOfTile = function(thisTile, patt, tileWidth, tileHeight, leftToRight) {
+        
+		    var outOfOrder = tabageos.BlitMath.getBasicPatternOf(thisTile,patt,tileWidth,tileHeight,leftToRight);
+		
+		    var ordered = [];
+		    ordered.push(outOfOrder.shift());
+		    
+		    while(outOfOrder.length > 0) {
+		        
+		        var nearestd = 20500;
+		        var nearesti;
+		        var i = 0;
+		        var p;
+		        var next = ordered[ordered.length-1];
+		        
+		        for(i; i < outOfOrder.length;i++) {
+		            p = outOfOrder[i];
+		            
+		            if(p.dist(next) <= nearestd) {
+		                nearestd = p.dist(next);
+		                nearesti = i+1-1;
+		            }
+		            
+		        }
+		        ordered.push( outOfOrder.splice(nearesti, 1)[0] );
+		        
+		    }
+		    
+            return ordered;
+    };
+
+	
+    /**
+    * 
+    *  @class BlitSpecs
     *  @classdesc
 	*   Used by the BlitMath Class to define the default width and height for blit calls. 
 	*    
@@ -4336,6 +4681,14 @@
         this.blitHeight = blitHeight || 16;
 		this.blitIndex = 0;
     };
+	/** 
+	*   
+	*    
+	*    
+	* @memberof BlitSpecs 
+	*  
+	*/
+    BlitSpecs.prototype.constructor = BlitSpecs;
 	/** 
 	*   
 	*    
@@ -4360,28 +4713,21 @@
 	*  
 	*/
     BlitSpecs.prototype.blitIndex = 0;
-	/** 
-	*   
-	*    
-	*    
-	* @memberof BlitSpecs 
-	*  
-	*/
-    BlitSpecs.prototype.constructor = BlitSpecs;
+	
     tabageos.BlitSpecs = BlitSpecs;
-})();
 
-(function() { 
+
+
 
 	'use strict';
 
     /** 
-	*   
+    *   
     *
     * @class BlittedTraveler
     * @classdesc
 	*    A Traveler that implements CanvasAnimation.
-	*    It has separate methods that can use a WayDeterminer for collision, but has no collision stuffs during its update/move method.
+	*    It has separate methods that can use a WayDeterminer for collision, but has no collision stuffs during its update,move method.
 	*    
     * @see Traveler
     * @see TravelerSkeleton
@@ -5497,10 +5843,10 @@
         return sorted;
     };
     tabageos.BlittedTraveler = BlittedTraveler;
-})();
 
 
-(function() { 
+
+
 	'use strict';
     /** 
 	*   All methods of this class are static.
@@ -5601,9 +5947,9 @@
         }
     };
     tabageos.BoundMethods = BoundMethods;
-})();
 
-(function() { 
+
+
 
 'use strict';
 
@@ -6243,9 +6589,9 @@
     }
     ;
     tabageos.CanvasAnimation = CanvasAnimation;
-})();
 
-(function() { 
+
+
 	'use strict';
     /** 
     *
@@ -6654,10 +7000,10 @@
     }
     ;
     tabageos.CanvasObject = CanvasObject;
-})();
 
 
-(function() { 
+
+
 	'use strict';
     /** 
     *
@@ -6950,11 +7296,11 @@
     }
     ;
     tabageos.CanvasObjectContainer = CanvasObjectContainer;
-})();
 
 
 
-(function() {
+
+
 	
 	
 		/**
@@ -6973,9 +7319,9 @@
 		*  So your buttons should be big, at least all thumb size.
 		*  The MoverPoints you pass during construction should define the middle point of each button.
 		*
-		*  Includes usb game pad support; see .handleGamePad()
+		*  Includes usb game pad support see .handleGamePad()
         *
-        *   See the ControllerPad example;    https://www.tabageos.com/examples/ControllerPad
+        *   
 		*  
         * @param holder {HTMLElement} The html div that is to hold the controller
 		* @param x {Number} placeholder for x, actual position is done during the show method. 
@@ -7330,7 +7676,7 @@
 		* For use with ControllerPad.css and the .show method
 		* Use .show(w,h,2) to display the directionalsController image.
 		* @memberof ControllerPad.prototype
-        * @method directionalControllerButtonSetup
+        * @method directionalsControllerButtonSetup
 		*/
 		ControllerPad.prototype.directionalsControllerButtonSetup = function() {
 			this._configDirectional("blue");
@@ -8165,11 +8511,11 @@
 		*/
 		ControllerPad.prototype.centerRotationY = 360;
 		/**
-        * for rotation the principle is to get the middle point and use atan2() * 180 / pi.
+        * for rotation the principle is to get the middle point and use atan2() * 180 divided by pi.
 		* the other things making this possible are in the MouseController Class and the static tabageos.ResizeGame method. 
-        * Together they translate the touch point into a point within gameWidth/Height.
+        * Together they translate the touch point into a point within gameWidth and gameHeight.
 		* when set up for capturing rotation, the controller calls rotateWithPoint on touchmove with the translate cords.
-		* the Rotating[Traveler/Shooter] Classes then need only use .setRotation(controller.rotation) to rotate via the controller.
+		* the Rotating[Traveler or Shooter] Classes then need only use .setRotation(controller.rotation) to rotate via the controller.
         *
         * @memberof ControllerPad.prototype
         * @method rotateWithPoint
@@ -8647,8 +8993,8 @@
 		  //ControllerPad._selfStyle();
 	tabageos.ControllerPad = ControllerPad;
 
-})();
-(function() { 
+
+
 	'use strict';
     /**
     *
@@ -8667,6 +9013,14 @@
         this.potato = potato || {};
 		this.target = null;
     };
+	/** 
+	*   
+	*    
+	*    
+	* @memberof Event 
+	*  
+	*/
+    Event.prototype.constructor = Event;
 	/** 
 	*   
 	*    The type of Event.
@@ -8691,14 +9045,7 @@
 	*  
 	*/
     Event.prototype.target = null;
-	/** 
-	*   
-	*    
-	*    
-	* @memberof Event 
-	*  
-	*/
-    Event.prototype.constructor = Event;
+	
 	/** 
 	*   
 	*    Does not do anything, for override and available if needed.
@@ -8711,10 +9058,10 @@
 		
 	};
     tabageos.Event = Event;
-})();
 
 
-(function() { 
+
+
 	'use strict';
     /** 
     *
@@ -8826,9 +9173,9 @@
     };
 
     tabageos.EventDispatcher = EventDispatcher;
-})();
 
-(function() { 
+
+
 
 	'use strict';
     
@@ -9032,38 +9379,38 @@
         }
     };
     tabageos.ExplosionFactory = ExplosionFactory;
-})();
 
-(function() { 
+
+
 	'use strict';
 	
 	/** 
 	*   
 	*    Constructs a new GameSkeleton instance, this constructor should generally not be used.
-	*		To use the GameSkeleton class you should extend it. Create a class that will extend GameSkeleton and within that class constructior call  GameSkeleton.call(this, specs);
+	*		To use the GameSkeleton class you should extend it. Create a class that will extend GameSkeleton and within that class constructior call  GameSkeleton.call(this, specs)
 	*
 	*		function MyGame() {
-	*			var specs = { ... };//see below for details of the specs Object.
-	*			tabageos.GameSkeleton.call(this, specs);
+	*			var specs = { ... }
+	*			tabageos.GameSkeleton.call(this, specs)
 	*		}
-	* 		MyGame.prototype = Object.create(tabageos.GameSkeleton.prototype);
+	* 		MyGame.prototype = Object.create(tabageos.GameSkeleton.prototype)
 	*		MyGame.prototype.setupSpecifics = function() {
-	*			//your game setup specifics, all properties of GameSkeleton available via 'this'
-	*			//skin related stuffs would happen here, title styling, level setup, etc...
-	*		};
+	*			your game setup specifics, all properties of GameSkeleton available via this
+	*			skin related stuffs would happen here, title styling, level setup, etc...
+	*		}
 	*		MyGame.prototype.loop = function(ts) {
-	*			//your specific game mechanics, all properties of GameSkeleton available via 'this'
-	*			//the meat of the game goes here, stuff that should happen every frame.
-	*		};
-	*	 	new MyGame();
+	*			your specific game mechanics, all properties of GameSkeleton available via this
+	*			the meat of the game goes here, stuff that should happen every frame.
+	*		}
+	*	 	new MyGame()
     *
     *       OR
     *
     *       class MyGame extends tabageos.GameSkeleton {
     *           constructor() {
-    *                super();
-    *                var gameSpecs = {...};
-    *                this.initialConstruction(gameSpecs);
+    *                super()
+    *                var gameSpecs = {...}
+    *                this.initialConstruction(gameSpecs)
     *           }
     *           setupSpecifics = function() {
     *
@@ -9073,14 +9420,14 @@
     *           }
     *
     *       }
-    *       new MyGame();
+    *       new MyGame()
 	*
 	*
 	* @class GameSkeleton
 	* @classdesc Game framework Class. Organizes the use of the various tabageos Classes for the creation of a game with title screen, main camera and game over screen.
     *                               Has just about everything needed for the framing of any game.
-	*    The way it should be used is to extend it via the Object.create method, then in the constructor function you call; GameSkeleton.call(this,specs);
-	*    When set up, all the properties and methods of this class would be available to your extending class via "this".
+	*    The way it should be used is to extend it via the Object.create method, then in the constructor function you call GameSkeleton.call(this,specs)
+	*    When set up, all the properties and methods of this class would be available to your extending class via this.
 	* @constructor
 	*
 	*		
@@ -9092,12 +9439,12 @@
 	*      The default value is:
 	*		{ gWidth:640, gHeight:320,cameraWidth:320, cameraHeight:320, 
 	*		cameraFollowOffsetX:-160, cameraFollowOffsetY:0,  tileW:16, tileH:16, 
-	*		spriteSheetImage: null, containerDivId:"container", rootDivId:"root",
-	*		controllerDivId:"controller", gameScale:2, useScreenOrganizer:true,startWidth:50, startHeight:25,
+	*		spriteSheetImage: null, containerDivId:'container', rootDivId:'root',
+	*		controllerDivId:'controller', gameScale:2, useScreenOrganizer:true,startWidth:50, startHeight:25,
 	*		controllerHeight:144, initialLives:3, initPlayerPosition:new tabageos.MoverPoint(32,32), 
 	*		gameLoop:null,initializationSpecifics:null, 
 	*		addedResizeMethod:null, sceneResetSpecifics:null,fullResetSpecifics:null, additionalSceneResetSpecifics:null, 
-	*		positionResetSpecifics:null, cameraType:2, backgroundColor:"#FFFFFF" }  
+	*		positionResetSpecifics:null, cameraType:2, backgroundColor:'#FFFFFF' }  
 	*         	
 	*			
 	*			@param specs.gWidth {Number} The total width of the game play area. 
@@ -9127,10 +9474,10 @@
 	*			@param specs.controllerDivId {String} The id of the html div that will be the controller, it should be inside of container and underneath, not in, root. If this value is not set a controller is not created.
 	*			
 	*			
-	*	<div id="container" style="position:absolute;width:640px;">
-	*	  <div id="root" style="position:relative;width:640px;height:272px;"></div>
-	*	  <div id="controller" > </div>
-	*	</div>
+	*	<div id='container' style='position:absolute width:640px'>
+	*	  <div id='root' style='position:relative width:640px height:272px'><div>
+	*	  <div id='controller' > <div>
+	*	<div>
 	*			
 	*			@param specs.gameScale {Number} The scale of the game, 0 for no scale, 1 for full screen, greater than 1 for less than full screen, 2 is half size. 3 is smaller
 	*			@param specs.useScreenOrganizer {Boolean} Default is true, whether to use a ScreenOrganizer or not, if false no title screen or game over screen is set up.
@@ -9183,7 +9530,7 @@
     *                                                           This method would receive a PatternActionEvent that would have tileValue, and x and y location in the map. The sceneChanger automatically changes scene maps in a default GameSkeleton setup. 
     *                                                           You add maps to the sceneChanger, define BlitMath.functionAssignments Array of tile values, and decalre what this function is ready to receive PatternActionEvents. This is normally the main setup method of each levels specifics.
 	*			@param specs.priorToSceneChange {Function} An optional method that would happen before a scene change. [not reset]
-	*			@param specs.afterSceneChange {Function} An optional method that would happen after a scene change. A scene reset is reseting the current scene, a scene change is changing to a different scene either by walking off screen or using the moveBackOneScene/FowardOneScene/gotoSceneByDoor/transitionToSceneByDoor methods.
+	*			@param specs.afterSceneChange {Function} An optional method that would happen after a scene change. A scene reset is reseting the current scene, a scene change is changing to a different scene either by walking off screen or using the moveBackOneScene,FowardOneScene,gotoSceneByDoor,transitionToSceneByDoor methods.
 	*			@param specs.specialControllerUse {Boolean} If true then the controller is not automatically resized, and no buttons are set up. Default is false.
 	*														By default ControllerPad.basicControllerButtonSetup is used and ControllerPad.assignStartAndBackMethods is used to assign this.maybeStartGame and this.maybeGoBack to the start and back controller buttons.
     *           @param specs.onSelectLevel {Function} An optional method that would happen when a level is selected from the built in level select screen.
@@ -9191,9 +9538,9 @@
 	*/
     function GameSkeleton(specs) {
 		if(specs) {
-			this.initialConstruction(specs);
+			this.initialConstruction(specs)
 		}
-		tabageos.EventDispatcher.call(this);
+		tabageos.EventDispatcher.call(this)
 
 	};
     GameSkeleton.prototype = Object.create(tabageos.EventDispatcher.prototype);
@@ -10077,6 +10424,52 @@
     *
     */
     GameSkeleton.prototype.autoPause = 1;
+
+    /**
+*
+* auto pause if game looses focus, by default auto pause is enabled
+*
+* @memberof GameSkeleton.prototype
+* @method enableAutoPause
+*
+*/
+GameSkeleton.prototype.enableAutoPause = function() {
+				window.onblur = function(e) {
+					if(!tabageos.GameSkeleton.game.paused) {
+						tabageos.GameSkeleton.game.pause();
+					}
+					if(tabageos.GameSkeleton.game._mute == 0) {
+						tabageos.GameSkeleton.game.muteUnmute();
+					}
+				};
+				window.onfocus = function(e) {
+					if(tabageos.GameSkeleton.game.paused) {
+						tabageos.GameSkeleton.game.pause();
+					}
+					if(tabageos.GameSkeleton.game._mute == 1) {
+						tabageos.GameSkeleton.game.muteUnmute();
+					}
+				};
+	};
+
+
+/**
+*
+* disable auto pause , by default auto pause is enabled
+*
+* @memberof GameSkeleton.prototype
+* @method disableAutoPause
+*
+*/
+	GameSkeleton.prototype.disableAutoPause = function() {
+				window.onblur = function(e) {
+					
+				};
+				window.onfocus = function(e) {
+					
+				};
+	};
+
     /**
     *
     *
@@ -10698,7 +11091,7 @@
     * @param lw {Number} width of link, default is 16
     * @param lh {Number} height of link, default is 16
     * @param linkaltstring {String} A string for the link title
-    * @param thelink {String} The http link string, for example https://www.tabageos.com
+    * @param thelink {String} The http link string
     *
     *
     *
@@ -11021,7 +11414,7 @@
 	
 	/**
     *
-    *   places each clickable/touchable level select div. This method is called as part of showLevelSelect.
+    *   places each clickable,touchable level select div. This method is called as part of showLevelSelect.
     *
     * 
     * @memberof GameSkeleton.prototype
@@ -11051,7 +11444,7 @@
 	};
 	/**
     *
-    *   removes each clickable/touchable level select div. This method is called as part of hideLevelSelect
+    *   removes each clickable,touchable level select div. This method is called as part of hideLevelSelect
     *
     * 
     * @memberof GameSkeleton.prototype
@@ -11076,8 +11469,63 @@
 	};
 	
 	
-
-    
+	/**
+    *
+    *
+    * Uses a cookie to save the data.
+    * 
+    *
+    * @memberof GameSkeleton.prototype
+    * @method cookieSave
+    * @param saveName {String} The name to use for the cookie
+    * @param saveData {String} The data to save.
+    * 
+    *
+    *
+    */
+    GameSkeleton.prototype.cookieSave = function(saveName, saveData) {
+		
+		var d = new Date();
+		d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000));
+		var expires = "expires="+d.toUTCString();
+		document.cookie = saveName + "=" + saveData + ";" + expires + ";path=/";
+		//window.console.log(document.cookie);
+		return true;
+	};
+	/**
+    *
+    *
+    * Get the data of a cookie saved item. 
+    * 
+    *
+    * @memberof GameSkeleton.prototype
+    * @method getCookieSaved
+    * @param saveName {String} The name of the cookie
+    * 
+    * 
+    *
+    *
+    */
+	GameSkeleton.prototype.getCookieSaved = function(saveName) {
+		
+		var ck = saveName + "=";
+			var data = "";
+			var co = document.cookie.split(';');
+			//window.console.log(co);
+			for(var i = 0; i < co.length; i++) {
+				var c = co[i];
+				while (c.charAt(0) == ' ') {
+					c = c.substring(1);
+				}
+				if (c.indexOf(ck) == 0) {
+					data = c.substring(ck.length, c.length);
+				}
+			}
+			return data;
+		
+	};
+	
+	
     
     
     
@@ -11156,15 +11604,267 @@
     
     
     
+    /**
+    *
+    * Use the fight font during pixelType methods.
+    * 
+    *
+    * @memberof GameSkeleton.prototype
+    * @method useFightFont
+    * @param [letterSpacing] {Number} default is 10, this font is a bigger font
+    * @param [canv] {CanvasObject}
+    * @param [blackGreyWhite] {Number} 0 1 or 2
+    *
+    *
+    */
+    GameSkeleton.prototype.useFightFont = function(letterSpacing, canv, blackGreyWhite) {
+		
+		var ctn = blackGreyWhite ? 8 : 7;
+		if(blackGreyWhite && blackGreyWhite >= 2) ctn = 9;
+		
+		this.setPixelTypingSpecs(null,canv || this.charLayer,0,0,17,17,letterSpacing || 10, ctn);
+		this.calibratePixelType(255,544,null,17,17);
+		
+		
+	};
+	/**
+    *
+    * Use the saikyo font during pixelType methods.
+    * 
+    *
+    * @memberof GameSkeleton.prototype
+    * @method useSaikyoFont
+    * @param [letterSpacing] {Number} default is 10
+    * @param [canv] {CanvasObject}
+    * @param [standardRedBlue] {Number} 0 1 or 2
+    *
+    *
+    */
+	GameSkeleton.prototype.useSaikyoFont = function(letterSpacing, canv, standardRedBlue) {
+		
+		var ctn = standardRedBlue ? 11 : 10;
+		if(standardRedBlue && standardRedBlue >= 2) ctn = 12;
+		
+		this.setPixelTypingSpecs(null,canv || this.charLayer,0,0,9,9,letterSpacing || 10, ctn);
+		this.calibratePixelType(135,288,288,9,9);
+		
+		
+	};
+	/**
+    *
+    * Use the solar font during pixelType methods.
+    * 
+    *
+    * @memberof GameSkeleton.prototype
+    * @method useSolarFont
+    * @param [letterSpacing] {Number} default is 7
+    * @param [canv] {CanvasObject}
+    *
+    *
+    */
+	GameSkeleton.prototype.useSolarFont = function(letterSpacing, canv) {
+		this.setPixelTypingSpecs(null,canv || this.charLayer,0,0,9,7,letterSpacing || 7, 5);
+		this.calibratePixelType(136,288,null,9,7);
+	};
+	/**
+    *
+    * Use the solar black font during pixelType methods.
+    * 
+    *
+    * @memberof GameSkeleton.prototype
+    * @method useSolarBlackFont
+    * @param [letterSpacing] {Number} default is 7
+    * @param [canv] {CanvasObject}
+    *
+    *
+    */
+	GameSkeleton.prototype.useSolarBlackFont = function(letterSpacing, canv) {
+		this.setPixelTypingSpecs(null,canv || this.charLayer,0,0,9,7,letterSpacing || 7, 6);
+		this.calibratePixelType(136,288,null,9,7);
+	};
+	
+	GameSkeleton.__requests = [];
+	GameSkeleton.__reqDest = [];
+	GameSkeleton.__preloadSoundSystem = null;
+	GameSkeleton.__buffs = [];
+	GameSkeleton.__sll = 0;
+	
+	GameSkeleton.__soundLoadLoop = function() {
+		var buffs = tabageos.GameSkeleton.__buffs;
+		var i = 0; var buff;var curl = 0;var sload = 0;
+		if(!tabageos.GameSkeleton.__eProgEvent) {
+			var loadDataArray = new Array(tabageos.GameSkeleton._totalLoad);
+			
+			loadDataArray[tabageos.GameSkeleton._totalLoad-1] = sload;
+			
+			tabageos.GameSkeleton.__eProgEvent = new tabageos.Event("loading", loadDataArray);
+			tabageos.GameSkeleton.__eProgEvent.totalLoaded = 0;
+		}
+		
+		for(i; i < buffs.length; i++) {
+			
+			buff = buffs[i];
+			if(buff.buffered.length) {
+				sload = Number( buff.buffered.end(0) / buff.duration );
+			}
+			curl = tabageos.GameSkeleton.__eProgEvent.potato[ tabageos.GameSkeleton.__requests.indexOf(buff) ];
+			if (!curl || curl < 1) {
+				tabageos.GameSkeleton.__eProgEvent.potato[ tabageos.GameSkeleton.__requests.indexOf(buff) ] = sload;
+			}
+			
+			if(tabageos.GameSkeleton.loadingDispatcher) {
+				tabageos.GameSkeleton.loadingDispatcher.dispatchEvent(tabageos.GameSkeleton.__eProgEvent);
+			}
+			
+			if(curl >= 1) {
+				tabageos.GameSkeleton.__buffs.splice(tabageos.GameSkeleton.__buffs.indexOf(buff),1); break;
+			}
+			
+		}
+		
+		if(tabageos.GameSkeleton.__buffs.length) {
+			tabageos.GameSkeleton.__sll = setTimeout(tabageos.GameSkeleton.__soundLoadLoop, 25);
+		} else {
+			tabageos.GameSkeleton.__sll = null;
+		}
+		
+	};
+	
+	
+	
+	
+	
+	GameSkeleton.loadByXhr = function(itemloc, soundn, stype, music) {
+		var success = false;
+		try {
+			
+			if(soundn) { 
+				var ss = tabageos.GameSkeleton.__preloadSoundSystem ? tabageos.GameSkeleton.__preloadSoundSystem : null;
+				if( ss && ss._soundNames.indexOf(soundn) === -1 ) {
+					
+					if(!music) {
+						ss.addSound(soundn+(stype||".ogg"),soundn,ss._globalVolume,4);
+					} else {
+						ss.addMusic(soundn+(stype||".ogg"), 1, 1);
+					}
+					var newSoundBuffer;
+					if(!music) {
+						newSoundBuffer = ss._sounds[ss._sounds.length-1][0];
+					} else {
+						newSoundBuffer = ss._soundTracks[ss._soundTracks.length-1];
+					}
+					tabageos.GameSkeleton._totalLoad += 1;
+					tabageos.GameSkeleton.__requests.push(newSoundBuffer);
+					tabageos.GameSkeleton.__reqDest.push(function() {});
+					var ptFunc = function(e) {
+						tabageos.GameSkeleton.__eProgEvent.potato[ tabageos.GameSkeleton.__requests.indexOf(e.target) ] = 1;
+						e.target.removeEventListener('canplaythrough', ptFunc,false);
+					};
+					newSoundBuffer.addEventListener('canplaythrough', ptFunc, false);
+					
+					tabageos.GameSkeleton.__buffs.push(newSoundBuffer);
+					if(!tabageos.GameSkeleton.__sll || tabageos.GameSkeleton.__buffs.length <= 1) {
+						tabageos.GameSkeleton.__soundLoadLoop();
+					}	
+				}
+				
+			} else {
+				
+				var stloc = window.location.href.charAt(0);
+				
+				if(stloc == 'h' || stloc == 'l') {
+					var xhr = new XMLHttpRequest();
+					xhr.responseType = "blob";
+					xhr.open("GET", itemloc);
+					xhr.addEventListener("load", tabageos.GameSkeleton.completeXhr);
+					xhr.addEventListener("progress", tabageos.GameSkeleton.progressXhr);
+					xhr.send();
+					tabageos.GameSkeleton.__requests.push(xhr);
+				} else {
+					
+					if(!tabageos.GameSkeleton.__eProgEvent) {
+						var loadDataArray = new Array(tabageos.GameSkeleton._totalLoad);
+						
+						loadDataArray[tabageos.GameSkeleton._totalLoad-1] = 1;
+						
+						tabageos.GameSkeleton.__eProgEvent = new tabageos.Event("loading", loadDataArray);
+						tabageos.GameSkeleton.__eProgEvent.totalLoaded = 0;
+					}
+					tabageos.GameSkeleton.__requests.push({'response':itemloc});
+					return false;
+					
+				}
+				
+			}
+			success = true;
+		} catch(e) {
+			window.console.log("could not load");
+			window.console.log(e);
+			
+		} return success;
+		
+	};
+    
+    GameSkeleton.progressXhr = function(e) {
+		
+		if(!GameSkeleton.__eProgEvent) {
+			var loadDataArray = new Array(tabageos.GameSkeleton._totalLoad);
+			loadDataArray[tabageos.GameSkeleton.__requests.indexOf(e.target)] = (e.loaded / e.total);
+			tabageos.GameSkeleton.__eProgEvent = new tabageos.Event("loading", loadDataArray);
+			tabageos.GameSkeleton.__eProgEvent.totalLoaded = 0;
+			if(GameSkeleton.loadingDispatcher) {
+				GameSkeleton.loadingDispatcher.dispatchEvent(GameSkeleton.__eProgEvent);
+			}
+		
+		} else {
+			tabageos.GameSkeleton.__eProgEvent.potato[tabageos.GameSkeleton.__requests.indexOf(e.target)] = (e.loaded / e.total);
+			
+			var i = 0; var l = GameSkeleton.__eProgEvent.potato.length;var pl;
+				var allone = 1;var tot = 0;var ft = l+1-1;
+				for(i; i < l;i++) {
+					pl = GameSkeleton.__eProgEvent.potato[i];
+					if(pl) {
+						tot += pl;
+					}
+					if( pl < 0.99 ) {
+						allone = 0;
+					}
+				}
+				
+				tabageos.GameSkeleton.__eProgEvent.totalLoaded = (tot / ft) || 0;
+			
+			if(tabageos.GameSkeleton.loadingDispatcher) {
+				tabageos.GameSkeleton.loadingDispatcher.dispatchEvent(tabageos.GameSkeleton.__eProgEvent);
+			}	
+		}
+	};
     
     
-    
-    
-    
-    
-    
-    
-    
+    /**
+    *
+    * 
+    *  Assigns a method to track prealoding. The method will get passed an event with a totalLoaded property.
+	*  To preload sounds add them to the specs Object during construction as the preloadSounds array
+	* 	To preload music add them to the specs Object preloadMusic array.
+	*  The sprite sheet you pass as specs spriteSheetImage will get loaded then sounds
+	*  And the method passed to this function will receive an event of all progress.
+	*  If your streamlining your sprite sheet use tabageos.loadSpriteSheetAndStart instead of this method.
+    *
+    * @memberof GameSkeleton
+    * @method assignPreloadMethod
+    * @param method {Function} the method to assign as the preloading method
+    * 
+    *
+    *
+    */
+    GameSkeleton.assignPreloadMethod = function(meth) {
+		
+		tabageos.GameSkeleton.loadingDispatcher = new tabageos.EventDispatcher();
+		var seep = {};
+		seep.seeProgress = meth;
+		tabageos.GameSkeleton.loadingDispatcher.addEventListener('loading', 'seeProgress', seep);
+		
+	};
     
     
     
@@ -11863,7 +12563,7 @@
     *    This routine is for platformers, for top down games simply use .chase and .update of a Traveler class.
 	*    
 	* @memberof GameSkeleton 
-	*  @method seeAndChanseRoutine
+	*  @method seeAndChaseRoutine
     * @param obj {MapMover} The enemy that will chase the player
     * @param enemies {Array} optional, the Array containing obj and the other enemies, if passed, then obj will separate and align with the others in the array.
     * @param player {MoverSkeleton} the MoverSkeleton for obj to chase
@@ -11920,6 +12620,316 @@
 		}
 		
 	};
+	
+	/** 
+	*   
+	*    pick and throw scenery in a platformer sense.
+	*
+	*	see the SceneryObjectBlittedTraveler example in the examples section.
+	*	
+	*    
+	* @memberof GameSkeleton 
+	*  @method basicPlatformerSceneryRoutine
+    * @param player {MapMover} 
+    * @param checkToThrowMethod {Function} should return true if to throw
+    * @param thePickUpMethod {Function} pick up method to use.
+    * @param tileValuesArray {MoverPoint} a premade MoverPoint to aid calculations, you can just pass this._helperPoint from the GameSkeleton Class.
+    * @param sceneryObjects {Array} array containing the SceneryObjects to be picked up or thrown
+    * @param sceneryObjectLayer {CanvasObject} the CanvasObject to draw SceneryObejcts on
+    * @param landLayer {CanvasObject} the land CanvasObject  to draw SceneryObejcts on
+    * @param source {Image|HTMLCanvas} the source to draw from
+	* @param map {Array} The array that contains SceneryObject values, and the players map
+	* @param tw {Number} tile width
+	* @param th {Number} tile height
+	* @param maxThrowSpeed {number} 
+	* @param minThrowSpeed {Number}
+	* @param gameWidth {Number} 
+	* @param gameHeight {Number}
+	* @param hp {MoverPoint} helper point
+	* @param [sceneChanger] {TileSceneChanger} the games TileSceneChanger, for sceneryObjectSceneChange if needed
+	*
+	*/
+	GameSkeleton.basicPlatformerSceneryRoutine = function(player, checkToThrowMethod, checkToPickUpMethod, thePickUpMethod, tileValuesArray, sceneryObjects, sceneryObjectLayer, landLayer, source, map, tw, th, maxThrowSpeed, minThrowSpeed, gameWidth, gameHeight, hp, sceneChanger) {
+		
+		
+		var i = 0;var obj;var ttw = tw||16; var tth = th||16;var re = false;
+						
+						if(player.holding && checkToThrowMethod()) {
+							
+							obj = player.throwSceneryObjectTraveler(16,16,1,1);
+							obj.xDirection = player._leftRightFace == 1 ? 1 : 0;
+							obj._jumpSpeed = 10;
+							obj._fromEnemyAi = 0;
+							obj._map = player._map;
+							obj._walkSpeed = Math.abs(player._veloc.x) >= player._walkSpeed ? maxThrowSpeed||14 : minThrowSpeed||4;
+							obj._veloc.y = -(Math.abs(player._veloc.y) < player._walkSpeed ? 2 : 3);obj._state = 3;
+							obj._solidSit = 0;obj._eHit = 0;obj._grounded = 0;
+							sceneryObjects.push(obj);
+						}
+						
+						
+						for(i;i < sceneryObjects.length;i++) {//move and interact with sceneryObejcts
+							obj = sceneryObjects[i];
+							
+							if(sceneChanger) {
+								sceneChanger.sceneryObjectSceneChange(obj,sceneryObjects,ttw-4,gameWidth-ttw,0,0);
+							}
+							if(!obj) break;//
+							
+							if(!obj._grounded) { //until it lands on the ground, move the scenery object
+									//no longer try to move horizontally once it reaches a horizontal collision
+								if(obj._pLeft || obj._pRight) { obj.xDirection = -2; }
+								
+								//move applies velocity ._veloc, in the desired direction.
+								obj.move(obj.xDirection != -2 ? (obj.xDirection ? 0 : 1) : 0,  obj.xDirection != -2 ? obj.xDirection : 0,  0, 0, 1);
+							} else {
+								obj._eHit = 0;
+								obj._fromEnemyAi = 0;
+							
+							}
+							sceneryObjectLayer.copyPixels(source,obj.tileRect, obj._pos,ttw,tth);//
+							
+							var exrec = obj.getRectangle(); exrec.x -= 2; exrec.width += 4;
+							//
+							var checkToPickUp = checkToPickUpMethod();
+							if(!player.holding && (checkToPickUp) && tabageos.GeometricMath.rectanglesOverlapAmount(exrec, player.getRectangle())/ttw > 0) {
+								
+								
+								if(!thePickUpMethod) {
+									player.pickUp(obj);
+								} else {
+									
+									thePickUpMethod(obj);
+									
+								}
+								sceneryObjects.splice(sceneryObjects.indexOf(obj),1);
+								sceneryObjectLayer.context.clearRect(obj.x,obj.y,ttw,tth);
+								re = true;
+								
+								break;
+								
+							}
+							
+							
+						
+						}
+						
+						
+						if(player.holding) {
+						
+							sceneryObjectLayer.copyPixels(source,player.holding.tileRect, player._pos,ttw,tth);
+							
+						}
+		
+		return re;
+		
+		
+	};
+	/**
+	*
+	*	throw pickup and interact with scenery in a top down sense by calling this method during the game loop
+	*	
+	*	see the RPGSceneryObject example in examples
+	*	
+	*
+	* @memberof GameSkeleton
+	* @method basicTopDownSceneryRoutine
+    * @param player {TravelingSceneryThrower}
+    * @param checkToThrowMethod {Function} a function that should return whether to throw or not, for example if a button is pressed
+    * @param checkToPickUpMethod {Function} a function that should return whether to pick up or not, for example if a button is pressed
+    * @param thePickUpMethod {Function} which method to use for picking up
+    * @param tileValuesArray {Array} array of values of tiles that are SceneryObjects
+    * @param sceneryObjects {Array} array containing the SceneryObjects to be picked up or thrown
+    * @param sceneryObjectLayer {CanvasObject} the CanvasObject to draw SceneryObejcts on
+    * @param landLayer {CanvasObject} the land CanvasObject  to draw SceneryObejcts on
+    * @param source {Image|HTMLCanvas} the source to draw from
+	* @param map {Array} The array that contains SceneryObject values, and the players map
+	* @param tw {Number} tile width
+	* @param th {Number} tile height
+	* @param maxThrowSpeed {number} 
+	* @param minThrowSpeed {Number}
+	* @param gameWidth {Number} 
+	* @param gameHeight {Number}
+	* @param hp {MoverPoint} helper point
+	*
+	*/
+	GameSkeleton.basicTopDownSceneryRoutine = function(player, checkToThrowMethod, checkToPickUpMethod, thePickUpMethod, tileValuesArray, sceneryObjects, sceneryObjectLayer, landLayer, source, map, tw, th, maxThrowSpeed, minThrowSpeed, gameWidth, gameHeight, hp) {
+		
+		var i = 0;var obj;var objtile;//move and interact with sceneryObejcts.
+		var ttw = tw||16; var tth = th||16;
+		var xts = maxThrowSpeed || 14; var mts = minThrowSpeed || 4;
+		var throwSpeed = (xts - mts) / 2;
+		
+		var helperPoint = hp || (tabageos.GameSkeleton.game ? tabageos.GameSkeleton.game._helperPoint : new tabageos.MoverPoint());
+		
+		if(!gameWidth) {
+			
+			gameWidth = tabageos.GameSkeleton.game.gameWidth;
+		}
+		if(!gameHeight) {
+			gameHeight = tabageos.GameSkeleton.game.gameHeight;
+		}
+		if(!tileValuesArray) {
+			tileValuesArray = [];
+		}
+		var re = false;
+		
+                if(player.holding && checkToThrowMethod()) {//throw what the player is holding when q is pressed
+                    
+					
+                    obj = player.throwSceneryObjectTraveler(ttw,tth,1, player.holding.setX ? 1 : 0);
+					
+                    obj.xDirection = player._leftRightFace == 1 ? 1 : 0;
+                    obj._fromEnemyAi = 0;
+                    obj._jumps = 0;
+                    obj._map = player._map;
+                    obj._walkSpeed = Math.abs(player._veloc.x) >= player._walkSpeed ? xts : mts;
+                    obj._veloc.y = -(Math.abs(player._veloc.y) < player._walkSpeed ? 2 : 3);obj._state = 3;
+                    obj._solidSit = 0;obj._eHit = 0;obj._grounded = 0;
+                    sceneryObjects.push(obj);
+                }
+                
+              
+                
+                for(i;i < sceneryObjects.length;i++) {
+                    obj = sceneryObjects[i];//sceneryObjects is a reference to the stored array in the sceneChanger holding the SceneryObjects for the currentScene.
+                    
+                    
+                    if(!obj) break;//objects can be thrown quickly into other scenes, its remotely possible for them to be thrown fast enough to cause this, when transfering from sceneryObejcts to an array stored in the TileSceneChanger.
+                    
+                    if(!obj._grounded) { //_grounded is being used to run this block once.
+                                    
+                        obj.maxSpeed = 25; obj.maxForce = 50;
+                        obj._veloc.x = player._veloc.x*throwSpeed;//set the veloctity to throwSpeed times players velocity that will send it foward.
+                        obj._veloc.y = player._veloc.y*throwSpeed;
+                        if(obj._veloc.x == 0 && obj._veloc.y == 0) {//if player is not moving determine veloc based on players animation direction, and use less velocity.
+                            obj._veloc.x = player._canvasAnimation.currentAnimation.indexOf("right") != -1 ? throwSpeed : (player._canvasAnimation.currentAnimation.indexOf("left") != -1 ? -(throwSpeed) : 0);
+                            obj._veloc.y = player._canvasAnimation.currentAnimation.indexOf("down") != -1 ? throwSpeed : (player._canvasAnimation.currentAnimation.indexOf("up") != -1 ? -(throwSpeed) : 0);
+                        }
+                        obj.update();//apply velocity and handle collisions.
+                        obj._grounded = 1;//manually set grounded, which is a setting normally for objects with gravity, but we are not using gravity, we've set _jumps to 0 for all objects and the player.
+                    } else {//if grounded is 1.
+                      
+                      
+                        if(!obj._solidSit) {//if the obejct is not stopped.
+                            obj._veloc.x *= .9;//apply friction.
+                            obj._veloc.y *= .9;//friction causes veloc to reach 0 eventually.
+                            obj.update();//update applies veloc to position and potentially collides.
+                            obj._grounded = 1;//keep grounded at 1.
+                        }
+                        if(obj._veloc.x < 1 && obj._veloc.y < 1 && obj._veloc.x > -1 && obj._veloc.y > -1 && !obj._solidSit) {
+                            //if it has basically stopped, make the tile position it is in solid. And mark it to not move anymore.
+                            objtile = tabageos.BlitMath.checkTileValueAt(obj.x,obj.y,map,ttw,tth,helperPoint);
+                            if(objtile[0] == 0 && objtile[1] == 0) {
+                                player._map[helperPoint.y][helperPoint.x] = obj.tileValue;//checkTilveValueAt is a loose check returning the tile closest to the x,y given, and placing the index of the exact tile found into _helperPoint.
+                                obj.setX(helperPoint.x*ttw);obj.setY(helperPoint.y*tth);
+                                obj._solidSit = 1;
+                                obj._eHit = 0;
+                          
+                            }
+                        }
+                    
+                    }
+                    //draw the SceneryObject.
+                    sceneryObjectLayer.copyPixels(source,obj.tileRect, obj._pos,ttw,tth);
+                    
+                    var exrec = obj.getRectangle(); exrec.x -= 2; exrec.width += 4; exrec.y -= 2; exrec.height += 4;
+					var checkToPickUp = checkToPickUpMethod();
+                    //picking up a SceneryObject that has been picked up before and thrown or that is a RPGSceneryObject added above
+                     if(!player.holding && (checkToPickUp) && tabageos.GeometricMath.rectanglesOverlapAmount(exrec, player.getRectangle())/ttw > 0) {
+                      
+                        
+                      
+                        if(!thePickUpMethod) {
+                            player.pickUp(obj);
+                        } else {
+							
+							thePickUpMethod(obj);
+							
+						}
+                        //remove scenery object
+                        sceneryObjects.splice(sceneryObjects.indexOf(obj),1);
+                        sceneryObjectLayer.context.clearRect(obj.x,obj.y,ttw,tth);
+                        objtile = tabageos.BlitMath.checkTileValueAt(obj.x,obj.y,player._map,ttw,tth,helperPoint);
+                        if(objtile[0] != 0 || objtile[1] != 0) {
+                            if(player._map[helperPoint.y] && player._map[helperPoint.y][helperPoint.x]) {
+                                player._map[helperPoint.y][helperPoint.x] = [0,0];
+                            }
+                        }
+						re = true;
+                        break;
+                      
+                    } else if (!player.holding && (!checkToPickUp) && tabageos.GeometricMath.rectanglesOverlapAmount(exrec, player.getRectangle())/ttw > 0) {
+                        
+                        if(obj.description) {
+                          
+                          re = obj.abilityDescription;
+                          
+                          
+                        }    
+                        
+                        
+                    }
+                
+                }
+              
+              
+                if(player.holding) {//draw what the player is holding.
+                    helperPoint.x = player.x +8;
+                    helperPoint.y = player.y +4;
+                    sceneryObjectLayer.copyPixels(source,player.holdingRect,helperPoint,ttw,tth);
+                }
+                var svn = ttw+2;
+				
+                var tileRight = tabageos.BlitMath.checkTileValueAt(player.x + svn,player.y,map,ttw,tth, helperPoint);
+                var tileLeft = tabageos.BlitMath.checkTileValueAt(player.x - 2,player.y,map,ttw,tth, helperPoint);
+                var tileUp = tabageos.BlitMath.checkTileValueAt(player.x ,player.y - 2,map,ttw,tth, helperPoint);
+                var tileDown = tabageos.BlitMath.checkTileValueAt(player.x,player.y + svn,map,ttw,tth, helperPoint);
+                //the optional last param of checkTileValueAt lets us do the above, therefpre helperPoint will only be populated if the result is the value we gave.
+				
+				i = 0;var tileNextTo = 0;
+				for(i; i < tileValuesArray.length; i++) {
+					
+					if(tabageos.BlitMath.valuesMatch(tileValuesArray[i],tileRight)) {
+						
+						tileNextTo = tileRight; break;
+					}
+					if(tabageos.BlitMath.valuesMatch(tileValuesArray[i],tileLeft)) {
+						
+						tileNextTo = tileLeft; break;
+					}
+					if(tabageos.BlitMath.valuesMatch(tileValuesArray[i],tileUp)) {
+						
+						tileNextTo = tileUp; break;
+					}
+					if(tabageos.BlitMath.valuesMatch(tileValuesArray[i],tileDown)) {
+						
+						tileNextTo = tileDown; break;
+					}
+				}
+				
+              
+                //if any tile around the player is a SceneryObject, one of the throwable tiles, and the b button is pressed, pick it up from the map.
+                if(!player.holding && tileNextTo && checkToPickUpMethod() && tabageos.BlitMath.valuesMatch(player._map[helperPoint.y][helperPoint.x], tileNextTo) ) {//because of checkTileValueAt behavior, we can check all the values together
+					//create a TileData Object to be picked up.
+                    var td = tabageos.TileData.make(helperPoint.x*ttw,helperPoint.y*tth,tileNextTo);//and still we know that helperPoint is only set to the matching value found.
+					//picking up TileData.
+                    player.pickUpTileData(td);
+					//remove TileData from the currentMap, this method also redraws for the spot the tile was at.
+                    tabageos.BlitMath.removeTileData(td,map,landLayer,source,ttw,tth,gameWidth,gameHeight,1);
+					//update the players map to be able to walk past the spot
+                    player._map[helperPoint.y][helperPoint.x] = [0,0];
+					re = true;
+                }
+		
+		
+		return re;
+		
+		
+	};
+	
+	
+	
 	
 	
 	/** 
@@ -12530,17 +13540,17 @@
 	*    Shows html text in a textArea using the given parameters.
     *
     *
-    *    For the most versatility, use the pixel font methods to display text.
+    *    It's generally best to use the pixel font methods to display text.
     *
-    *   This showText method exists for quick basic html text showing, to re-style it use the additionalCss param. 
+    *   This showText method exists for quick basic html text showing, to re style it use the additionalCss param. 
 	*    
 	* @memberof GameSkeleton.prototype 
 	* @method showText
 	* @param text {String}
 	* @param ttime {Number} The amount of time in millisecods to show the text, default is 4000
  	* @param tsz {Number} font size default is 16
-	* @param wth {Number} width of the text area default is 44%
-	* @param hgt {Number} height of the text area default is 44%
+	* @param wth {Number} width of the text area default is 44percent
+	* @param hgt {Number} height of the text area default is 44percent
 	* @param tp {Number} the top html css value default is 0
 	* @param lft {Number} the left html css value default is 0
 	* @param fontfamilyname {String} family name of the font to use
@@ -12865,7 +13875,7 @@
     /**
     *
     *
-    *   This method needs to be called repeatedly/during a loop to progress.
+    *   This method needs to be called repeatedly or during a loop to progress.
     *   Writes a paragraph of pixel text, letter by letter, each line in the paragraphTextByDots string should be denoted by a dot . 
     *
     * @param startX {Number} The starting x position to type from
@@ -12966,7 +13976,7 @@
      /**
     *
     *
-    *   This method needs to be called repeatedly/during a loop to progress.
+    *   This method needs to be called repeatedly or during a loop to progress.
     *   Writes pixel text, letter by letter.
     *
     * @param x {Number} The starting x position to type from
@@ -12974,7 +13984,7 @@
     * @param alphaText {String} String of text to type.
     * @param speed {Number} The speed at which to type each letter, default is 1, less than one will go slower, the value should not be 0 or negative.
     * 
-    * @param source {Img} Source Img to draw from, the img that has the pixel font line. Can be defined for all calls using setPixelTypingSpecs. If the line is in the sprite sheet then this should be; this._image
+    * @param source {Img} Source Img to draw from, the img that has the pixel font line. Can be defined for all calls using setPixelTypingSpecs. If the line is in the sprite sheet then this should be this._image
     * @param canv {CanvasObject} The CanvasObject to draw to. Can be defined for all calls using setPixelTypingSpecs.
     * @param lineFromX {Number} The x position in the sprite sheet that the pixel font line begins. Can be defined for all calls using setPixelTypingSpecs.
     * @param lineFromY {Number} The y position in the sprite sheet that the pixel font line begins. Can be defined for all calls using setPixelTypingSpecs.
@@ -14017,9 +15027,9 @@
     /**
     *
     * Setup a custom hud. 
-    * It's called setupCustomHealthHud because the _healthBar div is being used, but you can utilize html to style/position it in any way.
+    * It's called setupCustomHealthHud because the _healthBar div is being used, but you can utilize html to style,position it in any way.
     * 
-    *  By default there is a right side HUD with 4 buttons and on the left a basic health bar is displayed using calls to showHealthBar/hideHealthBar.
+    *  By default there is a right side HUD with 4 buttons and on the left a basic health bar is displayed using calls to showHealthBar,hideHealthBar.
     *  This method will hide the default right side HUD and gets the _healthBar left side area ready to be custom styled.
     *
     * @memberof GameSkeleton.prototype
@@ -14326,8 +15336,8 @@
     
 	tabageos.GameSkeleton = GameSkeleton;
 	
-})();
-(function() { 
+
+
 
 	'use strict';
 	/**
@@ -14347,12 +15357,13 @@
 	/**
 	*
 	*
-	* Returns the MoverPoint on the arc curve that is defined by the x/y pairs given.
+	* Returns the MoverPoint on the arc curve that is defined by the xy pairs given.
 	* The MoverPoint returned is in relation to t (0 to .9) on the curve.
 	* This method creates and returns a new MoverPoint, to avoid that instead use updateArcCurvePath with a premade MoverPoint.
 	*
 	* @memberof GeometricMath
-	* @param t {Number} translation on the path from which to get the one point; 0 to .9.
+	* @method arcCurvePoint
+	* @param t {Number} translation on the path from which to get the one point 0 to .9.
 	* @param p0x {Number} x position of first point in curve path
 	* @param p0y {Number} y position of first point in curve path
 	* @param p1x {Number} x position of middle point in curve path
@@ -14372,14 +15383,14 @@
 	/**
 	*
 	*
-	* Updates the given MoverPoint on the arc curve defined by the x/y pairs given.
+	* Updates the given MoverPoint on the arc curve defined by the xy pairs given.
 	* The update is based on t, which is a 0 to .9 value, the amount of points the path has being 1.
 	* The path is defined by p0x...p2y. 
 	* 
 	*  Same as the arcCurvePoint method except that you pass in a pre made MoverPoint that gets updated.
 	* 
 	* @param point {MoverPoint} The MoverPoint to store the point on the path.  
-	* @param t {Number} translation on the path from which to get the one point; 0 to .9.
+	* @param t {Number} translation on the path from which to get the one point 0 to .9.
 	* @param p0x {Number} x position of first point in curve path
 	* @param p0y {Number} y position of first point in curve path
 	* @param p1x {Number} x position of middle point in curve path
@@ -14387,6 +15398,7 @@
 	* @param p2x {Number} x position of last point in curve path
 	* @param p2y {Number} y position of last point in curve path
 	* @memberof GeometricMath
+	* @method updateArcCurvePoint
 	*
 	*
 	*/
@@ -14403,6 +15415,7 @@
 	* 
 	*
 	* @memberof GeometricMath
+	* @method getArcCurvePath
 	* @param p0 {MoverPoint} the first MoverPoint of the arc path
 	* @param p1 {MoverPoint} the middle MoverPoint of the arc path
 	* @param p2 {MoverPoint} the last MoverPoint of the arc path
@@ -14427,6 +15440,7 @@
 	* A path should first be made using the GeometricMath.getArcCurvePath method.
 	*
 	* @memberof GeometricMath
+	* @method updateArcCurvePath
 	* @param path {Array} an Array of MoverPoints to update
 	* @param p0 {MoverPoint} the first point in the arc curve path
 	* @param p1 {MoverPoint} the middle point in the arc curve path
@@ -14447,7 +15461,7 @@
     };
 	/**
 	* 
-	* Returns an Array of x and y pairs that make up the locations of each point along the path defined by the x/y pairs given.
+	* Returns an Array of x and y pairs that make up the locations of each point along the path defined by the xy pairs given.
 	* This is the most efficient method to use to obtain a arc curve path, then loop through the array by 2 to use each x y location.
 	* 
 	* @param p0x {Number} the x position of the first point.
@@ -14459,6 +15473,7 @@
 	* @param amountOfPathPoints {Number} the amount of points to calculate.
 	* @param prePath {Array} a predefined Array to hold the path.
 	* @memberof GeometricMath
+	* @method getRawArcCurvePath
 	* @returns {Array | Number}
 	*
 	*/
@@ -14480,11 +15495,12 @@
 	*
 	*
 	*
-	* Returns the point on the hermite (wave) curve as defined by t and the x/y pairs given. 
+	* Returns the point on the hermite (wave) curve as defined by t and the xy pairs given. 
 	* Creates and returns a new MoverPoint.
 	*
 	*
 	* @memberof GeometricMath
+	* @method hermiteCurvePoint
 	* @param t {Number} 
 	* @param p0x {Number} the x position of the first point.
 	* @param p0y {Number} the y position of the first point.
@@ -14517,6 +15533,7 @@
 	*
 	*
 	* @memberof GeometricMath
+	* @method getHermiteCurvePath
 	* @returns {Array}
 	*
 	*
@@ -14536,12 +15553,13 @@
 	*
 	*
 	*
-	*  Returns or updates an Array of x/y pairs that make up the hermite (wave) path as defined by the x/y pairs given. 
+	*  Returns or updates an Array of xy pairs that make up the hermite,wave path as defined by the xy pairs given. 
 	*
 	*
 	*
 	*
 	*  @memberof GeometricMath
+	* @method getRawHermiteCurvePath
 	* @returns {Array | Number}
 	*
 	*
@@ -14567,7 +15585,7 @@
 	* Returns true if the two lines intersect.
 	*
 	* @memberof GeometricMath
-	*
+	* @method lineIntersectionTest
 	* @param a beginning point of line one
 	* @param b ending point of line one
 	* @param c beginning point of line two
@@ -14596,10 +15614,11 @@
 	*
 	*
 	*
-	* Returns the point at which the lines interset or null.
+	* Returns the point at which the lines intersect or null.
 	*
 	*
 	* @memberof GeometricMath
+	* @method lineIntersectionPoint
 	* @param a beginning point of line one
 	* @param b ending point of line one
 	* @param c beginning point of line two
@@ -14637,6 +15656,7 @@
 	*
 	*
 	* @memberof GeometricMath
+	* @method testForPointInCircle
 	* @param circlePosition {MoverPoint} the position of the circle (its center)
 	* @param circleRadius {Number} the radius of the circle
 	* @param pointToTest {MoverPoint} the point to test and see if its inside the circles area.
@@ -14663,11 +15683,12 @@
 	*
 	*
 	* @memberof GeometricMath
+	* @method testForPointInArea
 	* @param p {MoverPoint} the point to check if its in the given area.
-	* @param left {Number} the left (x) position of the area
-	* @param right {Number} the right (x+width) position of the area
-	* @param top {Number} the top (y) position of the area
-	* @param bottom {Number} the bottom (y+height) position of the area
+	* @param left {Number} the left x position of the area
+	* @param right {Number} the right x plus width position of the area
+	* @param top {Number} the top y position of the area
+	* @param bottom {Number} the bottom y plus height position of the area
 	* @returns {Boolean}
 	*
 	*
@@ -14688,6 +15709,7 @@
 	*
 	*
 	* @memberof GeometricMath
+	* @method getMoverPointsOnCircle
 	* @param circleCenter {MoverPoint} the center point of the circle
 	* @param circleRadius {Number} the radius of the circle
 	* @param numberOfPoints {Number} the amount of points to get
@@ -14714,9 +15736,10 @@
 	*
 	*
 	*
-	* Returns an Array of the x/y pairs that define each point along the circle defined by circleCenterX/Y circleRaidus and numberOfPoints.
+	* Returns an Array of the xy pairs that define each point along the circle defined by circleCenterXY circleRaidus and numberOfPoints.
 	*
 	*  @memberof GeometricMath
+	* @method getRawPointsOnCircle
 	* @param circleCenterX {Number} the x position of the circles center
 	* @param circleCenterY {Number} the y position of the circles center
 	* @param circleRadius {Number} the radious of the circle
@@ -14757,6 +15780,7 @@
 	* Merges two or more Arrays into a1 and returns a1.
 	*
 	* @memberof GeometricMath
+	* @method mergeArrays
 	* @param a1 {Array} The Array that should get the other Arrays values added to it at the end
 	* @param a2 {Array} The first Array whos values will get added to the end of a1, any other Arrays passed will keep getting added to the end.
 	* @returns {Array} One Array containing the values of all the Arrays given.
@@ -14784,6 +15808,7 @@
 	*
 	*
 	* @memberof GeometricMath
+	* @method splice
 	* @param arr {Array} The Array to splice
 	* @param index {Number} The index at which to splice the Array.
 	*
@@ -14805,6 +15830,7 @@
 	* Returns true if the two given Rectangles intersect.
 	*
 	* @memberof GeometricMath
+	* @method rectanglesIntersect
 	* @param r1 {Rectangle}
 	* @param r2 {Rectangle}
 	* @returns {Boolean}
@@ -14842,6 +15868,7 @@
 	*
 	*
 	* @memberof GeometricMath
+	* @method rectanglesOverlapAmount
 	* @param r1 {Rectangle}
 	* @param r2 {Rectangle}
 	* @returns {Number}
@@ -14868,6 +15895,7 @@
 	* Returns true if the number given is a power of 2.
 	*
 	* @memberof GeometricMath
+	* @method isPowerOfTwo
 	* @param x {Number} The Number to check.
 	* @returns {Boolean}
 	*
@@ -14878,12 +15906,177 @@
     GeometricMath.isPowerOfTwo = function(x) {
         return x > 0 && (x & (x - 1)) == 0;
     };
+	
+	
+	/**
+	*
+	*
+	*
+	*
+	*
+	* Returns an array of MoverPoints that make up a path of tiles in the given patt with the given value
+	*
+	* @memberof GeometricMath
+	* @method getPathOfTile
+	* @param thisTile {Number|Array} The value of the tile to make a path out of
+	* @param patt {Array} 2D Array of values that thisTile is in
+`	* @param tileWidth {Number} width of each tile
+	* @param tileHeight {Number} height of each tile
+	* @param [leftToRight] {Boolean}
+	* @returns {Array}
+	*
+	*
+	*
+	*
+	*/
+GeometricMath.getPathOfTile = function(thisTile, patt, tileWidth, tileHeight, leftToRight) {
+        
+		    var outOfOrder = tabageos.BlitMath.getBasicPatternOf(thisTile,patt,tileWidth,tileHeight,leftToRight);
+		
+		    var ordered = [];
+		    ordered.push(outOfOrder.shift());
+		    
+		    while(outOfOrder.length > 0) {
+		        
+		        var nearestd = 20500;
+		        var nearesti;
+		        var i = 0;
+		        var p;
+		        var next = ordered[ordered.length-1];
+		        
+		        for(i; i < outOfOrder.length;i++) {
+		            p = outOfOrder[i];
+		            
+		            if(p.dist(next) <= nearestd) {
+		                nearestd = p.dist(next);
+		                nearesti = i+1-1;
+		            }
+		            
+		        }
+		        ordered.push( outOfOrder.splice(nearesti, 1)[0] );
+		        
+		    }
+		    
+            return ordered;
+    };
+	/**
+	*
+	*
+	*
+	*
+	*
+	* Returns an array of index arrays [x,y] denoting a random path.
+	*
+	* @memberof GeometricMath
+	* @method createRandomIndexPath
+	* @param cols {Number} The amount of columns
+	* @param rows {Number} The amount of rows
+`	* @param sx {Number} starting x index
+	* @param ex {Number} ending x index
+	* @returns {Array}
+	*
+	*
+	*
+	*
+	*/
+	GeometricMath.createRandomIndexPath = function(cols,rows,sx,ex) {
+		
+		var x = sx;
+		var path = [];
+		for( var y = rows - 1; y >= 0; y--) {
+			
+			var ux = y ? Math.floor(Math.random() * cols) : ex;
+			while( x != ux) {
+				path.push([x,y]);
+				if( x < ux) { x++; } else { x--; }
+				
+			}
+			path.push([x,y]);
+		}
+		for( var i = path.length - 4; i >= 0; i--) {
+			if (i+3 < path.length && path[i][1] === path[i+3][1] + 1 && path[i][0] === path[i+3][0]) {
+				path.splice(i+1,2);
+			}
+		}
+		return path;
+		
+	};
+	/**
+	*
+	*
+	*
+	*
+	*
+	* Applies the tile value given into the map given at the index locations denoted by the index path
+	*
+	* @memberof GeometricMath
+	* @method applyIndexPathToMap
+	* @param indexPath {Array} Array of [x,y] index values
+	* @param map {Array} 2D Array to apply value change to based on the index path given
+`	* @param tile {Object} The value to apply at each index
+	* 
+	*
+	*
+	*
+	*
+	*/
+	GeometricMath.applyIndexPathToMap = function(indexPath, map, tile) {
+		
+		var i = 0;var a;
+		for(i; i < indexPath.length; i++) {
+			a = indexPath[i];
+			map[a[1]][a[0]] = tile;
+		}
+		
+	};
+	
+	/**
+	*
+	*
+	*
+	*
+	*
+	* Creates a random enclosed path of the tile value given in the map given.
+	* 
+	*
+	* @memberof GeometricMath
+	* @method createRandomEnclosedPathOfTileInMap
+	* @param cols {Number} The amount of columns
+	* @param rows {Number} The amount of rows
+`	* @param offsx {Number} offset the starting x index
+	* @param offex {Number} offset the ending x index
+	* @param map {Array} The 2D Array to creat a random path in
+	* @param tile {Object} the value that each tile in the path should be
+	* @param rowOffset {Number} offset each row
+	*
+	*
+	*
+	*/
+	GeometricMath.createRandomEnclosedPathOfTileInMap = function(cols,rows,offsx,offex, map, tile, rowOffset) {
+		
+	    var hrcls = Math.round(cols/2);//half columns 
+		var initPath = tabageos.GeometricMath.createRandomIndexPath(hrcls,rows,hrcls-1-offsx,hrcls-1-offex);//start and end first path at the end of the first half matrix
+		var i = 0;var a;
+		for(i; i < initPath.length; i++) {
+			a = initPath[i];
+			map[a[1]+(rowOffset||0)][a[0]] = tile;
+		}
+		initPath = tabageos.GeometricMath.createRandomIndexPath(hrcls,rows,0-offsx,0-offex);//start and end second path at the beginning of the second half matrix
+		i = 0;
+		for(i; i < initPath.length; i++) {
+			a = initPath[i];
+			map[a[1]+(rowOffset||0)][a[0]+hrcls] = tile;//apply each path index to the whole map, the full 2d matrix, using the tile value. 
+		}
+		
+	};
+	
+	
     tabageos.GeometricMath = GeometricMath;
-})();
+
 
 
 //CopyRight 2019 (t)ad 
-(function() { 
+
 	'use strict';
     /**
     *@class IrisScreenOrganizer
@@ -14995,13 +16188,13 @@
         return b;
     };
     tabageos.IrisScreenOrganizer = IrisScreenOrganizer;
-})();
 
 
 
 
 
-(function() { 
+
+
 
 	'use strict';
     /** 
@@ -15101,10 +16294,10 @@
         }
     };
     tabageos.LoopingImage = LoopingImage;
-})();
 
 
-(function() { 
+
+
 	'use strict';
     /** 
     *
@@ -15883,10 +17076,10 @@
     };
     tabageos.MapMover = MapMover;
     
-})();
+
 //
 
-(function() { 
+
 
 	'use strict';
     
@@ -16716,10 +17909,10 @@
     };
     tabageos.MapTraveler = MapTraveler;
     
-})();
 
 
-(function() { 
+
+
 	'use strict';
     /** 
     *
@@ -16837,7 +18030,7 @@
     };
     /** 
     * 
-    * Defines the offset for the mouse based on the original width/height verses the scale width/height
+    * Defines the offset for the mouse based on the original width,height verses the scale width,height
     * @method mouseMoverPoint
     * @memberof MouseController
     * 
@@ -16859,10 +18052,10 @@
         return e;
     };
     tabageos.MouseController = MouseController;
-})();
 
 
-(function() { 
+
+
 	'use strict';
     /** 
     *
@@ -16940,9 +18133,9 @@
 	*/
     MouseEvent.MOUSE_MOVE = "mouseMove";
     tabageos.MouseEvent = MouseEvent;
-})();
 
-(function() { 
+
+
 	'use strict';
     /** 
     *
@@ -17453,10 +18646,10 @@
         return Math.sqrt(tabageos.MoverPoint.squaredDistanceBetween(mp1, mp2));
     };
     tabageos.MoverPoint = MoverPoint;
-})();
+
 
 //this.tabageos = this.tabageos || {};
-(function() { 
+
 	'use strict';
     /** 
     *
@@ -17766,7 +18959,7 @@
 	* @memberof MoverSkeleton.prototype 
 	* @method setY
 	* @param toThis {Number} The number to set y to.
-	* @param notDY {Boolean} If true will not set direction y; this.dY. The default behavior is to update this.dY to 1,-1, or 0 when this method is used.
+	* @param notDY {Boolean} If true will not set direction y, this.dY. The default behavior is to update this.dY to 1,negative 1, or 0 when this method is used.
     * 
 	*/
     MoverSkeleton.prototype.setY = function(toThis, notDY) {
@@ -17785,7 +18978,7 @@
         this._pos.y = toThis+1-1;
     };
     /** 
-	*   Returns the middle MoverPoint (_middlePoint) based on x/y width/height.
+	*   Returns the middle MoverPoint (_middlePoint) based on x,y width,height.
 	*    
 	*    
 	* @memberof MoverSkeleton.prototype 
@@ -17836,11 +19029,11 @@
         
     };
     tabageos.MoverSkeleton = MoverSkeleton;
-})();
 
 
-//
-(function() { 
+
+
+
 
 	'use strict';
 	
@@ -17961,10 +19154,10 @@
 	
 	tabageos.MovingPlatform = MovingPlatform;
 	
-})();
 
 
-(function() { 
+
+
 
 	'use strict';
     
@@ -18600,9 +19793,9 @@
         return null;
     };
     tabageos.NinjaSceneryThrower = NinjaSceneryThrower;
-})();
 
-(function() { 
+
+
 	'use strict';
     /** 
     *@class PatternActionEvent
@@ -18729,10 +19922,10 @@
         return pae;
     };
     tabageos.PatternActionEvent = PatternActionEvent;
-})();
 
 
-(function() { 
+
+
 	'use strict';
 	
 	
@@ -18802,9 +19995,9 @@
 	
     
     tabageos.Rectangle = Rectangle;
-})();
 
-(function() { 
+
+
 
 	'use strict';
 
@@ -18955,11 +20148,11 @@
 		}
     };
     tabageos.RotatingShooter = RotatingShooter;
-})();
+
 
 
 //this.tabageos = this.tabageos || {};
-(function() { 
+
 
 	'use strict';
 
@@ -18974,7 +20167,7 @@
     * @param wd {WayDeterminer} A WayDeterminer instance for collision stuffs 
 	* @param source {Image} HTML Image or Canvas Element, the sprite sheet to draw from
 	* @param canvas {CanvasObject} CanvasObject to draw to
-	* @param fromRect {Rectangle} fromRect used as WDTraveler/BlittedTraveler
+	* @param fromRect {Rectangle} fromRect used as WDTraveler,BlittedTraveler
 	* @param x {Number} x position
 	* @param y {Number} y position
 	* @param width {Number} width
@@ -19214,10 +20407,10 @@
     };
 
     tabageos.RotatingTraveler = RotatingTraveler;
-})();
 
 
-(function() { 
+
+
 	'use strict'; 
 	/**
 	*
@@ -19552,10 +20745,10 @@
     }
     ;
     tabageos.RPEase = RPEase;
-})();
 
 
-(function() { 
+
+
 	'use strict';
     
    /** 
@@ -19685,9 +20878,9 @@
     SceneryObject.prototype._solidSit = 0;
     
     tabageos.SceneryObject = SceneryObject;
-})();
 
-(function() { 
+
+
 
 	'use strict';
    
@@ -19761,10 +20954,10 @@
     SceneryObjectBlittedTraveler.prototype.tileValue = null;
 
     tabageos.SceneryObjectBlittedTraveler = SceneryObjectBlittedTraveler;
-})();
 
 
-(function() { 
+
+
 
 	'use strict';
    
@@ -19839,10 +21032,10 @@
     SceneryObjectTraveler.prototype.tileValue = null;
 
     tabageos.SceneryObjectTraveler = SceneryObjectTraveler;
-})();
 
 
-(function() {
+
+
 
 	'use strict';
 	
@@ -20112,8 +21305,8 @@
         return null;
     };
     tabageos.SceneryThrower = SceneryThrower;
-})();
-(function() { 
+
+
 	'use strict';
     /** 
 	*   @classdesc
@@ -20176,11 +21369,11 @@
     */
     ScreenChangeEvent.UNDER_COVER_CHANGES_COMPLETE = "underCoverChangesComplete";
     tabageos.ScreenChangeEvent = ScreenChangeEvent;
-})();
 
 
 
-(function() { 
+
+
 	'use strict';
     /** 
     * @classdesc
@@ -20758,10 +21951,10 @@
         this.dispatchEvent(new tabageos.ScreenChangeEvent(e.screenChangeNumber,tabageos.ScreenChangeEvent.SCREEN_CHANGE));
     };
     tabageos.ScreenOrganizer = ScreenOrganizer;
-})();
 
 
-(function() { 
+
+
 	'use strict';
     /** 
 	*   
@@ -20954,9 +22147,9 @@
         }
     };
     tabageos.ScreenSkeleton = ScreenSkeleton;
-})();
 
-(function() { 
+
+
 
 	'use strict';
     /** 
@@ -21018,9 +22211,9 @@
             };
             
             tabageos.SimpleIsoAnimation = SimpleIsoAnimation;
-})();
 
-(function() { 
+
+
 
 	'use strict';
     
@@ -21412,8 +22605,8 @@
     *  are used by this method.
     *
     *  Manual use of this method would be;
-    *  this.desiredDirection();
-    *  if(this.canPassOnMap()) {   this.setX(); this.setY(); }
+    *  this.desiredDirection()
+    *  if(this.canPassOnMap()) {   this.setX() this.setY() }
     *  
     *  The .move method encapsulates all those calls.
     *
@@ -21427,13 +22620,13 @@
 	* @param tw {Number}
 	* @param th {Number}
 	* @param noPassValues {Array} Array containing values the box should collide with
-	* @param offsetDivision {Number} The number that tw and th are divided by to account for screen/iso offset
+	* @param offsetDivision {Number} The number that tw and th are divided by to account for screen,iso offset
     *                        the default is 2, this number will cause the box to be closer or farther away from walls during collisions
     *                        this number has a lesser effect than offsetMinus and should be from 1 to tw.
     *  @param offsetMinus {Number} the total offset is subtracted by this number, use this to bring the box closer or farther away from collisions,
     *                     which means, when stopped, how close or far it is from the wall or object, default is 0,
     *                     a game that has all boxes and scenery the same size does not really need to mess with any of the offsets.
-    *  Both offsetDivision and Minus can be set during .move calls as well.
+    *  Both offsetDivision and offsetMinus can be set during .move calls as well.
     * .move fully encapsulates this method and all its params. 
     * @returns {Number} 0 or 1 
 	*/
@@ -21525,9 +22718,9 @@
                 
             };
             tabageos.SimpleIsoBox = SimpleIsoBox;
-})();
+
             
-(function() { 
+
 
 	'use strict';
             
@@ -21536,7 +22729,7 @@
 	*  @classdesc
     *    A SimpleIsoBox designated to be the main character in a scene.
     *
-    *    See the isometric example here: https://www.tabageos.com/examples/isometricExample
+    *    
 	*    
 	* @class SimpleIsoCharacter
 	* @param source {Image}
@@ -21671,10 +22864,10 @@
             
     tabageos.SimpleIsoCharacter = SimpleIsoCharacter;
     
-})();
 
 
-(function() { 
+
+
 
 	'use strict';
 
@@ -21869,10 +23062,10 @@
     };
             
     tabageos.SimpleIsoPoint = SimpleIsoPoint;
-})();
+
             
             //
-(function() { 
+
 
 	'use strict';
             
@@ -21882,7 +23075,7 @@
     * @classdesc
 	*   Used to display a basic isometric scene.
 	*    
-	*    See the isometric exmaple here:  https://www.tabageos.com/examples/isometricExample
+	*    
     *
     *     You just construct it and then call .render in a loop. The SimpleIsoCharacter Class move method returns true when it actually moves,
     *       so you only need to call render when any SimpleIsoCharacter actually moves or when the scene changes.
@@ -22198,12 +23391,12 @@
     };
             
     /**
-    * Draws a tile from a tilesheet into the scene using BlitMath notation;
+    * Draws a tile from a tilesheet into the scene using BlitMath notation
     *  [y,x] value denote the y and x index in the tilesheet to draw from.
     *  tw and th are the tile width and height, the y x index from value is multiplied by tw or th to get the position to draw from.
     *  tx and ty are the 2d point to draw to, pass in the 2d grid based point, this method translates to iso for you,
     *  ._spread, ._xSpreadShifter and ._ySpreadShifter can be used to make specific graphical adjustemnts,
-    *  play with values from 0.9 to +/-0.000009 to get it looking exactly right for your graphics. (whole numbers are too much)
+    *  play with values from 0.9 to positive or negative 0.000009 to get it looking exactly right for your graphics. (whole numbers are too much)
     *
     *  renderXOffset and renderYOffset offset the whole scene on the subject
     *
@@ -22710,10 +23903,10 @@
             
         tabageos.SimpleIsoScene = SimpleIsoScene;
 
-})();
 
 
-(function() { 
+
+
 
 	'use strict';
     
@@ -22951,9 +24144,9 @@
     
     tabageos.SoundSystem = SoundSystem;
     
-})();
 
-(function() { 
+
+
 
 	'use strict';
 
@@ -23035,9 +24228,9 @@
     };
 
     tabageos.TileData = TileData;
-})();
 
-(function() { 
+
+
 
 	'use strict';
 
@@ -23444,7 +24637,7 @@
 	};
 	/** 
 	*   
-	*    allow objects to be thrown into the next/previous scene
+	*    allow objects to be thrown into the next or previous scene
 	*    
 	* @memberof TileSceneChanger.prototype 
 	* @method sceneryObjectSceneChange
@@ -23727,10 +24920,10 @@
 
     tabageos.TileSceneChanger = TileSceneChanger;
 
-})();
+
 //this.tabageos = this.tabageos || {};
 
-(function() { 
+
 	'use strict';
     /**
     *
@@ -23779,6 +24972,13 @@
         tabageos.TimeKeeper.timeElapsed = tabageos.TimeKeeper.newTime - tabageos.TimeKeeper.time;
         tabageos.TimeKeeper.time = tabageos.TimeKeeper.newTime;
     };
+/**
+    *
+    *  
+    *
+    * @memberof TimeKeeper
+    * @method status
+    */
     TimeKeeper.status = function(stat) {
         if (stat == false) {
             tabageos.TimeKeeper.timeElapsed = 1;
@@ -23788,6 +24988,13 @@
             tabageos.TimeKeeper.started = true;
         }
     };
+	/**
+    *
+    *  
+    *
+    * @memberof TimeKeeper
+    * @method reset
+    */
     TimeKeeper.reset = function(ts) {
         tabageos.TimeKeeper.status(false);
         tabageos.TimeKeeper.status(true);
@@ -23826,9 +25033,9 @@
         }
     };
     tabageos.TimeKeeper = TimeKeeper;
-})();
 
-(function() { 
+
+
 	'use strict';
     /** 
     *
@@ -24187,9 +25394,9 @@
     }
     ;
     tabageos.Traveler = Traveler;
-})();
 
-(function() { 
+
+
 	'use strict';
     /** 
     *
@@ -25338,7 +26545,7 @@
     };
     /** 
 	*   
-	*    Follow the path of given MoverPoints; easeTo each MoverPoint.
+	*    Follow the path of given MoverPoints, easeTo each MoverPoint.
 	*    
 	* @memberof TravelerSkeleton.prototype 
 	* @method followPath
@@ -25473,10 +26680,10 @@
             this.forceApplier.multiply(cohesionPriority, 0);
     };
     tabageos.TravelerSkeleton = TravelerSkeleton;
-})();
 
 
-(function() { 
+
+
 
 	'use strict';
     
@@ -26121,10 +27328,10 @@
     
     
     tabageos.TravelingSceneryThrower = TravelingSceneryThrower;
-})();
 
 
-(function() { 
+
+
 	'use strict';
 	/**
 	* @class TweenMath
@@ -26355,10 +27562,10 @@
         return v;
     };
     tabageos.TweenMath = TweenMath;
-})();
 
 
-(function() {
+
+
 	
 	
 	
@@ -26635,8 +27842,8 @@
 	};
 
 
-})();
-(function() { 
+
+
 	'use strict';
     /** 
     *
@@ -26788,9 +27995,9 @@
         return result;
     };
     tabageos.WayDeterminer = WayDeterminer;
-})();
 
-(function() { 
+
+
 
 	'use strict';
 
@@ -27331,10 +28538,10 @@
         return result;
     };
     tabageos.WDTraveler = WDTraveler;
-})();
 
 
-(function() { 
+
+
 	
 	
 	/** 
@@ -28029,7 +29236,6 @@
 	};
 	
 	tabageos.WeaponHoldingAttacker = WeaponHoldingAttacker;
-})();
 
 
 
@@ -28043,7 +29249,8 @@
 
 
 
-(function() {
+
+
     
     /** 
 	*   
@@ -28648,4 +29855,1167 @@
     
     tabageos.WebglRenderer = WebglRenderer;
     
-})();
+
+ 'use strict'
+ 
+ 
+	const TOP = 0;
+	const RIGHT = 90;
+	const BOTTOM = 180;
+	const LEFT = 270;
+
+	const FACING = [TOP, RIGHT, BOTTOM, LEFT];
+
+	const FACING_TO_STRING = {
+		[TOP]: 'top',
+		[RIGHT]: 'right',
+		[BOTTOM]: 'bottom',
+		[LEFT]: 'left'
+	};
+
+	const FACING_TO_MOD = {
+		[TOP]: [0, -1],
+		[RIGHT]: [1, 0],
+		[BOTTOM]: [0, 1],
+		[LEFT]: [-1, 0]
+	};
+
+	const FACING_INVERSE = {
+		[TOP]: BOTTOM,
+		[RIGHT]: LEFT,
+		[BOTTOM]: TOP,
+		[LEFT]: RIGHT
+	};
+
+	const FACING_MOD_RIGHT = {
+		[TOP]: RIGHT,
+		[RIGHT]: BOTTOM,
+		[BOTTOM]: LEFT,
+		[LEFT]: TOP
+	};
+
+	const FACING_MOD_LEFT = {
+		[TOP]: LEFT,
+		[RIGHT]: TOP,
+		[BOTTOM]: RIGHT,
+		[LEFT]: BOTTOM
+	};
+
+
+	function nint(min, max) {
+		var ran = min + Math.round(Math.random( ) * (max));
+		return ran > max ? max : ran;
+	}
+
+	function nfloat(min=0, max=1) {
+		var ran = min + (Math.random( ) * (max));
+		return ran > max ? max : ran;
+	}
+
+	function vec(min, max){
+		//min and max are vectors [int, int];
+		//returns [min[0]<=x<=max[0], min[1]<=y<=max[1]]
+		return [nint(min[0], max[0]), nint(min[1], max[1])];
+	}
+
+	function choose(items, remove=false) {
+		let idx = nint(0, items.length - 1);
+		if (remove) {
+			return items.splice(idx, 1)[0];
+		} else {
+			return items[idx];
+		}
+	}
+
+	function maybe(probability) {
+		return nfloat() <= probability;
+	}
+
+	function iter_adjacent([x, y], cb) {
+		cb([x - 1, y]);
+		cb([x, y - 1]);
+		cb([x + 1, y]);
+		cb([x, y + 1]);
+	}
+
+	function iter_2d(size, callback) {
+		for (let y = 0; y < size[1]; y++) {
+			for (let x =0; x < size[0]; x++) {
+				callback([x, y]);
+			}
+		}
+	}
+
+	function iter_range(from, to, callback) {
+		let fx, fy, tx, ty;
+		if(from[0]<to[0]){
+			fx = from[0]; 
+			tx = to[0];      
+		} else {
+			fx = to[0];
+			tx = from[0];
+		};
+		if(from[1]<to[1]){
+			fy = from[1]; 
+			ty = to[1];      
+		} else {
+			fy = to[1];
+			ty = from[1];
+		};
+		for(var x=fx;x<=tx;x++){
+			for(var y=fy;y<=ty;y++){
+				callback([x, y]);
+			}
+		} 
+	}
+
+	function intersects(pos_1, size_1, pos_2, size_2) {
+		return (!pos_2[0] > pos_1[0] + size_1[0] ||
+				pos_2[0] + size_2[0] < pos_1[0] ||
+				pos_2[1] > pos_1[1] + size_1[1] ||
+				pos_2[1] + size_2[1] < size_1[1]);
+	}
+
+	function array_test(array, test) {
+		for (let i = 0; i < array.length; i++) {
+			if (test(array[i])) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	function add(p1, p2) {
+		return [p1[0] + p2[0], p1[1] + p2[1]];
+	}
+
+	function shift(pos, facing) {
+		return add(pos, FACING_TO_MOD[facing]);
+	}
+
+	function shift_left(pos, facing) {
+		return shift(pos,(facing - 90 + 360) % 360);
+	}
+
+	function shift_right(pos, facing) {
+		return shift(pos, (facing + 90 + 360) % 360);
+	}
+	
+ 
+	function Array2d(size=[0,0], default_value=0) {
+		this.rows = [];
+		this.size = [];
+
+		for (let y = 0; y < size[1]; y++) {
+			let row = [];
+			for (let x = 0; x < size[0]; x++) {
+				row.push(default_value);
+			}
+			this.rows.push(row);
+		}
+		
+	};
+	Array2d.constructor = Array2d;
+	Array2d.prototype = new Object();
+		
+	Array2d.prototype.filla = function(a, colsx, rowsy, value) {
+			value = value || 0;
+			for (let y = 0; y < rowsy; y++) {
+				let row = [];
+				for (let x = 0; x < colsx; x++) {
+					row.push(value);
+				}
+				a.push(row);
+			}
+	};
+
+	Array2d.prototype.iter = function(callback, context) {
+			for (let y = 0; y < this.size[1]; y++) {
+				for (let x = 0; x < this.size[0]; x++) {
+					callback.apply(context, [[x, y], this.get([x, y])]);
+				}
+			}
+	};
+
+	Array2d.prototype.get = function([x, y]) {
+			if (this.rows[y] === undefined) {
+				return undefined;
+			}
+			return this.rows[y][x];
+	};
+
+	Array2d.prototype.set = function([x, y], val) {
+			this.rows[y][x] = val;
+	};
+
+	Array2d.prototype.set_horizontal_line = function([start_x, start_y], delta_x, val) {
+			let c = Math.abs(delta_x),
+				mod = delta_x < 0 ? -1 : 1;
+
+			for (let x=0; x <= c; x++) {
+				this.set([pos[0] + x  * mod, pos[1]], val);
+			}
+	};
+
+	Array2d.prototype.set_vertical_line = function([start_x, start_y], delta_y, val) {
+			let c = Math.abs(delta_y),
+				mod = delta_y < 0 ? -1 : 1;
+
+			for (let y=0; y <= c; y++) {
+				this.set([pos[0], pos[1] + y * mod], val);
+			}
+	};
+
+	Array2d.prototype.get_square = function([x, y], [size_x, size_y]) {
+			let retv = new Array2d([size_x, size_y]);
+			for (let dx = 0; dx < size_x; dx ++) {
+				for (let dy = 0; dy < size_y; dy ++) {
+					retv.set([dx, dy], this.get([x + dx, y + dy]));
+				}
+			}
+			return retv;
+	};
+
+	Array2d.prototype.set_square = function([x, y], [size_x, size_y], val, fill=false) {
+			if (!fill) {
+				this.line_h([x, y], size_x - 1, val);
+				this.line_h([x, y + size_y - 1], size_x - 1, val);
+				this.line_v([x, y], size_y -1, val);
+				this.line_v([x + size_x - 1, y], size_y - 1, val);
+			} else {
+				for (let dx = 0; dx < size_x; dx ++) {
+					for (let dy = 0; dy < size_y; dy ++) {
+						this.set([x + dx, y + dy], val);
+					}
+				}
+			}
+	};
+	
+
+	function DungeonPiece(options, id) {
+
+			options = Object.assign({
+				size: [1, 1],
+				position: [0, 0],
+				parent: null,
+				max_exits: 10,
+				tag: ''
+			}, options);
+
+			Object.assign(this, options);
+
+			this.options = options;
+
+			this.id = id;
+			this.walls = new Array2d(this.size, true);
+			this.perimeter = [];
+			this.exits = [];
+			this.children = [];
+	}
+	DungeonPiece.constructor = DungeonPiece;
+	DungeonPiece.prototype = new Object();
+
+	DungeonPiece.prototype.rect = function() {
+		return new tabageos.Rectangle(this.position[0], this.position[1], this.size[0], this.size[1]);
+	}
+
+	DungeonPiece.prototype.is_exit = function([x, y]) {
+		return this.exits.filter(([exit_x, exit_y, ...rest]) => {
+			return exit_x === x && exit_y === y;
+		}).length !== 0;
+	}
+
+	DungeonPiece.prototype.get_non_wall_tiles = function() {
+		let retv = [];
+		this.walls.iter((pos, is_wall) => {
+			if (!is_wall) {
+				retv.push(pos);
+			}
+		});
+		return retv;
+	}
+
+	DungeonPiece.prototype.get_perimeter_by_facing = function(facing) {
+		return this.perimeter.filter(([[x, y], f]) => {
+			return facing === f;
+		});
+	}
+
+	DungeonPiece.prototype.get_inner_perimeter = function() {
+			//returns array of tiles in the piece that are adjacent to a wall,
+			// but not an exit;
+
+		let retv = [],
+			haswall, exit_adjacent;
+
+
+		this.walls.iter((pos, is_wall) => {
+				if (!is_wall && !this.is_exit(pos)) {
+					haswall = false;
+					exit_adjacent = false;
+					iter_adjacent(pos, p => {
+						haswall = haswall || this.walls.get(p);
+						exit_adjacent = exit_adjacent || this.is_exit(p);
+					});
+					if (haswall && !exit_adjacent) {
+						retv.push(pos);
+					}
+				}
+		});
+
+		return retv;
+	}
+
+		//local position to parent position
+	DungeonPiece.prototype.parent_pos = function([x, y]) {
+		return [this.position[0] + x, this.position[1] + y];
+	}
+
+		//local position to global position
+	DungeonPiece.prototype.global_pos = function(pos) {
+		pos = this.parent_pos(pos);
+		if (this.parent) {
+			pos = this.parent.global_pos(pos);
+		}
+		return pos;
+	}
+
+		//parent position to local position
+	DungeonPiece.prototype.local_pos = function(pos) {
+		return [pos[0] - this.position[0], pos[1] - this.position[1]];
+	}
+
+		//get (roughly) center tile position for the piece
+		// @TODO consider if should use Math.floor instead of Math.round
+	DungeonPiece.prototype.get_center_pos = function() {
+		return [Math.floor(this.size[0] / 2), Math.floor(this.size[1] / 2)];
+	}
+	DungeonPiece.prototype.add_perimeter = function(p_from, p_to, facing) {
+		iter_range(p_from, p_to, pos => {
+			this.perimeter.push([pos, facing]);
+		});
+	}
+	DungeonPiece.prototype.remove_perimeter = function(rect) {
+		this.perimeter = this.perimeter.filter(([x, y, facing]) => {
+			return !tabageos.GeometricMath.testForPointInArea({x:x,y:y}, rect.x,rect.y,rect.x+1,rect.y+1);//rect.contains(x, y, 1, 1);
+		});
+	}
+	DungeonPiece.prototype.intersects = function(piece) {
+		return intersects(this.position, this.size, piece.position, piece.size);
+	}
+	DungeonPiece.prototype.add_piece = function(piece, position = null) {
+		if (array_test(this.children, c => c.id === piece.id)) {
+			return;
+		}
+		piece.parent = this;
+		if (position) {
+			piece.position = position;
+		}
+		this.children.push(piece);
+		this.paste_in(piece);
+	}
+
+	DungeonPiece.prototype.paste_in = function(piece) {
+		iter_2d(piece.size, pos => {
+			let is_wall = piece.walls.get(pos);
+			if (!is_wall) {
+				this.walls.set(piece.parent_pos(pos), false);
+			}
+		});
+	}
+
+	DungeonPiece.prototype.add_exit = function(exit, room) {
+		this.walls.set(exit[0], false);
+		if (this.parent) {
+			this.parent.paste_in(this);
+		}
+		this.exits.push([exit[0], exit[1], room]);
+	};
+	
+
+/** 
+	*   
+    *
+    * @class DungeonGenerator
+    * @classdesc
+	*    Generates random dungeons
+	*    
+    * 
+	* 
+	* @param w {Number} tile width default is 32
+	* @param h {Number} tile height default is 32
+	* @param roomAmount {Number} 
+	* @param minRoomSize {Number} 
+	* @param maxRoomSize {Number} 
+	* @param maxExits {Number} 
+	* @param maxCorridorLength {Number} 
+	* @param minCorridorLength  {Number} 
+	* @param density  {Number} 
+	* @param symmetric {boolean} 
+	* @param intercns {Number} Interconnections amount
+	* @param maxInterLength {Number} 
+	* 
+	*/
+		function DungeonGenerator(w,h,roomAmount, minRoomSize,maxRoomSize,maxExits,maxCorridorLength,minCorridorLength,density,symmetric,intercns,maxInterLength) { 
+		
+			tabageos.EventDispatcher.call(this);
+			
+			let options =  {
+				size: [w || 32, h || 32],
+				rooms: {
+					initial: {
+						min_size: [minRoomSize || 3, minRoomSize || 3],
+						max_size: [maxRoomSize || 5, maxRoomSize || 5],
+						max_exits: maxExits || 2
+					},
+					any: {
+						min_size: [minRoomSize || 3, minRoomSize || 3],
+						max_size: [maxRoomSize || 6, maxRoomSize || 6] ,
+						max_exits: maxExits || 3
+					}
+				},
+				max_corridor_length: maxCorridorLength || 6,
+				min_corridor_length: minCorridorLength || 2,
+				corridor_density: density || 0.5, //corridors per room
+				symmetric_rooms: symmetric || false, // exits must be in the middle of walls
+				interconnects: intercns || 1, //extra corridors to connect rooms and make circular paths. not guaranteed
+				max_interconnect_length: maxInterLength || 10,
+				room_count: roomAmount || 10
+			};
+			this.origOptions =  {};
+			Object.assign(this.origOptions, options);
+			
+			this.options = options;
+			Object.assign(this, options);
+			this.next_piece_id = 0;
+			this.size = options.size || [2,2];
+			this.position = options.position || [0,0];
+			this.parent = options.parent || null;
+			this.max_exits = options.max_exits || 10;
+			this.tag = options.tag || '';
+			this.id = this.next_piece_id++;
+			this.walls = new Array2d(this.size, true);
+			this.perimeter = [];
+			this.exits = [];
+			this.children = [];
+			
+			this.start_pos = [0, 0];
+			this.minx = this.size[0];
+			this.maxx = 0;
+			this.miny = this.size[1];
+			this.maxy = 0;
+
+			this.room_tags = Object.keys(this.rooms).filter(tag => (tag !== 'any' && tag !== 'initial'));
+
+			for (let i = this.room_tags.length; i < this.room_count; i++) {
+				this.room_tags.push('any');
+			}
+
+			this.rooms = [];
+			this.corridors = [];
+			
+			this.loop_no_rooms = -717;
+			this.loop_no_corridors = -717;
+			
+			DungeonGenerator.GENERATE_COMPLETE = "generateComplete";
+			DungeonGenerator.SPECIFIC_PRINT_COMPLETE = "specificPrintComplete";
+
+		};
+		
+		DungeonGenerator.constructor = DungeonGenerator;
+		
+		DungeonGenerator.prototype = Object.create(tabageos.EventDispatcher.prototype);
+		
+		/**
+		*
+		* reset the generator after generate has already been called.
+		* needs to be called between generate calls. 
+		*
+		* @memberof DungeonGenerator.prototype
+		* @method reset
+		*
+		*/
+		DungeonGenerator.prototype.reset = function() {
+			
+			Object.assign(this.options, this.origOptions);
+			Object.assign(this,this.options);
+			
+			this.next_piece_id = 0;
+			this.id = 1;
+			this.walls = new Array2d(this.size, true);
+			this.perimeter = [];
+			this.exits = [];
+			this.children = [];
+			this.start_pos = [0, 0];
+			this.minx = this.size[0];
+			this.maxx = 0;
+			this.miny = this.size[1];
+			this.maxy = 0;
+			this.room_tags = Object.keys(this.rooms).filter(tag => (tag !== 'any' && tag !== 'initial'));
+
+			for (let i = this.room_tags.length; i < this.room_count; i++) {
+				this.room_tags.push('any');
+			}
+			this.rooms = [];
+			this.corridors = [];
+		}
+		
+		
+		DungeonGenerator.prototype.rect = function() {
+			return new tabageos.Rectangle(this.position[0], this.position[1], this.size[0], this.size[1]);
+		}
+
+		DungeonGenerator.prototype.is_exit = function([x, y]) {
+			return this.exits.filter(([exit_x, exit_y, ...rest]) => {
+				return exit_x === x && exit_y === y;
+			}).length !== 0;
+		}
+
+		DungeonGenerator.prototype.get_non_wall_tiles = function() {
+			let retv = [];
+			this.walls.iter((pos, is_wall) => {
+				if (!is_wall) {
+					retv.push(pos);
+				}
+			});
+			return retv;
+		}
+
+		DungeonGenerator.prototype.get_perimeter_by_facing = function(facing) {
+			return this.perimeter.filter(([[x, y], f]) => {
+				return facing === f;
+			});
+		}
+
+		DungeonGenerator.prototype.get_inner_perimeter = function() {
+			//returns array of tiles in the piece that are adjacent to a wall,
+			// but not an exit;
+
+			let retv = [],
+				haswall, exit_adjacent;
+
+
+			this.walls.iter((pos, is_wall) => {
+				if (!is_wall && !this.is_exit(pos)) {
+					haswall = false;
+					exit_adjacent = false;
+					iter_adjacent(pos, p => {
+						haswall = haswall || this.walls.get(p);
+						exit_adjacent = exit_adjacent || this.is_exit(p);
+					});
+					if (haswall && !exit_adjacent) {
+						retv.push(pos);
+					}
+				}
+			});
+
+			return retv;
+		}
+
+		//local position to parent position
+		DungeonGenerator.prototype.parent_pos = function([x, y]) {
+			return [this.position[0] + x, this.position[1] + y];
+		}
+
+		//local position to global position
+		DungeonGenerator.prototype.global_pos = function(pos) {
+			pos = this.parent_pos(pos);
+			if (this.parent) {
+				pos = this.parent.global_pos(pos);
+			}
+			return pos;
+		}
+
+		//parent position to local position
+		DungeonGenerator.prototype.local_pos = function(pos) {
+			return [pos[0] - this.position[0], pos[1] - this.position[1]];
+		}
+
+		//get (roughly) center tile position for the piece
+		// @TODO consider if should use Math.floor instead of Math.round
+		DungeonGenerator.prototype.get_center_pos = function() {
+			return [Math.floor(this.size[0] / 2), Math.floor(this.size[1] / 2)];
+		}
+
+		DungeonGenerator.prototype.add_perimeter = function(p_from, p_to, facing) {
+			iter_range(p_from, p_to, pos => {
+				this.perimeter.push([pos, facing]);
+			});
+		}
+
+		DungeonGenerator.prototype.remove_perimeter = function(rect) {
+			this.perimeter = this.perimeter.filter(([x, y, facing]) => {
+				return !tabageos.GeometricMath.testForPointInArea({x:x,y:y},rect.x,rect.y,rect.x+2,rect.y+2);// rect.contains(x, y, 2,2);
+			});
+		}
+
+		DungeonGenerator.prototype.intersects = function(piece) {
+			return intersects(this.position, this.size, piece.position, piece.size);
+		}
+
+		
+		DungeonGenerator.prototype.paste_in = function(piece) {
+			iter_2d(piece.size, pos => {
+				let is_wall = piece.walls.get(pos);
+				if (!is_wall) {
+					this.walls.set(piece.parent_pos(pos), false);
+				}
+			});
+		}
+
+		DungeonGenerator.prototype.add_exit = function(exit, room) {
+			this.walls.set(exit[0], false);
+			if (this.parent) {
+				this.parent.paste_in(this);
+			}
+			this.exits.push([exit[0], exit[1], room]);
+		}
+		
+		/**
+		*
+		* print the dungeon as a 2D array of [x,y, wall or not, wall or not] values.
+		*  wall or not will be negative 1 for walls 0 for non wall.
+		* 
+		* @memberof DungeonGenerator.prototype
+		* @method print
+		*
+		* @returns {Array}
+		*
+		*/
+		DungeonGenerator.prototype.print = function() { let ar = []; let row = [];
+			for (let y = 0; y < this.size[1]; y ++) {
+				row = [];
+				for (let x = 0; x < this.size[0]; x++) {
+					if (this.start_pos && this.start_pos[0] === x && this.start_pos[1] === y) {
+						row.push( [x,y,717,717] );
+					} else {
+						
+						var topush;
+						if( this.walls.get([x,y]) ) {
+							
+							topush = [x,y,-1,-1];
+							
+						} else {
+							topush = [x,y, 0,0];
+						}
+						
+						row.push( topush );
+					}
+				}
+				ar.push(row)
+			}
+			
+			return ar;
+		}
+		
+		/**
+		*
+		* returns an Object holding the values left right top bott topright topleft leftofleft rightofright bottofbott topoftop bottright bottleft
+		*  those values denote whether each tile around v is a wall or not.
+		* 
+		* @memberof DungeonGenerator.prototype
+		* @method tenAround
+		*
+		* @param v {Array} the value [x,y] index spot of the dungeon to check
+		* @param w {Number} tile width default is 16
+		* @param h {Number} tile height default is 16
+		* @returns {Object}
+		*/
+		DungeonGenerator.prototype.tenAround = function(v,w,h) {//twelve
+			
+			let ar = null;
+			let inx = v[0];
+			let iny = v[1];
+			let arrofD = this.print();
+			
+			let toptop = tabageos.BlitMath.checkTileValueAt(inx*w,(iny-2)*h,arrofD,w,h);
+			let top = tabageos.BlitMath.checkTileValueAt(inx*w,(iny-1)*h,arrofD,w,w);
+			let topleft = tabageos.BlitMath.checkTileValueAt((inx-1)*w,(iny-1)*h,arrofD,w,h);
+			let topright = tabageos.BlitMath.checkTileValueAt((inx+1)*w,(iny-1)*h,arrofD,w,h);
+			
+			let lft = tabageos.BlitMath.checkTileValueAt((inx-1)*w,(iny)*h,arrofD,w,h);
+			let lftlft = tabageos.BlitMath.checkTileValueAt((inx-2)*w,(iny)*h,arrofD,w,h);
+			let rgt = tabageos.BlitMath.checkTileValueAt((inx+1)*w,(iny)*h,arrofD,w,h);
+			let rgtrgt = tabageos.BlitMath.checkTileValueAt((inx+2)*w,(iny)*h,arrofD,w,h);
+			
+			let bott = tabageos.BlitMath.checkTileValueAt(inx*w,(iny+1)*h,arrofD,w,h);
+			let bottbott = tabageos.BlitMath.checkTileValueAt(inx*w,(iny+2)*h,arrofD,w,h);
+			
+			let bottleft = tabageos.BlitMath.checkTileValueAt((inx-1)*w,(iny+1)*h,arrofD,w,h);
+			let bottright = tabageos.BlitMath.checkTileValueAt((inx+1)*w,(iny+1)*h,arrofD,w,h);
+			
+			ar = { 'leftofleft':lftlft && lftlft[2], 'rightofright':rgtrgt && rgtrgt[2],  'bottofbott':bottbott && bottbott[2], 'topoftop':toptop && toptop[2], 'top':top && top[2], 'topleft':topleft && topleft[2], 'topright':topright && topright[2], 'left':lft && lft[2], 'right':rgt && rgt[2], 'bott':bott && bott[2], 'bottleft':bottleft && bottleft[2], 'bottright':bottright && bottright[2] };
+			
+			return ar;
+			
+		};
+		/**
+		*
+		* prints the generated dungeon as a 2D array of wallValue floorValue values
+		* the start position will be given playerValue
+		* you can pass a wallValueMethod and floorValueMethod to aid in determining what each value should be
+		* the methods you pass will get passed the [x,y] location of each spot, and an array containing whether or not the 12 tiles around it are wall or not,
+		* and the row, and column index of each spot
+		* the wallValueMethod floorValueMethod should return the values desired, you would use them for example to place shadows in corners
+		* or other such details. See the DungeonGenerator example in examples and the TileSceneChanger example.
+		* 
+		* @memberof DungeonGenerator.prototype
+		* @method specificPrint
+		*
+		* @param wallValue {Object} the desired value for each wall tile
+		* @param floorValue {Object} the desired value for each floor tile
+		* @param playerValue {Object} the desired value for the start tile
+		* @param wallValueMethod {Function} An optional function to use to determine each spots wall value, gets passed each position, the result of tenAround on the position, and the row and column index of the position.
+		* @param floorValueMethod {Function} optional function like wallValueMethod but for the floor tiles.
+		*
+		*/
+		DungeonGenerator.prototype.specificPrint = function(wallValue, floorValue, playerValue, wallValueMethod, floorValueMethod, log) { let ar = []; let row = [];
+			
+			for (let y = 0; y < this.size[1]; y ++) {
+				row = [];
+				for (let x = 0; x < this.size[0]; x++) {
+					if (this.start_pos && this.start_pos[0] === x && this.start_pos[1] === y) {
+						row.push( playerValue || [717,717] );
+					} else {
+						
+						var topush;
+						if( this.walls.get([x,y]) ) {
+							
+							row.push( wallValueMethod ? wallValueMethod( [x,y], this.tenAround([x,y]), row.length, ar.length ) : wallValue );
+							
+						} else {
+							row.push( floorValueMethod ? floorValueMethod( [x,y], this.tenAround([x,y]), row.length, ar.length ) : floorValue );
+						}
+						
+						
+					}
+				}
+				ar.push(row)
+			}
+			if (log) { window.console.log(JSON.stringify(ar)) };
+			
+			this.dispatchEvent(new tabageos.Event(DungeonGenerator.SPECIFIC_PRINT_COMPLETE));
+			
+			return ar;
+		}
+		
+
+		
+		DungeonGenerator.prototype.room = function(options) {
+			
+			options.room_size = options.size;
+			options.size = [options.size[0] + 2, options.size[1] + 2];
+			
+			var rm = new DungeonPiece(options, this.next_piece_id++);
+			
+			rm.walls.set_square([1, 1], rm.room_size, false, true);
+
+			if (!rm.symmetric) { //any point at any wall can be exit
+				rm.add_perimeter([1, 0], [rm.size[0] - 2, 0], 180);
+				rm.add_perimeter([0, 1], [0, rm.size[1] - 2], 90);
+				rm.add_perimeter([1, rm.size[1] - 1], [rm.size[0] - 2, rm.size[1] - 1], 0);
+				rm.add_perimeter([rm.size[0] - 1, 1], [rm.size[0] - 1, rm.size[1] - 2], 270);
+			} else { //only middle of each wall can be exit
+				let [w, h] = rm.get_center_pos();
+
+				rm.perimeter = [
+					[[w, 0], 180],
+					[[rm.size[0]-1, h], 270],
+					[[w, rm.size[1]-1], 0],
+					[[0, h], 90]
+				];
+			}
+			return rm;
+			
+		};
+		
+		DungeonGenerator.prototype.corridor = function(options) {
+			
+			options.size = (options.facing === 0 || options.facing === 180) ? [3, options.length] : [options.length, 3];
+			
+			options.room_size = options.size;
+			options.size = [options.size[0] + 2, options.size[1] + 2];
+			
+			var rm = new DungeonPiece(options, this.next_piece_id++);
+			
+			
+			rm.walls.set_square([1, 1], rm.room_size, false, true);
+
+			if (!rm.symmetric) { //any point at any wall can be exit
+				rm.add_perimeter([1, 0], [rm.size[0] - 2, 0], 180);
+				rm.add_perimeter([0, 1], [0, rm.size[1] - 2], 90);
+				rm.add_perimeter([1, rm.size[1] - 1], [rm.size[0] - 2, rm.size[1] - 1], 0);
+				rm.add_perimeter([rm.size[0] - 1, 1], [rm.size[0] - 1, rm.size[1] - 2], 270);
+			} else { //only middle of each wall can be exit
+				let [w, h] = rm.get_center_pos();
+
+				rm.perimeter = [
+					[[w, 0], 180],
+					[[rm.size[0]-1, h], 270],
+					[[w, rm.size[1]-1], 0],
+					[[0, h], 90]
+				];
+			}
+			
+			
+			rm.options.size = (rm.options.facing === 0 || rm.options.facing === 180) ? [3, rm.options.length] : [rm.options.length, 3];
+			
+			var w = rm.size[0] - 1;
+			var h = rm.size[1] - 1;
+			
+			//special perimeter: allow only 4 exit points, to keep this corridor corridor-like..
+			if (rm.facing === 180) rm.perimeter = [      [[1, h],   0], [[0, 1],    90], [[2, 1],   270], [[1, 0], 180] ];
+			else if (rm.facing === 270) rm.perimeter = [ [[0, 1],  90], [[w-1, 0], 180], [[w-1, 2],   0], [[w, 1], 270] ];
+			else if (rm.facing === 0) rm.perimeter = [   [[1, 0], 180], [[2, h-1], 270], [[0, h-1],  90], [[1, h],   0] ];
+			else if (rm.facing === 90) rm.perimeter = [  [[w, 1], 270], [[1, 2],     0], [[1, 0],   180], [[0, 1],  90] ];
+			
+			return rm;
+			
+		};
+		
+
+		DungeonGenerator.prototype.add_piece = function(piece, position) {
+			if (array_test(this.children, c => c.id === piece.id)) {
+				return;
+			}
+			piece.parent = this;
+			if (position) {
+				piece.position = position;
+			}
+			this.children.push(piece);
+			this.paste_in(piece);
+
+			this.minx = Math.min(this.minx, piece.position[0]);
+			this.maxx = Math.max(this.maxx, piece.position[0] + piece.size[0]);
+
+			this.miny = Math.min(this.miny, piece.position[1]);
+			this.maxy = Math.max(this.maxy, piece.position[1] + piece.size[1]);
+		}
+
+		DungeonGenerator.prototype.trim = function() {
+			this.size = [this.maxx - this.minx, this.maxy - this.miny];
+			this.children.forEach(child => {
+				child.position = [child.position[0] - this.minx, child.position[1] - this.miny];
+			});
+
+			this.start_pos = [this.start_pos[0] - this.minx, this.start_pos[1] - this.miny];
+			this.walls = this.walls.get_square([this.minx, this.miny], this.size);
+
+			this.minx = 0;
+			this.maxx = this.size[0];
+
+			this.miny = 0;
+			this.maxy = this.size[1];
+		}
+
+		
+
+		DungeonGenerator.prototype.fits = function(piece, position) {
+			let p, x, y;
+			for (x = 0; x < piece.size[0]; x++) {
+				for (y = 0; y < piece.size[1]; y++) {
+					p = this.walls.get([position[0] + x, position[1] + y]);
+					if (p === false || p === null || p === undefined) {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+
+		DungeonGenerator.prototype.join_exits = function(piece1, piece1_exit, piece2, piece2_exit) {
+			/*
+			register an exit with each piece, remove intersecting perimeter tiles
+			*/
+			
+			piece1.add_exit(piece1_exit, piece2);
+			piece2.add_exit(piece2_exit, piece1);
+
+			let ic = tabageos.GeometricMath.rectanglesOverlapAmount(piece1.rect(), piece2.rect());//piece1.rect.intersection(piece2.rect);
+			
+			if (ic) {
+				piece1.remove_perimeter(new tabageos.Rectangle(piece1.local_pos([ic[0], ic[1]], [ic.width, ic.height])));
+				piece2.remove_perimeter(new tabageos.Rectangle(piece2.local_pos([ic[0], ic[1]], [ic.width, ic.height])));
+			}
+		}
+
+		DungeonGenerator.prototype.join = function(piece1, piece2_exit, piece2, piece1_exit) {
+			/*
+			join piece 1 to piece2 provided at least one exit.
+			piece1 should already be placed
+			*/
+			if (!piece1_exit) {
+				piece1_exit = choose(piece1.get_perimeter_by_facing(FACING_INVERSE[piece2_exit[1]]));
+			}
+
+			//global piece2 exit pos
+			let piece2_exit_pos = piece1.parent_pos(piece1_exit[0]);
+
+			//figure out piece2 position
+			let piece2_pos = [
+				piece2_exit_pos[0] - piece2_exit[0][0],
+				piece2_exit_pos[1] - piece2_exit[0][1]
+			];
+
+			if (!this.fits(piece2, piece2_pos)) {
+				return false;
+			}
+
+			this.join_exits(piece1, piece1_exit, piece2, piece2_exit);
+			this.add_piece(piece2, piece2_pos);
+
+			return true;
+		}
+
+		DungeonGenerator.prototype.get_open_pieces = function(pieces) {
+			//filter out pieces
+			return pieces.filter(piece => {
+				return piece.exits.length < piece.max_exits && piece.perimeter.length;
+			});
+		}
+
+		DungeonGenerator.prototype.add_room = function(room, exit, add_to_room=null) {
+			let g_add_to_room = add_to_room;
+			//add a new piece, exit is local perimeter pos for that exit;
+			let choices, old_room, i = 0;
+			while (true) {
+				//pick a placed room to connect this piece to
+				if (add_to_room) {
+					old_room = add_to_room;
+					add_to_room = null;
+				} else {
+					choices = this.get_open_pieces(this.children);
+					if (choices && choices.length) {
+						old_room = choose(choices);
+					} else {
+						console.log('ran out of choices connecting');
+						break;
+					}
+				}
+				
+				//if exit is specified, try joining  to this specific exit
+				if (exit) {
+					//try joining the rooms
+					if (this.join(old_room, exit, room)) {
+						return true;
+					}
+				//else try all perims to see
+				} else {
+					let perim = room.perimeter.slice();
+					while (perim.length) {
+						if (this.join(old_room, choose(perim, true), room)) {
+							return true;
+						}
+					}
+				}
+
+				if (i++ === 10) {
+					
+					return false;
+				}
+			}
+		}
+
+		DungeonGenerator.prototype.new_corridor = function() {
+			return this.corridor({
+				length: nint(this.min_corridor_length, this.max_corridor_length),
+				facing: choose(FACING)
+			});
+		}
+
+		DungeonGenerator.prototype.add_interconnect = function() {
+			let perims = {},
+				hash, exit, p;
+
+			//hash all possible exits
+			this.children.forEach(child => {
+				if (child.exits.length < child.max_exits) {
+					child.perimeter.forEach(exit => {
+						p = child.parent_pos(exit[0]);
+						hash = `${p[0]}_${p[1]}`;
+						perims[hash] = [exit, child];
+					});
+				}
+			});
+
+			//search each room for a possible interconnect, backwards
+			let room, mod, length, corridor, room2;
+			for (let i = this.children.length - 1; i --; i >= 0) {
+				room = this.children[i];
+
+				//if room has exits available
+				if (room.exits.length < room.max_exits) {
+					
+					//iterate exits
+					for (let k = 0; k < room.perimeter.length; k++) {
+						exit = room.perimeter[k];
+						p = room.parent_pos(exit[0]);
+						length = -1;
+
+						//try to dig a tunnel from this exit and see if it hits anything
+						while (length <= this.max_interconnect_length) {
+							//check if space is not occupied
+							if (!this.walls.get(p) ||
+								!this.walls.get(shift_left(p, exit[1])) ||
+								!this.walls.get(shift_right(p, exit[1]))) {
+								break;
+							}
+							hash = `${p[0]}_${p[1]}`;
+
+							//is there a potential exit at these coordiantes (not of the same room)
+							if (perims[hash] && perims[hash][1].id !== room.id) {
+								room2 = perims[hash][1];
+
+								//rooms cant be joined directly, add a corridor
+								if (length > -1) {
+									corridor = new Corridor({
+										length,
+										facing: exit[1]
+									});
+
+									if (this.join(room, corridor.perimeter[0], corridor, exit)) {
+										this.join_exits(room2, perims[hash][0], corridor, corridor.perimeter[corridor.perimeter.length - 1]);
+										return true;
+									} else {
+										return false;
+									}
+								//rooms can be joined directly
+								} else {
+									this.join_exits(room2, perims[hash][0], room, exit);
+									return true;
+								}
+							}
+
+							//exit not found, try to make the interconnect longer
+							p = shift(p, exit[1]);
+							length ++;
+						}
+					}
+				}
+			}
+		}
+
+		DungeonGenerator.prototype.new_room = function(key) {
+			//spawn next room
+			key = key || choose(this.room_tags, false);
+
+			let opts = this.options.rooms[key];
+
+
+			let room = this.room({
+				size: vec(opts.min_size, opts.max_size),
+				max_exits: opts.max_exits,
+				symmetric: this.symmetric_rooms,
+				tag: key
+			});
+
+			this.room_tags.splice(this.room_tags.indexOf(key), 1);
+
+			if (key === 'initial') {
+				this.initial_room = room;
+			}
+			return room;
+		}
+		
+		
+		DungeonGenerator.prototype.loopedGenerate = function() {
+			if(this.loop_no_corridors == -717 && this.loop_no_rooms == -717) {
+				this.loop_no_rooms = this.options.room_count - 1;
+					let room = this.new_room(this.options.rooms.initial ? 'initial' : undefined);
+					this.loop_no_corridors = Math.round(this.corridor_density * this.loop_no_rooms);
+
+				this.add_piece(room, this.options.rooms.initial && this.options.rooms.initial.position ? this.options.rooms.initial.position :  this.get_center_pos());
+			}
+			let k;
+
+			if (this.loop_no_corridors || this.loop_no_rooms) {
+				k = nint(1, this.loop_no_rooms + this.loop_no_corridors);
+				if (k <= this.loop_no_corridors) {
+					let corridor = this.new_corridor();
+					let added = this.add_room(corridor, corridor.perimeter[0]);
+					this.loop_no_corridors --;
+
+					//try to connect to this corridor next
+					if (this.loop_no_rooms > 0 && added) {
+						this.add_room(this.new_room(), null, corridor);
+						this.loop_no_rooms --;
+					}
+
+				} else {
+					this.add_room(this.new_room());
+					this.loop_no_rooms --;
+				}
+				
+				return;
+			}
+
+			for (k = 0; k < this.interconnects; k++) {
+				this.add_interconnect();
+			}
+
+			this.trim();
+
+			if (this.initial_room) {
+				this.start_pos = this.initial_room.global_pos(this.initial_room.get_center_pos());
+			}
+			
+			this.loop_no_corridors = -717; this.loop_no_rooms = -717;
+			this.dispatchEvent(new tabageos.Event(DungeonGenerator.GENERATE_COMPLETE));
+			
+		}
+
+		/**
+		*
+		* generate a new random dungeon, a DungeonGenerator.GENERATE_COMPLETE Event will dispatch when the generation is complete.
+		* 
+		* @memberof DungeonGenerator.prototype
+		* @method generate
+		*
+		* 
+		*
+		*/
+		DungeonGenerator.prototype.generate = function() {
+			let no_rooms = this.options.room_count - 1,
+				room = this.new_room(this.options.rooms.initial ? 'initial' : undefined),
+				no_corridors = Math.round(this.corridor_density * no_rooms);
+
+			this.add_piece(room, this.options.rooms.initial && this.options.rooms.initial.position ? this.options.rooms.initial.position :  this.get_center_pos());
+
+			let k;
+
+			while (no_corridors || no_rooms) {
+				k = nint(1, no_rooms + no_corridors);
+				if (k <= no_corridors) {
+					let corridor = this.new_corridor();
+					let added = this.add_room(corridor, corridor.perimeter[0]);
+					no_corridors --;
+
+					//try to connect to this corridor next
+					if (no_rooms > 0 && added) {
+						this.add_room(this.new_room(), null, corridor);
+						no_rooms --;
+					}
+
+				} else {
+					this.add_room(this.new_room());
+					no_rooms --;
+				}
+			}
+
+			for (k = 0; k < this.interconnects; k++) {
+				this.add_interconnect();
+			}
+
+			this.trim();
+
+			if (this.initial_room) {
+				this.start_pos = this.initial_room.global_pos(this.initial_room.get_center_pos());
+			}
+			
+			this.dispatchEvent(new tabageos.Event(DungeonGenerator.GENERATE_COMPLETE));
+			
+		}
+	
+
+	tabageos.DungeonGenerator = DungeonGenerator;
+
