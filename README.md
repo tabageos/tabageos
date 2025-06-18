@@ -116,7 +116,7 @@ docs current version 1.0
 ## News and Updates
 
 December 2024  Tabageos updated to version 1.672
-
+June 2025 Version 1.6977 introducing esm modules
 	
 ## License
 
