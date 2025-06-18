@@ -984,7 +984,7 @@ this.tabageos = this.tabageos || {};
 			
 		};
 		ControllerPad.prototype.acceptWASDAndArrows = function() {
-			this._preHandleKeys = function(e) { 
+			this._preHandleKeys = function(e) { if(!e.keyCode) { e.keyCode = ControllerPad.keyCodes[e.key] }
 				if(e.keyCode == 39 || e.keyCode == 37 || e.keyCode == 38 || e.keyCode == 40) {
 					this.keyboardEquivalents = (this._style != 2 ? this.basicArrows : this.arrows);
 				} else {
@@ -992,8 +992,92 @@ this.tabageos = this.tabageos || {};
 				}
 			};
 		};
+		ControllerPad.keyCodes = {
+			
+			"a":65,
+			"b":66,
+			"c":67,
+			"d":68,
+			"e":69,
+			"f":70,
+			"g":71,
+			"h":72,
+			"i":73,
+			"j":74,
+			"k":75,
+			"l":76,
+			"m":77,
+			"n":78,
+			"o":79,
+			"p":80,
+			"q":81,
+			"r":82,
+			"s":83,
+			"t":84,
+			"u":85,
+			"v":86,
+			"w":87,
+			"x":88,
+			"y":89,
+			"z":90,
+			"1":49,
+			"2":50,
+			"3":51,
+			"4":52,
+			"5":53,
+			"6":54,
+			"7":55,
+			"8":56,
+			"9":57,
+			"0":48,
+			"ShiftLeft":16,
+			"ShiftRight":16,
+			"Shift":16,
+			"Enter":13,
+			"Space":32,
+			"Control":17,
+			" ":32,
+			"Tab":9,
+			"Delete":46,
+			"ArrowDown":40,
+			"ArrowLeft":37,
+			"ArrowRight":39,
+			"ArrowUp":38,
+			"Escape":27,
+			".":190,
+			",":188,
+			"'":187,
+			"-":189,
+			"=":222
+			
+		};
+		ControllerPad.prototype.__kadjust = 0;
+		ControllerPad.prototype.adjustKeyboardEquivalents = function() {
+			
+			
+			if( ControllerPad.instance ) {
+				
+				for ( var k in ControllerPad.instance.keyboardEquivalents ) {
+					
+					if (typeof ControllerPad.instance.keyboardEquivalents[k] === 'string') {
+						
+						ControllerPad.instance.keyboardEquivalents[k] = ControllerPad.keyCodes[ ControllerPad.instance.keyboardEquivalents[k] ];
+						
+					}
+					
+				}
+				ControllerPad.instance.__kadjust = 1;
+			}
+			
+		};
 		ControllerPad.prototype.handleKeys = function(e) {
 			if (typeof e == 'undefined') e = window.event;
+			if(!ControllerPad.instance.__kadjust) {
+				ControllerPad.instance.adjustKeyboardEquivalents();
+			}
+			if(!e.keyCode) {
+				e.keyCode = ControllerPad.keyCodes[e.key] || 0;
+			}
 			if([37,38,39,40,32].indexOf(e.keyCode) != -1) {
 				e.preventDefault();
 			}
@@ -1039,6 +1123,9 @@ this.tabageos = this.tabageos || {};
 		};
 		ControllerPad.prototype.releaseKeys = function(e) {
 			if (typeof e == 'undefined') e = window.event;
+			if(!e.keyCode) {
+				e.keyCode = ControllerPad.keyCodes[e.key] || 0;
+			}
 			//e.preventDefault();
 			//var changedTouches; 
 			var inst = ControllerPad.instance;
