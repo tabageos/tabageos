@@ -123,4 +123,4 @@ June 2025 Version 1.6977 introducing esm modules
 
 MIT License.
 	
-Current Release 1.672
+Current Release 1.6977
