@@ -115,6 +115,8 @@ docs current version 1.0
 
 ## News and Updates
 
+October 2025 Nightly version 1.6998 released.  1.7 planned for mid November. 
+
 December 2024  Tabageos updated to version 1.672
 
 June 2025 Version 1.6977 introducing esm modules
@@ -124,3 +126,4 @@ June 2025 Version 1.6977 introducing esm modules
 MIT License.
 	
 Current Release 1.6977
+
