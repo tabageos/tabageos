@@ -51,6 +51,7 @@ import {CanvasObject} from './CanvasObject.js';
 			this.holderDiv = holder;
 			this._holderDivParent = holder ? holder.offsetParent : null;
 			this.avg =  55;
+			this.dispatchAllKeys = 0;
 			this.buttons = {"right":0, "left":0, "up":0, "down":0, "a":0, "b":0, "c":0, "d":0, "start":0, "back":0};
 			this.basicArrows = {"right":39, "left":37, "up":38, "down":40, "a":32, "b":66, "c":67, "d":77, "start":16, "back":27};
 			this.arrows = {"right":39, "left":37, "up":38, "down":40, "a":37, "b":38, "c":39, "d":40, "start":16, "back":27};
@@ -84,6 +85,7 @@ import {CanvasObject} from './CanvasObject.js';
 		ControllerPad.prototype.holderDiv;
 		ControllerPad.prototype._holderDivParent;
 		ControllerPad.prototype._style = 3;
+		ControllerPad.prototype.dispatchAllKeys = 0;
 		ControllerPad.prototype.customStyleTotalWidth = 0;
 		ControllerPad.prototype.customStyleTotalHeight = 0;
 		ControllerPad.prototype.basicArrows = {"right":39, "left":37, "up":38, "down":40, "a":32, "b":66, "c":67, "d":77, "start":16, "back":27};
@@ -860,29 +862,30 @@ import {CanvasObject} from './CanvasObject.js';
 						}
 					}
 					if(e.target == this.dRight) {
-						this.buttons.right = 1; this.buttons.left = 0;
+						this.buttons.right = 1; this.buttons.left = 0;tstri = "Right";
 					} 
 					if(e.target == this.dLeft) {
-						this.buttons.left = 1; this.buttons.right = 0;
+						this.buttons.left = 1; this.buttons.right = 0;tstri = "Left";
 					} 
 					if(e.target == this.dUp) {
-						this.buttons.up = 1; this.buttons.down = 0;
+						this.buttons.up = 1; this.buttons.down = 0;tstri = "Up";
 					} 
 					if(e.target == this.dDown) {
-						this.buttons.down = 1; this.buttons.up = 0;
+						this.buttons.down = 1; this.buttons.up = 0;tstri = "Down";
 					} 
 					if(e.target == this.buttonA) {
-						this.buttons.a = 1;this.buttons.b = 0;this.buttons.c = 0;this.buttons.d = 0;
+						this.buttons.a = 1;this.buttons.b = 0;this.buttons.c = 0;this.buttons.d = 0;tstri = "A";
 					} 
 					if(e.target == this.buttonB) {
-						this.buttons.b = 1; this.buttons.c = 0;this.buttons.d = 0;this.buttons.a = 0;
+						this.buttons.b = 1; this.buttons.c = 0;this.buttons.d = 0;this.buttons.a = 0;tstri = "B";
 					} 
 					if(e.target == this.buttonC) {
-						this.buttons.c = 1; this.buttons.b = 0;this.buttons.a = 0;this.buttons.d = 0;
+						this.buttons.c = 1; this.buttons.b = 0;this.buttons.a = 0;this.buttons.d = 0;tstri = "C";
 					} 
 					if(e.target == this.buttonD) {
-						this.buttons.d = 1; this.buttons.b = 0; this.buttons.c = 0;this.buttons.a = 0;
+						this.buttons.d = 1; this.buttons.b = 0; this.buttons.c = 0;this.buttons.a = 0;tstri = "D";
 					}
+					if(!ControllerPad.instance.dispatchAllKeys) { tstri = ""; }
 					if(e.target == this.startButton) {
 						if(this.buttons.a == 0 && this.buttons.right == 0 && this.buttons.left == 0) { this.buttons.start = 1; tstri = "Start"; }
 					} 
@@ -1134,30 +1137,31 @@ import {CanvasObject} from './CanvasObject.js';
 			//var changedTouches; 
 			var inst = ControllerPad.instance;
 			var kstri = "";
-			if(e.keyCode == inst.keyboardEquivalents.right) { inst.buttons.right = 0; 
+			if(e.keyCode == inst.keyboardEquivalents.right) { inst.buttons.right = 0; kstri = "Right";
 				//changedTouches = [{pageX: inst.dRight.x/tabageos.MouseController._oX, pageY: inst.dRight.y/tabageos.MouseController._oY}];
 			} 
-			if(e.keyCode == inst.keyboardEquivalents.left) { inst.buttons.left = 0; 
+			if(e.keyCode == inst.keyboardEquivalents.left) { inst.buttons.left = 0; kstri = "Left";
 				//changedTouches = [{pageX: inst.dLeft.x/tabageos.MouseController._oX, pageY: inst.dLeft.y/tabageos.MouseController._oY}];
 			} 
-			if(e.keyCode == inst.keyboardEquivalents.up) { inst.buttons.up = 0; 
+			if(e.keyCode == inst.keyboardEquivalents.up) { inst.buttons.up = 0; kstri = "Up";
 				//changedTouches = [{pageX: inst.dUp.x/tabageos.MouseController._oX, pageY: inst.dUp.y/tabageos.MouseController._oY}];
 			} 
-			if(e.keyCode == inst.keyboardEquivalents.down) { inst.buttons.down = 0; 
+			if(e.keyCode == inst.keyboardEquivalents.down) { inst.buttons.down = 0; kstri = "Down";
 				//changedTouches = [{pageX: inst.dDown.x/tabageos.MouseController._oX, pageY: inst.dDown.y/tabageos.MouseController._oY}];
 			}
-			if(e.keyCode == inst.keyboardEquivalents.a) { inst.buttons.a = 0; 
+			if(e.keyCode == inst.keyboardEquivalents.a) { inst.buttons.a = 0; kstri = "A";
 				//changedTouches = [{pageX: inst.buttonA.x/tabageos.MouseController._oX, pageY: inst.buttonA.y/tabageos.MouseController._oY}];
 			}
-			if(e.keyCode == inst.keyboardEquivalents.b) { inst.buttons.b = 0; 
+			if(e.keyCode == inst.keyboardEquivalents.b) { inst.buttons.b = 0; kstri = "B";
 				//changedTouches = [{pageX: inst.buttonB.x/tabageos.MouseController._oX, pageY: inst.buttonB.y/tabageos.MouseController._oY}];
 			}
-			if(e.keyCode == inst.keyboardEquivalents.c) { inst.buttons.c = 0; 
+			if(e.keyCode == inst.keyboardEquivalents.c) { inst.buttons.c = 0; kstri = "C";
 				//changedTouches = [{pageX: inst.buttonC.x/tabageos.MouseController._oX, pageY: inst.buttonC.y/tabageos.MouseController._oY}];
 			} 
-			if(e.keyCode == inst.keyboardEquivalents.d) { inst.buttons.d = 0; 
+			if(e.keyCode == inst.keyboardEquivalents.d) { inst.buttons.d = 0; kstri = "D";
 				//changedTouches = [{pageX: inst.buttonD.x/tabageos.MouseController._oX, pageY: inst.buttonD.y/tabageos.MouseController._oY}];
 			} 
+			if(!inst.dispatchAllKeys) { kstri = ""; }
 			if(e.keyCode == inst.keyboardEquivalents.start) { inst.buttons.start = 0; kstri = "Start";
 				//changedTouches = [{pageX: inst.startButton.x/tabageos.MouseController._oX, pageY: inst.startButton.y/tabageos.MouseController._oY}];
 			}

@@ -41,6 +41,15 @@ import { PatternActionEvent } from './PatternActionEvent.js';
     BlitMath.setSpecs = function(toThis) {
         BlitMath._specs = toThis;
     };
+	BlitMath.reverseArrayValues = function(array) {
+		var i = 0;
+		var l = array.length+1-1;
+		var a = [];
+		for (i; i < l; i++) {
+			a[i] = array.pop();
+		}
+		return a;
+	};
 	
 	BlitMath.valuesMatch = function(val1, val2) {
 		var r = false;
@@ -265,6 +274,15 @@ import { PatternActionEvent } from './PatternActionEvent.js';
             }
         }
     };
+	BlitMath.xySwitch1D = function(subject) {
+		
+		var i = 0;var a = [];
+		for( i; i < subject.length-2; i+= 2 ) {
+			a.push( subject[i+1] );
+			a.push( subject[i] );
+		}
+		return a;
+	};
     BlitMath.xySwitch = function(subject, xFitst, yFirst) {
         var a;
         var b;
@@ -893,6 +911,26 @@ import { PatternActionEvent } from './PatternActionEvent.js';
 		    
             return ordered;
     };
+	
+	BlitMath.createBlank2DMap = function(cols,rows) {
+		
+		var map = [];
+		var i = 0;
+		var j = 0;
+		for( i; i < rows; i++ ) {
+			
+			map[i] = [];
+			j = 0;
+			for (j; j < cols; j++ ) {
+				
+				map[i][j] = [0,0];
+				
+			}
+			
+		}
+		
+		return map;
+	};
 	
     export { BlitMath   };
 

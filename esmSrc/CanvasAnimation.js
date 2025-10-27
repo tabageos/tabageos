@@ -92,6 +92,23 @@ import {MoverPoint} from './MoverPoint.js';
 		return this.currentAnimation.indexOf(txt) != -1;
 		
 	};
+	CanvasAnimation.cloneAnimationSpecs = function(animationSpecs, adjustEachXIndexBy, adjustEachYIndexBy) {
+		
+		let newSpecs = {};
+
+		for (var aspec in animationSpecs) {
+			var pwera = [];var pwi = 0; 
+			for ( pwi; pwi < animationSpecs[aspec][1].length; pwi+=2 ) {
+				pwera[pwi] =  animationSpecs[aspec][1][pwi] + (adjustEachXIndexBy || 0);
+				pwera[pwi+1] =  animationSpecs[aspec][1][pwi+1] + (adjustEachYIndexBy || 0);
+			}
+
+			newSpecs[aspec] = [animationSpecs[aspec][0], pwera ];
+			
+		}
+		return newSpecs;
+	
+	};
 	
 	
     CanvasAnimation.prototype.changeLeftRightUpDownAnimation = function(left,right,up,down, dontKeepAniIndex) {

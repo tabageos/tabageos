@@ -969,7 +969,7 @@ import { PNGModule } from './PNG.js';//puts PNG on the window
 		return GameSkeleton.game._mute +1-1;
     };
 	
-	GameSkeleton.prototype.playSound = function(soundString, poolAmount, stype, sname) {
+	GameSkeleton.prototype.playSound = function(soundString, poolAmount, stype, sname) { window.console.log('ps');
 		if(this.soundSystem._soundNames.indexOf(soundString) === -1) {
 			this.soundSystem.addSound(soundString.indexOf(";base64") == -1 ? (soundString+(stype||".ogg")) : soundString,sname || soundString,this.soundSystem._globalVolume,poolAmount || 2);
 		}
@@ -1046,6 +1046,7 @@ import { PNGModule } from './PNG.js';//puts PNG on the window
 								} else {
 									thePickUpMethod(obj);
 								}
+								
 								sceneryObjects.splice(sceneryObjects.indexOf(obj),1);
 								sceneryObjectLayer.context.clearRect(obj.x,obj.y,ttw,tth);
 								re = true;

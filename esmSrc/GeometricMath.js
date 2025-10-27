@@ -179,6 +179,58 @@ import { BlitMath } from './BlitMath.js';
 		}
         return a1;
     };
+	
+	GeometricMath.valuesMatch = function(val1, val2) {
+		var r = false;
+		if(val1[0] || val1[0] === 0) {
+			var i = 0; var l = val1.length;
+			for(i; i < l;i++) {
+				if(val1[i] != val2[i]) {
+					r = false; break;
+				} else { r = true; }
+			}
+		} else {
+			if(val1 == val2) { r = true; }
+		}
+		return r;
+	};
+	GeometricMath.cloneMultiArray = function(mda) {
+        
+        var i = 0;
+        var l = mda.length;
+        var ina;
+        var j = 0;
+        var jl;
+        var clone = [];
+        var na;
+        for (i; i < l; i++) {
+            ina = mda[i];
+            j = 0;
+            jl = mda[i].length;
+			if(mda[i][0] && mda[i][0].length) { 
+				clone[i] = [];
+			
+				for (j; j < jl; j++) {
+					na = [(typeof ina[j][0] == "number" ? ina[j][0] + 1 - 1 : ina[j][0]), (typeof ina[j][1] == "number" ? ina[j][1] + 1 - 1 : ina[j][1])];
+					clone[i].push(na);
+					if (ina[j][2] || ina[j][2] === 0) {
+						na.push((typeof ina[j][2] == "number" ? ina[j][2] + 1 - 1 : ina[j][2]));
+					}
+					if (ina[j][3] || ina[j][3] === 0) {
+						na.push((typeof ina[j][3] == "number" ? ina[j][3] + 1 - 1 : ina[j][3]));
+					}
+				}
+			
+			} else {
+				clone[i] = [];
+				for (j; j < jl; j++) {
+					clone[i].push(ina[j]+1-1);	
+				}
+				
+			}
+        }
+        return clone;
+    };
 	GeometricMath.splice = function(arr, index) {
 			var i = index;
 			var l = arr.length - 1;
@@ -258,31 +310,108 @@ import { BlitMath } from './BlitMath.js';
 		
 	};
 	
-	GeometricMath.applyIndexPathToMap = function(indexPath, map, tile) {
+	
+	
+	
+	GeometricMath.populate2DMap = function(map, tile, level) {
 		
-		var i = 0;var a;
-		for(i; i < indexPath.length; i++) {
-			a = indexPath[i];
-			map[a[1]][a[0]] = tile;
+		
+		var i = 0;
+		var j = 0;
+		var rows = map.length;
+		var cols = map[0].length;
+		
+		for( i; i < rows; i++ ) {
+			
+			
+			j = 0;
+			for (j; j < cols; j++ ) {
+				var blank = null;
+				if (tile) {
+					if(typeof tile === 'function') {
+						blank = tile(j,i, level);
+					} else {
+						blank = tile;
+					}
+				}
+				if(blank) {
+					map[i][j] = blank;
+				}
+				
+			}
+			
 		}
 		
 	};
 	
 	
-	GeometricMath.createRandomEnclosedPathOfTileInMap = function(cols,rows,offsx,offex, map, tile, rowOffset) {
+	GeometricMath.create2DMap = function(cols,rows, tile, level) {
+		
+		var map = [];
+		var i = 0;
+		var j = 0;
+		
+		for( i; i < rows; i++ ) {
+			
+			map[i] = [];
+			j = 0;
+			for (j; j < cols; j++ ) {
+				var blank = [0,0];
+				if (tile) {
+					if(typeof tile === 'function') {
+						blank = tile(j,i, level);
+					} else {
+						blank = tile;
+					}
+				}
+				
+				map[i][j] = blank;
+				
+			}
+			
+		}
+		
+		return map;
+	};
+	
+	GeometricMath.applyIndexPathToMap = function(indexPath, map, tile, rowOffset, level) {
+		
+		var i = 0;var a;var t;
+		for(i; i < indexPath.length; i++) {
+			a = indexPath[i];
+			if (typeof tile == 'function') {
+				t = tile(a[0]+1-1,a[1]+(rowOffset||0), level);
+			} else {
+				t = tile;
+			}
+			map[a[1]+(rowOffset||0)][a[0]] = t;
+		}
+		
+	};
+	
+	
+	GeometricMath.createRandomEnclosedPathOfTileInMap = function(cols,rows,offsx,offex, map, tile, rowOffset,startIndex) {
 		
 	    var hrcls = Math.round(cols/2);//half columns 
 		var initPath = GeometricMath.createRandomIndexPath(hrcls,rows,hrcls-1-offsx,hrcls-1-offex);//start and end first path at the end of the first half matrix
-		var i = 0;var a;
+		var i = startIndex || 0;var a;var poffa;
 		for(i; i < initPath.length; i++) {
 			a = initPath[i];
-			map[a[1]+(rowOffset||0)][a[0]] = tile;
+			poffa = a[1]+(rowOffset||0);
+			if(!map[poffa]) {
+				poffa = a[1]+1-1;
+			}
+			map[poffa][a[0]] = tile;
 		}
 		initPath = GeometricMath.createRandomIndexPath(hrcls,rows,0-offsx,0-offex);//start and end second path at the beginning of the second half matrix
-		i = 0;
+		i = startIndex || 0;
 		for(i; i < initPath.length; i++) {
 			a = initPath[i];
-			map[a[1]+(rowOffset||0)][a[0]+hrcls] = tile;//apply each path index to the whole map, the full 2d matrix, using the tile value. 
+			poffa = a[1]+(rowOffset||0);
+			if(!map[poffa]) {
+				poffa = a[1]+1-1;
+			}
+			map[poffa][a[0]+hrcls] = tile;//apply each path index to the whole map, the full 2d matrix, using the tile value. 
 		}
 		
 	};

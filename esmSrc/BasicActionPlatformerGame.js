@@ -5,7 +5,7 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 	constructor(gameWidth,gameHeight,camerasWidth,camerasHeight,containerDivId, rootDivId, controllerDivId, tileset, tileWidth, tileHeight, 
 				titleImageFromRect, optionsImageFromRect, creditsImageFromRect, backgroundImageFromRect, 
 				startLocationRect, optionsLocationRect, creditsLocationRect, mapsObject, playerDefinitionObject, enemyDefinitionObject, npcDefinitionObject,
-				secondaryAttackMethod, arrayOfCreditStrings, addedSetupMethod, loadbarColor,loadbarCSS, soundDefinitionObject) {
+				secondaryAttackMethod, arrayOfCreditStrings, addedSetupMethod, addedLevelSetupMethod, loadbarColor,loadbarCSS, soundDefinitionObject, bAlpha, establishWorkers) {
 					
 		if( tileset && tileset !== "streamline" ) { //preloading
 			let ddiv = document.createElement("div");ddiv.setAttribute("id","gmeloader1");
@@ -26,17 +26,36 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 				}
 			});
 		}
-		super();//GameSkeleton
-		let cFollowOffsetX =  (camerasWidth != gameWidth) ? -(camerasWidth/2) : 0;
+		super();//GameSkeleton, "this" is now available
+		this.mapDefinitions = mapsObject || new tabageos.MapDefinitionObject();
+		this.playerDefinition = playerDefinitionObject || new tabageos.PlayerDefinitionObject();
+		this.enemyDefinitions = enemyDefinitionObject || new tabageos.EnemyDefinitionObject();
+		this.npcDefinitions = npcDefinitionObject || new tabageos.NPCDefinitionObject();
+		camerasWidth = camerasWidth || this.mapDefinitions._defaultCameraWidth;
+		camerasHeight = camerasHeight || this.mapDefinitions._defaultCameraHeight;
+		gameWidth = gameWidth || this.mapDefinitions._defaultGameWidth;
+		gameHeight = gameHeight || this.mapDefinitions._defaultGameHeight;
+		
+		let cFollowOffsetX = (camerasWidth != gameWidth) ? -(camerasWidth/2) : 0;
 		let cFollowOffsetY = (camerasHeight != gameHeight) ? ( -( (camerasHeight/2) + (tileWidth*2) ) ) : 0;
-		let stmp = startLocationRect ? new tabageos.MoverPoint(startLocationRect.x, startLocationRect.y) : new tabageos.MoverPoint(80,96);
+		if((!tileset || tileset === null) && this.playerDefinition && this.playerDefinition._defaultSpriteSheet) {
+			tileset = this.playerDefinition._defaultSpriteSheet;
+			if(this.enemyDefinitions && this.enemyDefinitions.addDefault) {
+				this.enemyDefinitions.addDefault(1);
+				this.enemyDefinitions.addDefault(2);
+				this.enemyDefinitions.addDefault(3);
+			}
+		}
+		startLocationRect = startLocationRect || this.mapDefinitions._defaultStartButtonLocation || new tabageos.Rectangle(80,96,96,32);
+		let stmp = startLocationRect ? new tabageos.MoverPoint(startLocationRect.x, startLocationRect.y) : new tabageos.MoverPoint(this.mapDefinitions._defaultStartButtonLocation.x, this.mapDefinitions._defaultStartButtonLocation.y);//new tabageos.MoverPoint(80,96);
 		let gameSpecs = {
-			gWidth:gameWidth, gHeight:gameHeight,cameraWidth:camerasWidth, cameraHeight:camerasHeight, 
-            cameraFollowOffsetX:cFollowOffsetX, cameraFollowOffsetY:cFollowOffsetY, tileW:tileWidth, tileH:tileHeight, 
-            spriteSheetImage:tileset, containerDivId:containerDivId, rootDivId:rootDivId,
-            controllerDivId:controllerDivId, gameScale:1, hudScale:3, useScreenOrganizer:true,startWidth:(startLocationRect ? startLocationRect.width : 96), startHeight:(startLocationRect ? startLocationRect.height : 32),
-            controllerHeight:144, initialLives:3, initPlayerPosition:new tabageos.MoverPoint( playerDefinitionObject.x || 96, playerDefinitionObject.y || (gameHeight-(tileHeight*2)) ), startLocations:stmp,
-            gameLoop:this.loop,initializationSpecifics:this.setup, disableBackgroundAlpha:0,
+			gWidth:gameWidth || this.mapDefinitions._defaultGameWidth, gHeight:gameHeight || this.mapDefinitions._defaultGameHeight,
+			cameraWidth:camerasWidth || this.mapDefinitions._defaultCameraWidth, cameraHeight:camerasHeight || this.mapDefinitions._defaultCameraHeight, 
+            cameraFollowOffsetX:cFollowOffsetX, cameraFollowOffsetY:cFollowOffsetY, tileW:tileWidth || 16, tileH:tileHeight || 16, 
+            spriteSheetImage:tileset, containerDivId:containerDivId || 'container', rootDivId:rootDivId || 'root',
+            controllerDivId:controllerDivId || 'controller', gameScale:1, hudScale:3, useScreenOrganizer:true,startWidth:(startLocationRect ? startLocationRect.width : this.mapDefinitions._defaultStartButtonLocation.width), startHeight:(startLocationRect ? startLocationRect.height : this.mapDefinitions._defaultStartButtonLocation.height),
+            controllerHeight:144, initialLives:3, initPlayerPosition:new tabageos.MoverPoint( this.playerDefinition.x || 96, this.playerDefinition.y || (gameHeight-(tileHeight*2)) ), startLocations:stmp,
+            gameLoop:this.loop,initializationSpecifics:this.setup, disableBackgroundAlpha: (bAlpha === 0 ? 0 : 1),
             addedResizeMethod:null, priorToSceneChange:this.initialSceneChanges, sceneChangeSpecifics:this.setupLevel,sceneResetSpecifics:null,fullResetSpecifics:this.onFullReset, additionalSceneResetSpecifics:null, 
             positionResetSpecifics:null, underCoverSpecifics:this.underCoverChanges, cameraType:1,afterSceneChange:this.afterSceneChanges, 
 			preloadSounds: [], preloadMusic: []
@@ -44,14 +63,17 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		};
 		//defining properties of BasicActionPlatformerGame class.
 		
-		this.optionsRectangle = optionsLocationRect || new tabageos.Rectangle(1808,544,256,208);
-		this.creditsRectanlge = creditsLocationRect || new tabageos.Rectangle(2112,544,256,208);
-		this.titleRectangle = titleImageFromRect;
-		this.backgroundRectangle = backgroundImageFromRect;
-		this.playerDefinition = playerDefinitionObject;
-		this.enemyDefinitions = enemyDefinitionObject || {};
-		this.npcDefinitions = npcDefinitionObject || {};
-		this.mapDefinitions = mapsObject || {};
+		this.optionsRectangle = optionsImageFromRect || this.mapDefinitions._defaultOptionsImageRect;
+		if(!this.optionsRectangle) {  this.optionsRectangle  = new tabageos.Rectangle(1808,544,256,208); }
+		this.creditsRectanlge = creditsImageFromRect || this.mapDefinitions._defaultCreditsImageRect; 
+		if(!this.creditsRectanlge) { this.creditsRectanlge =  new tabageos.Rectangle(2112,544,256,208); }
+		this.optionsButtonLocationRect = optionsLocationRect || this.mapDefinitions._defaultOptionsButtonLocation;
+		this.creditsButtonLocationRect = creditsLocationRect || this.mapDefinitions._defaultCreditsButtonLocation;
+		this.titleRectangle = titleImageFromRect || this.mapDefinitions._defaultTitleImageRect;
+		this.backgroundRectangle = backgroundImageFromRect || this.mapDefinitions._defaultBackgroundRect;
+		
+		
+		
 		this.transValues = this.mapDefinitions.walkPastValues || [];
 		this.foreValues = this.mapDefinitions.foregroundValues || [];
 		this.attackStrength = this.playerDefinition ? (this.playerDefinition.attackStrength || 3) : 3;
@@ -62,6 +84,15 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		this.explosionFactory = new tabageos.ExplosionFactory(32,32,9,400,0);
 		this.secondaryExtra = secondaryAttackMethod || null;
 		this.addToSetup = addedSetupMethod || null;
+		this.addToLevelSetup = addedLevelSetupMethod || null;
+		this.gameOverRect = null;
+		this.gameOverVictoryRect = null;
+		if(this.mapDefinitions.gameOverRectangle) {
+			this.gameOverRect = this.mapDefinitions.gameOverRectangle;
+		}
+		if(this.mapDefinitions.gameOverVictoryRectangle) {
+			this.gameOverVictoryRect = this.mapDefinitions.gameOverVictoryRectangle;
+		}
 		
 		var pd = this.playerDefinition || {};
 		
@@ -82,8 +113,8 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		
 		this.healthBarImage = new Image();
 		this.healthBarImage.src = this.healthBarSrc;
-		
-		this.hudStyle = null;
+		this.wholeHudStyle = "";//css string
+		this.hudStyle = null;//actual style css element
 		this.healthBarDisplayDiv = null;
 		this.powerBarDisplayDiv = null;
 		this.bustDisplayDiv = null;
@@ -102,7 +133,7 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		
 		this.healthBarPercent = (this.initialHealthLevel / (pd.healthBarWidth || 62));
 		
-		this.creditsArray = arrayOfCreditStrings || ["made with Tads Basic Game Objects", "art by Ansimuz"];
+		this.creditsArray = arrayOfCreditStrings || ["made with Tads Basic Game Objects", "art by Grafx Kid"];
 		
 		this.attackExplosion = pd.attackExplosion || null;
 		this.attackWithExplosion = 0;
@@ -116,42 +147,76 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		this.enemyProjectiles = [];//not used
 		this.movingProjectiles = [];
 		
+		this.__holdingC = 0;//holding the controller button c signifier, for only being able to shoot one projectile at a time.
+		
 		this.heldScenery = [];
 		this.canHold = pd.itemValuesToHold || [];
 		
 		this._memory = { entries:[] };
 		
 		this._doorUnits = [];
+		this.lightsReady = 0;
+		this.lightsFrom = null;
+		this.lightsTileValues = [];
+		this.lightsCanvasAnimation = null;
+		this.__lightsInit = 0;//two underscroes mean the property is wanting to be completely private, you should not change it, it also propably is not documented.
 		
+		this.basicPlatformer = 0;
+		this.playerAnimationChangeBypass = 0;//either set this to some millisecond time, or call animateThePlayer passing a time, to bypass the default change of animation behavior.
+		//by default the player is assumed to be a WeaponHoldingAttacker and various animation calculations are automatically done based on if it is attacking or not.
+		//to change the players animation yourself, do so then either set this or call animateThePlayer with a time, the animation changed to is still automatically animated and displayed.
 		this.throwCheck = function() { return false; };//never throw
         this.pickUpCheck = function() { return true; };//always pick up by just walking past it, alternately you could use the methods from the SceneryThrower class
 		//but by default to store things picked up you pass those values as itemValuesToHold in the json def for the player.
 		this.pTypeString = "";
 		this.pTypeTime = 0;
 		this.pTypeMP = new tabageos.MoverPoint();
+		this.currentNpcTalking = null;
+		this.npcTypeTime = 0;
+		this.bossblit = null;
+		this.newestMap = null;
+		
+		this.__genMaps = {};//level1, level2, level3, etc... used during level generation
+		
+		this.dialogBoxFromRectangle = null;
+		this.lastMinutePlayerPosition = null;
+		this.gameOverPosition = null;
+		this.difficultyButtonsLocationRect = null;
+		if(this.mapDefinitions.difficultyButtonsLocationRect) {
+			this.difficultyButtonsLocationRect = this.mapDefinitions.difficultyButtonsLocationRect;
+		}
+		
+		if (this.npcDefinitions && this.npcDefinitions.dialogBoxFromRectangle)  {
+			this.dialogBoxFromRectangle = this.npcDefinitions.dialogBoxFromRectangle;
+		}
 		
 		let usedSoundNames = ["coinCollect", "playerHurt", "playerJump", "playerAttack", "playerAttackTwo", 
-			"playerPickup", "enemyHurt", "enemyAttack", "bossHurt", "bossAttack", "bossAttackTwo", "dialog"];
+			"playerPickup", "enemyHurt", "enemyAttack", "bossHurt", "bossAttack", "bossAttackTwo", "dialog"]; //these are the names/properties recognized off of any given SoundDefinitionObject which can be that class or just an object with these properties.
 		
 		this.coinCollectSound = "coinCollect";
 		this.lastTrack = "";
+		this.stringProp = new RegExp(/[\{]{1}[a-zA-Z_\.]{1,}[\}]{1}/);
 		
 		gameSpecs.preloadSoundsArray = [];
 		gameSpecs.preloadMusicArray = [];
-		if( soundDefinitionObject ) {
+		if( soundDefinitionObject ) { 
 			
 		
 			for ( var soundString in soundDefinitionObject ) {
 				
 				for ( var sn of usedSoundNames ) { //this.coinCollectSound , and all in usedSoundNames with 'Sound' added
-					if ( soundString === sn ) {
-						this[sn+"Sound"] = soundDefinitionObject[soundString].split(".")[0];
+					if ( soundString === sn && soundDefinitionObject[soundString] ) {
+						if(soundDefinitionObject[soundString].indexOf('base64') != -1) {
+							this[sn+"Sound"] = soundDefinitionObject[soundString];
+						} else {
+							this[sn+"Sound"] = soundDefinitionObject[soundString].split(".")[0];
+						}
 					}
 				}
 				
-				if(soundString.indexOf("level") == -1) {
+				if(soundString.indexOf("level") == -1 && soundDefinitionObject[soundString] && soundDefinitionObject[soundString].indexOf('base64') == -1) {
 					gameSpecs.preloadSoundsArray.push(soundDefinitionObject[soundString]);
-				} else {
+				} else if(soundString.indexOf("level") != -1 && soundDefinitionObject[soundString] && soundDefinitionObject[soundString].indexOf('base64') == -1) {
 					var lvnum = soundString.replace(/[a-zA-Z/-/_]{1,}/g,"");
 					this["level"+lvnum+"Track"] = soundDefinitionObject[soundString].split(".")[0];
 					
@@ -160,16 +225,21 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 				
 				
 			}
+		} else {
+			//no sound definition
+			
 		}
 		
 		
 		
-		this.dontEstablishWorkers();//workers are useful if the game is going to primarely be a phone app, dont establish workers if there are other workers on the page other than the games.
-		this.initialConstruction(gameSpecs);//manual super
+		if(!establishWorkers) {
+			this.dontEstablishWorkers();//workers are useful if the game is going to primarely be a phone app, dont establish workers if there are other workers on the page other than the games.
+		}
+		this.initialConstruction(gameSpecs);//manual super, actual completion of construction, ultimately GameSkeleton.establish 
 	}
 	
 	
-	establishHUD(w, h, hbw, hbh, pbw, pbh, hbx, hby, pbx, pby, bw, bh) {
+	establishHUD(x,y, w, h, hbw, hbh, pbw, pbh, hbx, hby, pbx, pby, bw, bh) {
 		
 		if(!this.hudStyle) {
 			this.hudStyle = document.createElement("style");
@@ -178,7 +248,7 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 			document.getElementsByTagName("head")[0].removeChild(this.hudStyle);
 		}
 		
-		this.hudStyle.innerHTML = "#basehud { position:absolute;top:0px;left:0px;image-rendering: -moz-crisp-edges;image-rendering: -webkit-crisp-edges;image-rendering: pixelated;image-rendering: crisp-edges;width:"+(w||96)+"px;height:"+(h||32)+"px;background: no-repeat url( "+ this.baseHUDImage + ") }";
+		this.hudStyle.innerHTML = "#basehud { position:absolute;top:"+(y||0)+"px;left:"+(x||0)+"px;image-rendering: -moz-crisp-edges;image-rendering: -webkit-crisp-edges;image-rendering: pixelated;image-rendering: crisp-edges;width:"+(w||96)+"px;height:"+(h||32)+"px;background: no-repeat url( "+ this.baseHUDImage + ") }";
 		
 		var hbwcalc = Math.floor(this.player.health / this.healthBarPercent);
 		
@@ -200,6 +270,8 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		
 		document.getElementsByTagName("head")[0].appendChild(this.hudStyle);
 		
+		this.wholeHudStyle = "position:absolute;top:"+(y||0)+"px;left:"+(x||0)+"px;height:"+(h||32)+"px; width:"+(w||96)+"px;";
+		
 		this.setupCustomHealthHud("basehud");
 		this.addToCustomHud("healthbar", healthStyle);
 		this.addToCustomHud("powerbar", powerStyle);
@@ -210,15 +282,86 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		this.hideCustomHud();
 		
 		this._hudEstablished = 1;
-	}
+	};
+	
+	hideTheHud(maintainHiddenDuringLoop) {
+		this.hideCustomHud(); //changes healthBarIsDisplayed to 0, among other things to hide the hud, the hud is css and html on top of everything.
+		this.healthBarIsDisplayed = maintainHiddenDuringLoop || 0;//during the loop if healthBarIsDisplayed is 0 the hud gets shown again by default.
+		//GameSkeleton methods to show/hide the hud assume it is happening during setup, or outside of the game loop.
+		//if what we want is to hide the hud on demand, we need to pass 1 to this method.
+	};
+	
+	establishLights() {
+		
+		this.lightsReady = 0;
+		if(!this.lightsCanvasAnimation) {
+			this.lightsCanvasAnimation = new tabageos.CanvasAnimation(this._image, this.charLayer,null,0,0,this.mapDefinitions.lightAnimationWidth || this.tileWidth,this.mapDefinitions.lightAnimationHeight || this.tileHeight);
+		}
+		
+		if(this.mapDefinitions && this.mapDefinitions.lightValues) {//initalize lights
+				let lightsToBeOn = 0;
+				for (let lval of this.mapDefinitions.lightValues) {
+					let lftv = lval[0];
+					let lightp = lval[1];
+					let lwi = lval[2];
+					let lhi = lval[3];
+					let ldim = lval[4] || 1;
+					let lcolor = lval[5] || "#000000";
+					let lcomp = lval[6] || 1;
+					
+					//testing if it is in the map at all, and we also potentially need that location if an animation has been passed
+					let lightPos = tabageos.BlitMath.getLocationOfTile(lftv, this.sceneChanger.currentMap, this.tileWidth,this.tileHeight);
+					
+					if ( lightPos ) {
+						if(!this.__lightsInit) {this.__lightsInit = 1;
+							this.initializeLights(ldim, lcolor, lcomp);
+						}
+						lightsToBeOn = 1;
+						//this._lightComp = 'multiply';
+						this.lightsReady = 0;
+						this.lightsTileValues.push(  lftv );
+						if (lightp.length > 2) {
+							let lcanv = new tabageos.CanvasAnimation(this._image, this._lightCanvas, null,lightPos.x,lightPos.y, lwi, lhi);
+							lcanv.animationSpecs = { "anim":[0, lightp] };
+							lcanv.currentAnimation = "anim";
+							this.lightsFrom = lcanv;
+							this.lightsReady = -2;
+						} else {
+							this.lightsFrom = new tabageos.Rectangle(lightp[0], lightp[1], lwi, lhi);
+							this.lightsReady = -1;
+						} 
+						
+						
+					}
+					
+				}
+				
+				if(!lightsToBeOn) {
+					this.turnOffLights();
+				}
+				
+		}
+		
+		
+	};
 	
 	onFullReset() {
 		
 		this.heldScenery = [];
-		
-		this._memory = { entries:[] }; //or from saved
-		
-		this.sceneChanger.clearAllArrays();
+		this._memory = { entries:[] }; //or from saved, load happens during setup.
+		this.foregroundObjects = [];
+		this._doorUnits = [];
+		this.__lightsInit = 0;
+		this.lightsReady = -1;
+		this.pTypeTime = 0;
+		this.npcTypeTime = 0;
+		this.lives = 3;
+		this.bossblit = null;
+		this.newestMap = null;
+		this.playerProjectiles = [];
+		this.lightsTileValues = [];
+		this.lightsCanvasAnimation = null;
+		this.sceneChanger.clearAllArrays();this.bossblit = null;
 		this.enemies = [];this.foregroundObjects = [];this.movingProjectiles = [];this.scenery = [];
 		this.removeStandardButtons();
 		
@@ -226,7 +369,7 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 	
 	saveGame() {
 		
-		let datasv = ""+this.sceneChanger.currentScene+","+this.player.x+","+this.player.y+","+this.coinsCollected+"ainit7";
+		let datasv = ""+this.sceneChanger.currentScene+","+this.player.x+","+this.player.y+","+this.coinsCollected+","+this.attackStrength+"ainit7";
 		
 		for ( var entry of this._memory.entries ) {
 			datasv += "e.:"+entry[0]+","+entry[1]+","+(entry[2] || 0);
@@ -236,7 +379,7 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 			datasv += "hs.:"+scenery[0]+","+scenery[1];
 		}
 		
-		this.localSave("bapGameSave", datasv);
+		this.localSave(this.playerDefinition.saveGameName || "bapGameSave", datasv);
 		
 		
 	};
@@ -244,7 +387,7 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 	
 	loadSavedGame() {
 		
-		let dt = this.getLocalSaved("bapGameSave");
+		let dt = this.getLocalSaved(this.playerDefinition.saveGameName || "bapGameSave");
 		let lpp = null;
 		if(dt) {
 			
@@ -275,7 +418,7 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 			
 			
 		}
-		return lpp; //[level, player x, player y, coinsCollected]
+		return lpp; //[level, player x, player y, coinsCollected, attackStrength]
 		
 	};
 	
@@ -284,16 +427,24 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		this.camera.v.width = this.cameraWidth+1-1;
         this.camera.v.height = this.cameraHeight+1-1;
 		
-		//assuming giant world much smaller camera space
-        this.tweenLimitX = this.gameWidth - this.cameraWidth;//1856;
-        this.tweenLimitY = this.gameHeight - this.cameraHeight;//960;
+		//assuming bigger world much smaller camera space, if the camera width is half game width and camera height half game height
+		//then these tweenLimits do not have to be manually set, by default GameSkeleton assumes half width and height, but BasicActionPlatformerGame assumes a longer gameWidth and taller height
+		//therefore this formula is used within the assumtption the game is a standard platformer style with bigger world to the camera
+		//for best performance the game width and height should not exceed 1500 ~ 2000. 
+		//3k with lights and foreground and enemies is pushing things. 
+		//This example shows every advanced feature and will run fast and smooth everywhere, without workers, utlizing a minimal space, but yet it still feel like a lot because of how the camera behaves
+        this.tweenLimitX = this.gameWidth - this.cameraWidth;//1024 - 256
+        this.tweenLimitY = this.gameHeight - this.cameraHeight;//416 - 208
 		
 		this.title.floor.copyPixels(this._image, this.titleRectangle, new tabageos.MoverPoint());
-        this.startButton.innerHTML = "";
+        this.startButton.innerHTML = "";//assume no html being used for the title screen and other screens, all screens are drawn from the sprite sheet.
+		this.gameOverContainer.floor.copyPixels(this._image, this.gameOverRect || new tabageos.Rectangle(2416,544,256,208), new tabageos.MoverPoint());
 		
 		let pd = this.playerDefinition;
         
 		let playerCA = new tabageos.CanvasAnimation(this._image,this.charLayer,null,0,0,pd.aniWidth,pd.aniHeight);
+		playerCA.fromWidthOffset = pd.aniFromWidthOffset || 0;
+		playerCA.fromHeightOffset = pd.aniFromHeightOffset || 0;
 		playerCA.fromXOffset = pd.aniFromXOffset || 0;
 		playerCA.fromYOffset = pd.aniFromYOffset || 0;
 		playerCA.animationSpecs = pd.animationSpecs;
@@ -307,17 +458,21 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		
 		let md = this.mapDefinitions;
 		let lvToSetup = 1;
+		let levelsAdded = 0;
 		let ldarr = this.loadSavedGame();//potentially populates heldScenery, and populates _memory.entries
 		if(ldarr) {  //[level, player.x, player.y, coins]
 			lvToSetup = Number(ldarr[0]);
+			if(ldarr[4]) {
+				this.attackStrength = Number(ldarr[4]);
+			}
 			//this.coinsCollected = Number(ldarr[3] || 0);
 			//coins respawn even after save, you could check for amount of coins per level and if less than what has been saved remove them up to the level saved.
 			//as is the class saves how many coins were picked up but that data is not used, on full exit the browser and come back the player would have to collect coins again.
 		}
 		
-		if(!md.generate) {
 		
-			for ( var map in md ) {
+		
+			for ( var map in md ) { 
 				if(map.indexOf('background') == -1 && map.indexOf('level') != -1)  {
 					if( md[map] && (md[map][0] || md[map][0] === 0) && (md[map][0][0] || md[map][0][0] === 0) )  { 
 					
@@ -327,12 +482,76 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 								md[map] = tabageos.BlitMath.replaceAllOfValueFromMultiArray(md[map], hsce, 0, 0);
 							}
 						}
-						this.sceneChanger.addScene(md[map]);
+						this.sceneChanger.addScene(md[map]); levelsAdded+=1;
 					}
 				}
 			}
 		
-		} else {
+		if(md.generate > 0) { //auto genration of a very basic level with floor and random horizontal upper floor
+		//to variate it define walls ground or platforms as functions in the json that would put different tiles based on what position it is.
+			let lGen = md.generate +1-1;
+			
+			while ( lGen > 0 ) {
+				
+				levelsAdded += 1;
+				if(this.__genMaps["level"+levelsAdded]) { //for game over or reset to title keep same generated maps
+					this.sceneChanger.addScene(this.__genMaps["level"+levelsAdded]);
+				} else {
+					let acols = (this.gameWidth/this.tileWidth)-1;
+					let arows = (this.gameHeight/this.tileHeight) -1;
+					let level = levelsAdded+1-1;
+					
+					let walls = function(x,y) {//this method is used by GeometricMath.create2DMap to get what tile to place at each tile spot in the map.
+						
+						let tl = [0,0];
+						if(md.methodForEveryTile) {
+							tl = md.methodForEveryTile(x,y,level);
+						}
+						
+						if(x == 0 || x == acols) { //make a left and right wall
+							if(typeof md.walls == 'function') {
+								tl = md.walls(x,y, level);
+							} else {
+								tl = md.walls;
+							}
+						}
+						if(y == arows) {//the ground on the very bottom
+							if(typeof md.ground == 'function') {
+								tl = md.ground(x,y, level);
+							} else {
+								tl = md.ground;
+							}
+						}
+						return tl;
+					};
+					
+					//blank map with left and right walls and bottom ground, walls could also just be a value, and then all the tiles would be that value.
+					let newMap = tabageos.GeometricMath.create2DMap(this.gameWidth/this.tileWidth, this.gameHeight/this.tileHeight, walls, level);
+					
+					//random ground path horizontal
+					let ipath = tabageos.GeometricMath.createRandomIndexPath(this.gameWidth/this.tileWidth, 5,1, (this.gameWidth/this.tileWidth) - 2);
+					
+					//push the path down to the bottom using rowOffset
+					//these methods are primarely used in a top down sense, but we are using them for horizontal ground in this case
+					tabageos.GeometricMath.applyIndexPathToMap(ipath, newMap, md.platforms, (this.gameHeight/this.tileHeight) -(md.platformsIndexAboveGround || 10) , level );
+					
+					
+					//apply bushes just above the path, as the tiles above the path, the value(s) for bushes should be in the walkPastValues also
+					tabageos.GeometricMath.applyIndexPathToMap(ipath, newMap, md.bushes, (this.gameHeight/this.tileHeight) -(md.platformsIndexAboveGround || 10) - 1 , level );
+					
+					if(md.afterGenerate) {
+
+						this.newestMap = tabageos.BlitMath.cloneMultiArray(newMap);
+						tabageos.GeometricMath.populate2DMap(newMap, md.afterGenerate, level);
+						
+					}
+					
+					this.sceneChanger.addScene(newMap);
+					this.__genMaps["level"+levelsAdded] = tabageos.BlitMath.cloneMultiArray(newMap);
+					this.newestMap = null;
+				}
+				lGen -= 1;
+			}
 			
 			//todo  generate md.generate amount of maps, planned for 1.7 , auto generation of levels if no level maps given.
 			//fill with wall, using the new path methods of GeometricMath
@@ -377,7 +596,11 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		}
 		
 		for ( var holdable of this.canHold ) { 
-			if(holdable[0] || holdable[1]) {
+			if( (holdable[0] || holdable[1])
+				&& !this.valuesMatch(this.coinValue, holdable)	
+				&& !this.valuesMatch(this.heartsValue, holdable)
+				&& !this.valuesMatch(this.powerUpsValue, holdable) ) {
+					
 				tabageos.BlitMath.functionAssignments.push(holdable);
 				tabageos.BlitMath.ignoredArrays.push(holdable);
 			}
@@ -386,6 +609,11 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		tabageos.BlitMath.functionAssignments.push(this.coinValue);
 		tabageos.BlitMath.ignoredArrays.push(this.coinValue);
 		
+		tabageos.BlitMath.functionAssignments.push(this.heartsValue);
+		tabageos.BlitMath.ignoredArrays.push(this.heartsValue);
+		
+		tabageos.BlitMath.functionAssignments.push(this.powerUpsValue);
+		tabageos.BlitMath.ignoredArrays.push(this.powerUpsValue);
 		
 		//draw the first level
 		tabageos.BlitMath.specificPatternBlit(this.display,this._image,this.sceneChanger.currentMap);
@@ -395,7 +623,13 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		if(md && md.backgroundMap1) {
 			tabageos.BlitMath.specificPatternBlit(this.backgroundLayer, this._image, md.backgroundMap1);
 		} else {
-			this.backgroundLayer.copyPixels(this._image, this.backgroundRectangle, new tabageos.MoverPoint());
+			var bmpp = new tabageos.MoverPoint(0,0);
+			this.backgroundLayer.copyPixels(this._image, this.backgroundRectangle, bmpp);
+			//assume paint the whole background
+			while(this.backgroundRectangle.width < this.gameWidth && bmpp.x < this.gameWidth) {
+				bmpp.x += this.backgroundRectangle.width;
+				this.backgroundLayer.copyPixels(this._image, this.backgroundRectangle, bmpp);
+			}
 		}
 		
 		var plax1;
@@ -408,20 +642,41 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		}
 		//this.transValues.push([17,28]);
 		
+		//all user given values for ladders are replaced with [17,28] in the ladder map only, therefore the player can use [17,28] in all cases
 		let ladderMap1 = tabageos.BlitMath.replaceValuesFromMultiArray(this.sceneChanger.currentMap, pd.ladderValues, 17, 28);
 		
-		this.player = new tabageos.WeaponHoldingAttacker(0,0,pd.width,pd.height,this.sceneChanger.currentMap,playerCA,0,0,this.tileWidth,this.tileHeight,this.sceneChanger.currentMap.length,this.sceneChanger.currentMap[0].length, ladderMap1,this.controller,[17,28], pd.attackButton || 69, pd.attackTwoButton || 81);
-        this.player.health = pd.playerHealth || 500;
-        this.player.crouchHeightOffset = pd.crouchHeightOffset || 1;//because all of the widths and heights are the same for this animation, we need to set 1 to crouchHeightOffset, because normally it would be different than the other frames, but in this case each animation is the same width and height.
-        this.player.crouchWidthOffset = pd.crouchWidthOffset || 0;
-        this.player.attackWidthOffset = pd.attackWidthOffset || 0;
-        this.player.attackHeightOffset = pd.attackHeightOffset || 0;
-        this.player.attackTwoWidthOffset = pd.attackTwoWidthOffset || 0;
-        this.player.attackTwoHeightOffset = pd.attackTwoHeightOffset || 0;
-		this.player.attackTwoName = pd.attackTwoName || "down";
-		this.player._gravityLevel = pd.gravityLevel || .301;
-		this.player._walkSpeed = pd.walkSpeed || 4;
-		this.player._jumpSpeed = pd.jumpSpeed || 4;
+		
+		if(!pd.basicPlatformer) {
+		
+			this.player = new tabageos.WeaponHoldingAttacker(pd.x || 0,pd.y || 0,pd.width,pd.height,this.sceneChanger.currentMap,playerCA,0,0,this.tileWidth,this.tileHeight,this.sceneChanger.currentMap.length,this.sceneChanger.currentMap[0].length, ladderMap1,this.controller,[17,28], pd.attackButton || 69, pd.attackTwoButton || 81);
+			this.player.health = pd.healthAmount || 500;
+			this.player.crouchHeightOffset = pd.crouchHeightOffset || 1;//because all of the widths and heights are the same for this animation, we need to set 1 to crouchHeightOffset, because normally it would be different than the other frames, but in this case each animation is the same width and height.
+			this.player.crouchWidthOffset = pd.crouchWidthOffset || 0;
+			this.player.attackWidthOffset = pd.attackWidthOffset || 0;
+			this.player.attackHeightOffset = pd.attackHeightOffset || 0;
+			this.player.attackTwoWidthOffset = pd.attackTwoWidthOffset || 0;
+			this.player.attackTwoHeightOffset = pd.attackTwoHeightOffset || 0;
+			this.player.attackTwoName = pd.attackTwoName || "fireball";
+			this.player._gravityLevel = pd.gravityLevel || .301;
+			this.player._walkSpeed = pd.walkSpeed || 4;
+			this.player.maxSpeed = pd.walkSpeed || 4;
+			this.player._jumpSpeed = pd.jumpSpeed || 4;
+		
+		} else {
+			this.basicPlatformer = 1;
+			this.player = new tabageos.BasicPlatformer(pd.x || 0,pd.y || 0,pd.width,pd.height,this.sceneChanger.currentMap,playerCA,0,0,this.tileWidth,this.tileHeight,0,0,ladderMap1,this.controller,[17,28]);
+			this.player.health = pd.healthAmount || 500;
+			this.player._gravityLevel = pd.gravityLevel || .286;
+			this.player._walkSpeed = pd.walkSpeed || 4;
+			this.player.maxSpeed = pd.walkSpeed || 4;
+			this.player._jumpSpeed = pd.jumpSpeed || 4;
+			
+			this.controller.basicWasd.b = pd.attackButton || "e";
+			this.controller.basicWasd.c = pd.attackTwoButton || "q";
+			this.controller.basicArrows.b = pd.attackButton || "e";
+			this.controller.basicArrows.c = pd.attackTwoButton || "q";
+			
+		}
 		
         this.player._map = tabageos.BlitMath.replaceValuesFromMultiArray(this.player._map,this.transValues,0,0);
 		
@@ -430,17 +685,22 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		
 		this.scenery = this.changeSceneScenery(lvToSetup);
 		
+		
+		// setup methods called now
+		
+		//this is a main map based setup method, each tile is fired as an event to setupLevel if found in functionAssignments
 		tabageos.BlitMath.dispatchFunctionAssignments(this,"setupLevel",this,this.sceneChanger.currentMap,this.tileWidth,this.tileHeight);
 		
 		
-		this.establishHUD(pd.hudWidth || 96, pd.hudHeight || 32, pd.healthBarWidth || 62, pd.healthBarHeight || 16, pd.powerBarWidth || 55, pd.powerBarHeight || 16, pd.healthBarX || 32, pd.healthBarY || 16, pd.powerBarX || 32, pd.powerBarY || 16, pd.bustWidth || 32, pd.bustHeight || 32);
+		this.establishHUD(pd.hudX || 0, pd.hudY || 0,pd.hudWidth || 96, pd.hudHeight || 32, pd.healthBarWidth || 62, pd.healthBarHeight || 16, pd.powerBarWidth || 55, pd.powerBarHeight || 16, pd.healthBarX || 32, pd.healthBarY || 16, pd.powerBarX || 32, pd.powerBarY || 16, pd.bustWidth || 32, pd.bustHeight || 32);
 		
 		
-        this.setupStandardButtons(32,0,16,16,80,0,16,16,48,0,16,16,64,0,16,16,"help",(this.playerDefinition && this.playerDefinition.helpLink) ? this.playerDefinition.helpLink : "");
+        this.setupStandardButtons(pd.pauseX||32, pd.pauseY||0,16,16,pd.homeX||80,pd.homeY||0,16,16,pd.muteX||48,pd.muteY||0,16,16,pd.linkX||64,pd.linkY||0,16,16,"help",(this.playerDefinition && this.playerDefinition.helpLink) ? this.playerDefinition.helpLink : "");
 		
-		this.beforeStartGameLoop = function(e) {
+		
+		this.beforeStartGameLoop = function(e) { //happens just after the start button is pressed
             this._doAlternate = 0;
-            this.player.setY(this.gameHeight-(this.tileHeight*3)-this.player._canvasAnimation.height);
+           // this.player.setY(this.gameHeight-(this.tileHeight*3)-this.player._canvasAnimation.height);
 			if( ldarr && ldarr[1] ) {
 				this.player.setX(Number(ldarr[1])); this.player.setY(Number(ldarr[2])); 
 			}
@@ -462,14 +722,35 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		
 		if(!this.getButton("toOptionsB")) {
 			
-			this.makeButton("backToTitleB",256-32,16,16,16,this.showTitle,"back",0,1);
-			this.makeButton("toOptionsB",64,132,128,32,this.showOptions,"options",0,1);
-			this.makeButton("toCreditsB",64,160,128,32,this.showCredits,"credits",0,1);
+			this.makeButton("backToTitleB",this.cameraWidth-32,0,32,32,this.showTitle,"back",0,1);
 			
-			this.makeButton("diffOneB",91,121,16,24, this.changeDifficulty,"easy");
-			this.makeButton("diffTwoB",109,121,16,24, this.changeDifficulty,"mid");
-			this.makeButton("diffThreeB",127,121,16,24, this.changeDifficulty,"midhard");
-			this.makeButton("diffFourB",146,121,16,24, this.changeDifficulty,"hard");
+			var opabs = [64,132,128,32];
+			var crabs = [64,160,128,32];
+			var dfabs = [91,121,16,24];
+			var cr;
+			if(this.optionsButtonLocationRect) {
+				cr = this.optionsButtonLocationRect;
+				opabs =[cr.x+1-1,cr.y+1-1,cr.width+1-1,cr.height+1-1];
+			}
+			if(this.creditsButtonLocationRect) {
+				cr = this.creditsButtonLocationRect;
+				crabs =[cr.x+1-1,cr.y+1-1,cr.width+1-1,cr.height+1-1];
+			}
+			this.makeButton("toOptionsB",opabs[0],opabs[1],opabs[2],opabs[3],this.showOptions,"options",0,1);
+			this.makeButton("toCreditsB",crabs[0],crabs[1],crabs[2],crabs[3],this.showCredits,"credits",0,1);
+			
+			if(this.difficultyButtonsLocationRect) {
+				cr = this.difficultyButtonsLocationRect;
+				dfabs =[cr.x+1-1,cr.y+1-1,cr.width+1-1,cr.height+1-1];
+			
+			
+			
+				this.makeButton("diffOneB",dfabs[0],dfabs[1],dfabs[2],dfabs[3], this.changeDifficulty,"easy");
+				this.makeButton("diffTwoB",dfabs[0]+this.tileWidth,dfabs[1],dfabs[2],dfabs[3], this.changeDifficulty,"mid");
+				this.makeButton("diffThreeB",dfabs[0]+(this.tileWidth*2),dfabs[1],dfabs[2],dfabs[3], this.changeDifficulty,"midhard");
+				this.makeButton("diffFourB",dfabs[0]+(this.tileWidth*3),dfabs[1],dfabs[2],dfabs[3], this.changeDifficulty,"hard");
+			
+			}
 			
 			//this.getButton("toOptionsB").setAttribute("class", "hoverable");
 			//this.getButton("toCreditsB").setAttribute("class", "hoverable");
@@ -499,14 +780,33 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 			}
 		}
 		
-		this.useOldSchoolFont();
+		this.useClintBlockFont();
+		
+		
+		this.establishLights();
+		
+		if(this.mapDefinitions["level"+lvToSetup+"Doors"]) {
+			var fi = 0;var doorv;var tonum = 0;
+			for (fi; fi < this.mapDefinitions["level"+lvToSetup+"Doors"].length;fi++) {
+				doorv = this.mapDefinitions["level"+lvToSetup+"Doors"][fi];
+				
+				this._doorUnits.push(doorv);
+			}
+		}
+		
 		
 		if(this.addToSetup != null && typeof this.addToSetup == 'function') {
 			this.addToSetup();//you can alter or add to setup from the json by defining and passing an additionalSetupMethod
 		}
 		
 		
+		if(this.addToLevelSetup && typeof this.addToLevelSetup == 'function') {//for initial level optional setups
+			
+			this.addToLevelSetup(lvToSetup, this.player,this.enemies,this.sceneChanger.currentMap);
+		}
+		
 	};
+	
 	
 	changeDifficulty(e) {
 		var diffs = {"easy":1, "mid":2, "midhard":3, "hard":5}
@@ -559,7 +859,7 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 			
 			var creds = this.creditsArray.toString().split(",").join(".");
 			
-			this.pixelParagraph(16,64,16,creds,this.title.floor);
+			this.pixelParagraph(this.cameraWidth/2 - this.cameraWidth/4,64,16,creds,this.title.floor);
 			
 		}
 		
@@ -567,7 +867,7 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 	
 	showOptions(e) { 
 		
-		var ths = this._gameParent;
+		var ths = this._gameParent;//the buttons game parent is the GameSkeleton, 'this' here refers to the event listener fired from the button. _gameParent is applied to each button made with makeButton
 		ths.removeStartButton();
 		ths.removeButton("toOptionsB");
 		ths.removeButton("toCreditsB");
@@ -580,11 +880,12 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		ths._sliderValue = ths.soundSystem._globalVolume+1-1;
 		ths.appendButton("backToTitleB");
 		
-		ths.appendButton("diffOneB");
-		ths.appendButton("diffTwoB");
-		ths.appendButton("diffThreeB");
-		ths.appendButton("diffFourB");
-		
+		if(ths.getButton("diffOneB")) {
+			ths.appendButton("diffOneB");
+			ths.appendButton("diffTwoB");
+			ths.appendButton("diffThreeB");
+			ths.appendButton("diffFourB");
+		}
 		ths.initVolumeSliderAnimation((256/2) - 40,58,ths.title.floor, 1);
 		//ths.removeEventListener('volumeSliderEvent','changeOtherThanVolume', this);
 		//ths.addEventListener('volumeSliderEvent','changeOtherThanVolume', this);
@@ -600,7 +901,7 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		}
 	};
 	
-	enemy(x,y,fwo,fho,aspecs,spee, hea, w, h, s, aoffwidth, aoffheight, dropvf, expo, exs,awords,bwords,dropwords, tlv) {
+	enemy(x,y,fwo,fho,aspecs,spee, hea, w, h, s, aoffwidth, aoffheight, dropvf, expo, exs,awords,bwords,dropwords, tlv, mandwords) {
         var eA,en;
         eA = new tabageos.CanvasAnimation(this._image, this.charLayer,null,x,y,w || this.tileWidth, h || this.tileHeight);
         eA.animationSpecs = aspecs;
@@ -614,7 +915,14 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
         en.maxSpeed = spee || 3;
         en._veloc.y = 4;
 		en.attackStrength = s || 2;
-        en.health = (hea || 25) * this.gameDifficulty;
+		
+		if(hea < this.cameraWidth) { 
+			en.health = (hea || 25) * this.gameDifficulty;
+			en.maxHealth = en.health+1-1;
+		} else {
+			en.health = hea;
+			en.maxHealth = hea+1-1;
+		}
 		en.origAWOffset = fwo +1-1;
 		en.origAHOffset = fho +1-1;
 		en.attackFromWidthOffset = aoffwidth || 0;
@@ -625,15 +933,34 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		en.aWords = awords || "";
 		en.bWords = bwords || "";
 		en.dropWords = dropwords || "";
+		en.manditoryWords = mandwords || "";
 		en._currentWords = "";
+		en._wordCounter = 0;
 		en.tileValue  = tlv || [];
         return en;
         
     };
+	dropEnemy(x,y,enemyTileValue) {
+		
+		for ( var eo of Object.values(this.enemyDefinitions) ) { 
+			
+			if(eo && eo.tileValue) {
+				if( this.valuesMatch(eo.tileValue,enemyTileValue) ) {//drop an enemy
+					
+					this.enemies.push( 
+						this.enemy(x,y,eo.fromWidthOffset,eo.fromHeightOffset,eo.animationSpecs,eo.speed, eo.health,eo.width,eo.height, eo.attackStrength, eo.attackFromWidthOffset, eo.attackFromHeightOffset, eo.dropValueFunction, eo.explosion, eo.exSpeed) 
+					);
+					break;
+				
+				}
+			}
+		}
+		
+	};
 	
 	dropScenery(x,y,todrop, source) {
 		
-		var soca = new tabageos.CanvasAnimation(source || this._image,this.charLayer,new tabageos.Rectangle(todrop[1]*this.tileWidth,todrop[0]*this.tileHeight,this.tileWidth,this.tileHeight),en.x,en.y,this.tileWidth,this.tileHeight);
+		var soca = new tabageos.CanvasAnimation(source || this._image,this.charLayer,new tabageos.Rectangle(todrop[1]*this.tileWidth,todrop[0]*this.tileHeight,this.tileWidth,this.tileHeight),x,y,this.tileWidth,this.tileHeight);
 		if(todrop[2]) {
 			//animation frames array in 2
 			soca.defineAnimation("frames",todrop[2]);
@@ -648,7 +975,7 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		
 	}
 	
-	dropCoin(x,y,customValue) {
+	dropCoin(x,y,customValue) { window.console.log("cdrop");
 		var todrop = customValue || [0,0];
 		var soca = new tabageos.CanvasAnimation( ((todrop[0] || todrop[1]) ? this._image : this.coinImage),this.charLayer,new tabageos.Rectangle(todrop[1]*this.tileWidth,todrop[0]*this.tileHeight,this.tileWidth,this.tileHeight),x,y,this.tileWidth,this.tileHeight);
 		if(todrop[2]) {
@@ -669,9 +996,11 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		
 	}
 	
-	setupLevel(e) {
+	setupLevel(e) { //called during the setup of individual levels, based on the values in BlitMath.functionAssignments the event causing this method contains the tile from functionAssignments found in the map as e.tileValue, and its location as e.x and e.y
 		
-		//called on enemy values, and walkPastValues and foreground values for each map when going to scene
+		//this method gets called for enemy values, and walkPastValues and foreground values for each map when going to a scene
+		//this method is an event handler, and gets called multiple times during the setup of each level.
+		//found tiles in BlitMath.functionAssignments are dispatched as events causing this method to fire for each one.
 		
 		//assume each to be walk past and drawn some other way, ie  an enemy becomes moving, a lamp, foreground waterfall perhaps, and such
 		this.player._map[e.tileYIndex][e.tileXIndex] = [0,0];
@@ -692,7 +1021,7 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 			if(npc && npc.tileValue && this.valuesMatch(e.tileValue, npc.tileValue)) { 
 				
 				this.npcs.push(
-					this.enemy(e.x,e.y,npc.width - this.tileWidth,npc.height - this.tileHeight,npc.animationSpecs,0, 0,this.tileWidth,this.tileHeight, 0,0, 0, npc.dropValueFunction, 0, 7000,npc.aWords,npc.bWords,npc.dropWords, npc.tileValue)
+					this.enemy(e.x,e.y,npc.width - this.tileWidth,npc.height - this.tileHeight,npc.animationSpecs,0, 0,this.tileWidth,this.tileHeight, 0,0, 0, npc.dropValueFunction, 0, 7000,npc.aWords,npc.bWords,npc.dropWords, npc.tileValue,npc.manditoryWords)
 				
 				); 
 				var newNpc = this.npcs[this.npcs.length-1];
@@ -718,8 +1047,16 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 			
 		}
 		
-		for ( var holdable of this.canHold ) {
-			if(this.valuesMatch(e.tileValue, holdable) && this.valuesMatch(this.sceneChanger.currentMap[e.tileYIndex][e.tileXIndex], holdable) ) {
+		for ( var holdable of this.canHold ) { //turn holdable vales found in the map into loose scenery ready to be picked up
+			var alreadyh = 0;
+			for ( var aheld of this.heldScenery ) {
+				if(this.valuesMatch(aheld, e.tileValue)) {
+					//already holding the item
+					this.sceneChanger.currentMap[e.tileYIndex][e.tileXIndex] = [0,0];
+					alreadyh = 1;
+				}
+			}
+			if(!alreadyh && this.valuesMatch(e.tileValue, holdable) && this.valuesMatch(this.sceneChanger.currentMap[e.tileYIndex][e.tileXIndex], holdable) ) {
 				this.sceneChanger.currentMap[e.tileYIndex][e.tileXIndex] = [0,0];
 				
 				var todrop = holdable;
@@ -742,8 +1079,16 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 			}
 		}
 		
-		if(this.valuesMatch(e.tileValue, this.coinValue)) {
+		if(this.valuesMatch(e.tileValue, this.coinValue ) && this.valuesMatch(this.sceneChanger.currentMap[e.tileYIndex][e.tileXIndex], this.coinValue)) {
 			this.dropCoin(e.x,e.y);
+			this.sceneChanger.currentMap[e.tileYIndex][e.tileXIndex] = [0,0];
+		}
+		if(this.valuesMatch(e.tileValue, this.heartsValue) && this.valuesMatch(this.sceneChanger.currentMap[e.tileYIndex][e.tileXIndex], this.heartsValue) ) {
+			this.dropScenery(e.x,e.y, e.tileValue);
+			this.sceneChanger.currentMap[e.tileYIndex][e.tileXIndex] = [0,0];
+		}
+		if(this.valuesMatch(e.tileValue, this.powerUpsValue) && this.valuesMatch(this.sceneChanger.currentMap[e.tileYIndex][e.tileXIndex], this.powerUpsValue) ) {
+			this.dropScenery(e.x,e.y, e.tileValue);
 			this.sceneChanger.currentMap[e.tileYIndex][e.tileXIndex] = [0,0];
 		}
 		
@@ -754,7 +1099,7 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
             fia2 = [fia[0]+1-1, fia[1]+1-1];
             
             if( this.valuesMatch(e.tileValue, fia2) && !fia[4] ) { 
-                var afrct = new tabageos.Rectangle(fia[1]*this.tileWidth,fia[0]*this.tileHeight,fia[2] || this.tileWidth*2, fia[3] || this.tileHeight*2);
+                var afrct = new tabageos.Rectangle(fia[1]*this.tileWidth,fia[0]*this.tileHeight,fia[2] || this.tileWidth, fia[3] || this.tileHeight);
                 var fobj = new tabageos.CanvasAnimation(this._image, this.charLayer, afrct,e.x + (fia[5] || 0),e.y + (fia[6] || 0),afrct.width,afrct.height);
                 
                 
@@ -766,7 +1111,7 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
             if( this.valuesMatch(e.tileValue, fia2) && fia[4] && fia[4].length ) { 
                 
                 //x and y setup but with tiles smaller than the animation
-                var afrcta = new tabageos.Rectangle(fia[1]*this.tileWidth,fia[0]*this.tileHeight,fia[2] || this.tileWidth*2, fia[3] || this.tileHeight*2);
+                var afrcta = new tabageos.Rectangle(fia[1]*this.tileWidth,fia[0]*this.tileHeight,fia[2] || this.tileWidth, fia[3] || this.tileHeight);
                 var fwbj = new tabageos.CanvasAnimation(this._image, this.charLayer, afrcta,e.x + (fia[5] || 0),e.y + (fia[6] || 0),this.tileWidth,this.tileHeight);
                 
                 
@@ -783,22 +1128,48 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
         }
 		
 		
-		
+		//then underCoverChanges happens
+		//then afterSceneChanges happens
 
 	}
+	turnLightsOff() {
+		this.turnOffLights();
+		this.applyLights();//because _actualApplyLights happens during the _loop of GameSkeleton, out of loop we have to do this
+		this._actualApplyLights();
+	};
 	initialSceneChanges(l) {
+		this.bossblit = null;
 		this.enemies = this.changeSceneEnemies(l);
 		this.scenery = this.changeSceneScenery(l);
+		this.movingProjectiles = [];
+		this.playerProjectiles = [];
 		this.npcs = [];
+		this.pTypeTime = 0;
+		this.npcTypeTime = 0;
+		this._doorUnits = [];
 		this.foregroundObjects = [];
+		this.__lightsInit = 0;
+		this.lightsReady = -1;
+		this.lightsTileValues = [];
+		this.turnLightsOff();
+		this.gameOverPosition = null;
 		
-	}
+		if(this.lastMinutePlayerPosition) {
+			
+			this.player.setX(this.lastMinutePlayerPosition.x+1-1);
+			this.player.setY(this.lastMinutePlayerPosition.y+1-1);
+			this.gameOverPosition = new tabageos.MoverPoint(this.player.x+1-1,this.player.y+1-1);
+			this.lastMinutePlayerPosition = null;
+			
+		}
+		
+	};
 	underCoverChanges() {
-		
-		
-		
-	}
-	afterSceneChanges(l) {
+		//sceneChanger.changeScene is called with all its needed params from GameSkeleton then TileSceneChanger
+	};
+	afterSceneChanges(l) {//this is also called during the setup of initial levels, as the result of an event, it happens shortly after the initial scene changes have happened. sceneChanger.changeScene is being called with all its needed params in the background by GameSkeleton.
+		//l is the level being changed to
+		//this method only happens if there has been a change from one scene to another, not from the title screen to a scene.
 		
 		this.player._map = tabageos.BlitMath.replaceValuesFromMultiArray(this.player._map,this.transValues,0,0);
         
@@ -813,6 +1184,16 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 		
 		if(this.mapDefinitions && this.mapDefinitions["backgroundMap"+l+""] ) {
 			tabageos.BlitMath.specificPatternBlit(this.backgroundLayer, this._image, this.mapDefinitions["backgroundMap"+l+""]);
+		} else {
+			
+			var bmppb = new tabageos.MoverPoint(0,0);
+			this.backgroundLayer.copyPixels(this._image, this.backgroundRectangle, bmppb);
+			//assume paint the whole background
+			while(this.backgroundRectangle.width < this.gameWidth && bmppb.x < this.gameWidth) {
+				bmppb.x += this.backgroundRectangle.width;
+				this.backgroundLayer.copyPixels(this._image, this.backgroundRectangle, bmppb);
+			}
+			
 		}
 		
 		if( this.player._canvasAnimation.getDirectionOfAnimation(this.player._canvasAnimation.currentAnimation,1) == "left" ) {
@@ -823,6 +1204,11 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 			//player position can be offset here if desired, use setX() or set both ._pos.x and .x;
 		}
 		
+		
+		this.establishLights();
+		
+		
+		
 		if(this.mapDefinitions["level"+l+"Doors"]) {
 			var fi = 0;var doorv;var tonum = 0;
 			for (fi; fi < this.mapDefinitions["level"+l+"Doors"].length;fi++) {
@@ -831,27 +1217,67 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 			}
 		}
 		
-		this.camera.v.x = (this.player.x - this.camera.v.width) > 0 ? this.player.x - this.camera.v.width + (this.player._canvasAnimation.width/2) : 0;
 		
-		this.callCamera();
+		
+		//adjust camera to center on player
+		this.camera.v.x = (this.player.x - this.camera.v.width) > 0 ? this.player.x - this.camera.v.width + (this.player._canvasAnimation.width/2) : 0;
+		//this.camera.v.y = this.player.y - this.camera.v.height + (this.player._canvasAnimation.height) + this.tileHeight;
+
+		this.callCamera(1,0,0, this.player._pos, 0, 1);   //sus, perhaps only  basicPlatformer, if needing long transitioning levels
+		
+		
 		if(this["level"+l+"Track"] && this.lastTrack != "level"+l+"Track") {
 			this.playMusic(this["level"+l+"Track"]); this.lastTrack = "level"+l+"Track";
 		} else if (this.level1Track) {
 			if(this.soundSystem._soundTracks.length >= 1) {
-				
+				//music is already playing of the same track
 			} else {
 				this.playMusic(this.level1Track);
 			}
 		}
+		
+		let pd = this.playerDefinition;
+		
+		if(pd.projectileValue) {
+			
+			for (var pi = 51; pi > 0; pi--) { 
+				var pval = [ pd.projectileValue[0] || 5, pd.projectileValue[1] || 30 ];
+				var proj = new tabageos.BlittedTraveler(this._image, this.charLayer, new tabageos.Rectangle(pval[1]*this.tileWidth, pval[0]*this.tileHeight, pd.projectileWidth,pd.projectileHeight),0,0,this.tileWidth, this.tileHeight);
+				proj.fromWidthOffset = pd.projectileWidth - this.tileWidth;
+				proj.fromHeightOffset = pd.projectileHeight - this.tileHeight;
+				if(pd.projectileValue[2]) {
+					proj.defineAnimation("right", pd.projectileValue[2]);
+				}
+				if(pd.projectileValue[3]) {
+					proj.defineAnimation("left", pd.projectileValue[3]);
+				}
+				proj.currentAnimation = "right";
+				this.playerProjectiles.push(proj);
+			}
+		}
+		
+		if(this.addToLevelSetup && typeof this.addToLevelSetup == 'function') {
+			
+			this.addToLevelSetup(l, this.player,this.enemies,this.sceneChanger.currentMap);
+		}
+		
+		
 	}
 	
 	
-	animateThePlayer() {
-        
-        if(this.player._canvasAnimation.currentAnimation.indexOf("hurt") == -1 || (this.player._canvasAnimation.finishedCurrentAnimation()) || (this.player._canvasAnimation.ani >= 4)) {
+	animateThePlayer(bypassTime) {
+        if(bypassTime) {
+			this.playerAnimationChangeBypass = bypassTime +1-1;
+		} 
+        if(this.playerAnimationChangeBypass <= 0 && ( this.player._canvasAnimation.currentAnimation.indexOf("hurt") == -1 || (this.player._canvasAnimation.finishedCurrentAnimation()) || (this.player._canvasAnimation.ani >= 4) ) ) {
             //changeDirectionAnimation is overridden via WeaponHoldingAttacker, it needs to get called, we can't use the other auto animation changing functions from CanvasAnimation if we want attacking functionality to work.
-            this.player._canvasAnimation.changeDirectionAnimation(this.player._veloc.x < 0,this.player._lastVeloc.x > 0, this.player._veloc.y < 0, this.player._veloc.y > 0);
-        } 
+           this.playerAnimationChangeBypass = 0;
+		   this.player._canvasAnimation.changeDirectionAnimation(this.player._veloc.x < 0,this.player._lastVeloc.x > 0, this.player._veloc.y < 0, this.player._veloc.y > 0);
+        } else if (this.playerAnimationChangeBypass > 0) {
+			
+			this.playerAnimationChangeBypass -= 33.3;
+			
+		}
         this.player._canvasAnimation.animate(this.player._canvasAnimation.currentAnimation.indexOf("attak") != -1 ? 0 : this.player._autoAnimationThrottle);
 		 
         this.player._canvasAnimation.matchPosition(this.player,(this.player._canvasAnimation.width/2)-(this.tileWidth/2),this.player._canvasAnimation.height-this.tileHeight);
@@ -865,15 +1291,29 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
         
     };
 	
+	typePixels(stringToType) {
+		
+		this.pTypeString = stringToType;//type on top of everything, and for some time
+		this.pTypeTime = 5000;//these params are used in the game loop
+		this.pTypeMP.x = this.player.x - 48;
+		this.pTypeMP.y = this.player.y - 32;
+		
+	};
+	displayPlayerHealth() {
+		this.healthBarDisplayDiv.style.width = Math.floor(this.player.health / this.healthBarPercent) + "px";
+	};
+	displayPlayerPower() {
+		this.powerBarDisplayDiv.style.width = Math.floor(this.secondaryPowerLevel / this.powerBarPercent) + "px";
+	};
 	
 	
-	loop(ts) {
+	loop(ts) {//BasicActionPlatformerGame loop, called within GameSkeleton ._loop, the game loop
 		
 		
 		if(!this.healthBarIsDisplayed) { 
-			//the custom hud can't be greater width/height, and the buttons are always on the top right and in the standard positions.
+			//the custom hud buttons are always on the top right and in the standard positions.
 			//to change the hud more either recall setupCustomHealthHud and the related methods, or copy and paste the class code and edit it, or extend GameSkeleton directly constructing your own setup method.
-            this.showCustomHud(this.player.health,0,0,0,"position:absolute;top:0px;left:0px;height:32px; width:96px;");
+            this.showCustomHud(this.player.health,0,0,0,this.wholeHudStyle);
             this.healthBarDisplayDiv.style.width = Math.floor(this.player.health / this.healthBarPercent) + "px";//max 500 health.  62 width
 			
         }
@@ -888,17 +1328,25 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 			}
 		}
 		
+		let passAfterRoutine = -7;
+		if(this.enemyDefinitions.enemyRoutine && typeof this.enemyDefinitions.enemyRoutine == 'function') {
+			
+			passAfterRoutine = this.enemyDefinitions.enemyRoutine(this.player,this.enemies,this.sceneChanger.currentMap, this.sceneChanger.currentScene, this.camera, this.explosionFactory);
+			
+		}
 		
-		var i = 0;var en;
+		if (passAfterRoutine === -7 || passAfterRoutine === true) {
+		
+			var i = 0;var en;
             for(i; i < this.enemies.length; i++) {//enemies
                 
                 en = this.enemies[i];
                 
-                if(!en._grounded) {//initially the enemy is placed in the air and so falls to the ground.
-                    en.move(0,0,0,1);//move down.
+                if(!en._grounded) {//initially the enemy can be placed in the air and so falls to the ground.
+                    en.move(0,0,0,1);//move down.  left, right, up, down
                 }
                 if(en._canvasAnimation.currentAnimation.indexOf("death") == -1 && en._canvasAnimation.currentAnimation.indexOf("hurt") == -1) { //if en is hurt we let that animation finish before doing anything else. 
-                    //So it is stuned for a bit.
+                    
                     if(tabageos.GeometricMath.testForPointInCircle(this.player._pos,200,en._pos)) {
 						//seeAndChaseRoutine causes it to chase the player and not fall off of ledges or go over empty spots.
 						//the method is only for platformers, for a top down game we would just use the .chase method of the TravelerSkeleton Class
@@ -907,42 +1355,54 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
                         en._canvasAnimation.x = en.x;
                         en._canvasAnimation.y = en.y;
                         en._canvasAnimation.fromWidthOffset = en.origAWOffset;
+						en._canvasAnimation.fromHeightOffset = en.origAHOffset;
                         en._canvasAnimation.currentAnimation = en._veloc.x > 0 ? "right" : "left";
                     } else {
                         en._canvasAnimation.x = en.x;
                         en._canvasAnimation.y = en.y;
                         en._canvasAnimation.fromWidthOffset = en.origAWOffset;
+						en._canvasAnimation.fromHeightOffset = en.origAHOffset;
                         en._canvasAnimation.currentAnimation = en._canvasAnimation.currentAnimation.indexOf("right") != -1 ? "idleright" : "idleleft";
                     }
                 }
-                
-                if(tabageos.GeometricMath.testForPointInCircle(this.player._pos,en.origAWOffset*2,en._pos)) {
-                //if close to the player and not hurt show attack animation
+				var eacalc = en.origAWOffset +1-1;
+                if(eacalc <= 0) {
+					eacalc = this.tileWidth+1-1;
+				}
+                if(tabageos.GeometricMath.testForPointInCircle(this.player._pos,eacalc < this.tileWidth*2 ? eacalc*2 : eacalc - this.tileWidth/2,en._pos)) {
+                //if close to the player and not hurt show attack animation, assumes all enemies have an attack animation with attackFromWidthOffset defined.
                     
                     if(en._canvasAnimation.currentAnimation.indexOf("death") == -1 && en._canvasAnimation.currentAnimation.indexOf("hurt") == -1) {
                         en._canvasAnimation.currentAnimation = en._canvasAnimation.currentAnimation.indexOf("right") != -1 ? "attackright" : "attackleft";
                         en._veloc.x = 0;en._veloc.y = 0;
                         en._canvasAnimation.fromWidthOffset = en.attackFromWidthOffset;
+						en._canvasAnimation.fromHeightOffset = en.attackFromHeightOffset;
 						if(this.enemyAttackSound) {
 							this.playSound(this.enemyAttackSound);
 						}
                     }
                     
-                    this._helperPoint.x = this.player.x + (this.tileWidth/2);
+                    this._helperPoint.x = this.player.x  + (this.player._leftRightFace ?  (this.tileWidth/2) : -(this.tileWidth/2));
                     this._helperPoint.y = this.player.y;
                     
-                    if((this.attackWithExplosion && tabageos.GeometricMath.testForPointInCircle(this.attackWithExplosion,this.attackWithExplosion.width,en._pos)) || tabageos.GeometricMath.testForPointInCircle(this._helperPoint,en.origAWOffset-(this.tileWidth/2),en._pos)) {
+                    if( !this.basicPlatformer && ( (this.attackWithExplosion && tabageos.GeometricMath.testForPointInCircle(this.attackWithExplosion,this.attackWithExplosion.width,en._pos)) || tabageos.GeometricMath.testForPointInCircle(this._helperPoint,eacalc-(this.tileWidth/2),en._pos) )  ) {
                         //if the player is real close
                         
                         //and the player is facing the enemy and the player is attacking
                         if(this.attackWithExplosion || (this.player.atApexOfAttack && this.player._leftRightFace != en._leftRightFace && this.player._canvasAnimation.currentAnimation.indexOf("attack") != -1)) {
                             //hurt the enemy and knock it back a little.
                             en._canvasAnimation.fromWidthOffset = en.origAWOffset;
+							en._canvasAnimation.fromHeightOffset = en.origAHOffset;
                             en._canvasAnimation.currentAnimation = en._canvasAnimation.currentAnimation.replace("attack","hurt");
-                            
-                            en.setX( this.player._leftRightFace ? en.x + 4 : en.x - 4 );
+                            if(en.maxHealth < 4500) {//no knock back if maxHealth is 4500 or more, assuming a boss.
+								en.setX( this.player._leftRightFace ? en.x + 4 : en.x - 4 );
+							}
                             //en.setX(en.x - (en._veloc.x*8));
-                            en.health -= this.attackStrength;
+							if(en.maxHealth > 4500) {
+								en.health -= (this.attackStrength/25);//attack strength is only 1/25 as strong on bosses.
+							} else  {
+								en.health -= this.attackStrength;
+							}
                             this.attackWithExplosion = 0;
 							if(this.enemyHurtSound) {
 								this.playSound(this.enemyHurtSound);
@@ -952,10 +1412,38 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
                             en._canvasAnimation.currentAnimation = en._canvasAnimation.currentAnimation.indexOf("right") != -1 ? "attackright" : "attackleft";
                             en._veloc.x = 0;en._veloc.y = 0;
                             en._canvasAnimation.fromWidthOffset = en.attackFromWidthOffset;//will vary with each enemy
-							
+							en._canvasAnimation.fromHeightOffset = en.attackFromHeightOffset;
                             
                         }
-                    }
+                    } else if ( this.basicPlatformer ) {
+						
+						this._helperPoint.x = this.player.x + (this.tileWidth/2);
+						this._helperPoint.y = this.player.y + this.player._canvasAnimation.height;
+						
+						//this._helperPoint.y += this.player._canvasAnimation.height;
+						//if(tabageos.GeometricMath.testForPointInCircle(this._helperPoint,en.origAWOffset-(this.tileWidth/2),en._pos)) {
+							if(tabageos.GeometricMath.testForPointInCircle(this._helperPoint,this.tileWidth+4,en._pos) && this.player._state === 3 && en._pos.y <= this._helperPoint.y && this.player.x >= en.x && this.player.x <= en.x + en.width) {
+								en._canvasAnimation.fromWidthOffset = en.origAWOffset;
+								en._canvasAnimation.fromHeightOffset = en.origAHOffset;
+								en._canvasAnimation.currentAnimation = en._canvasAnimation.currentAnimation.replace("attack","hurt");
+								
+								
+								if(en.maxHealth > 4500) {
+									en.health = 0;//(this.attackStrength/25);//attack strength is only 1/25 as strong on bosses.
+								} else  {
+									en.health = 0;//this.attackStrength;
+								}
+								
+								if(this.enemyHurtSound) {
+									this.playSound(this.enemyHurtSound);
+								}
+								
+								this.player._grounded = 0;
+								this.player._veloc.y = -9;this.player._state = 3; 
+							} 
+						//}
+						
+					}
                 }
                 
                 
@@ -964,6 +1452,7 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
                     en._canvasAnimation.x = en.x;
                     en._canvasAnimation.y = en.y;
                     en._canvasAnimation.fromWidthOffset = en.origAWOffset;
+					en._canvasAnimation.fromHeightOffset = en.origAHOffset;
                     en._canvasAnimation.currentAnimation = this.player._leftRightFace ? "deathright" : "deathleft";
 					
                 }
@@ -971,23 +1460,46 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
                 //we slow down and speed up the enemy attack by the animation throttle.
                 en._canvasAnimation.animate(en._canvasAnimation.currentAnimation.indexOf("attack") != -1 ? .8 : .5);
                 en._canvasAnimation.blit();
-                
+                if(en.origAWOffset > this.tileWidth*4) {
+					this.bossblit = en;
+				}
                 
             
                 //the en will only be in attack if close to the player, and the animation will only finish if it stays close and the player has not attacked.
                 //also note that finishedCurrentAnimation returns true when the animation is about to finish, at about the 4th to last frame.
-                if(en._canvasAnimation.currentAnimation.indexOf("attack") != -1 && en._canvasAnimation.finishedCurrentAnimation()) {
+                if(this.player.health > 0 && en._canvasAnimation.currentAnimation.indexOf("attack") != -1 && en._canvasAnimation.finishedCurrentAnimation()) {
                     
                     //player hurt
                     this.player._veloc.y = -2;
                     this.player._veloc.x = -this.player._veloc.x;
                     this.player.update();
-                    this.player.setX(this.player._leftRightFace ? this.player.x - 10 : this.player.x + 10);
+					if(en.origAWOffset <= this.tileWidth*2) { //a very big enemy does not cause automatic knock back
+						this.player.setX(this.player._leftRightFace ? this.player.x - (en.origAWOffset||this.tileWidth) : this.player.x + (en.origAWOffset||this.tileWidth));
+					}
                     this.player._canvasAnimation.currentAnimation = "hurt"+this.player._canvasAnimation.getDirectionOfAnimation(this.player._canvasAnimation.currentAnimation,1,0);
                     this.player._canvasAnimation.animate();	
                     this.player._canvasAnimation.matchPosition(this.player,(this.player._canvasAnimation.width/2)-this.tileWidth,this.player._canvasAnimation.height-this.tileHeight);
                     this.player._canvasAnimation.blit();
-                    this.player.health -= en.attackStrength;
+                    this.player.health -= (!this.basicPlatformer  ? en.attackStrength : this.player.health+1);
+					
+						if(this.basicPlatformer && this.playerDefinition.saveLifeValues && this.playerDefinition.currentPowerValue) {
+							
+								for ( let pwlfs of this.playerDefinition.saveLifeValues ) {
+									
+									if( this.valuesMatch( pwlfs, this.playerDefinition.currentPowerValue ) ) {
+										this.player.health = this.initialHealthLevel+1-1;
+										this.playerDefinition.currentPowerValue = [0,0];
+										break;
+										
+									}
+									
+									
+								}
+
+						} else if (this.basicPlatformer && this.playerDefinition.currentPowerValue) {
+							this.playerDefinition.currentPowerValue = [0,0];
+						}
+					
 					this.healthBarDisplayDiv.style.width = Math.floor(this.player.health / this.healthBarPercent) + "px";
 					if(this.playerHurtSound) {
 						this.playSound(this.playerHurtSound);
@@ -999,18 +1511,25 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
                     en._canvasAnimation.x = en.x;
                     en._canvasAnimation.y = en.y;
                     en._canvasAnimation.fromWidthOffset = en.origAWOffset;
+					en._canvasAnimation.fromHeightOffset = en.origAHOffset;
                     en._canvasAnimation.currentAnimation = en._veloc.x > 0 ? "right" : "left";
                 }
                 
                 //health bar
                 this._helperRect.x = 0; this._helperRect.y = 0;
-                if(en.health < 10000) {
+                if(!this.basicPlatformer && en.health < 10000 && en.origAWOffset < this.tileWidth * 3) {
 					this._helperRect.width = en.health > 50 ? 50 : en.health; 
 					this._helperRect.height = 3;
-					this._helperPoint.x = en.x - (this.tileWidth/2);
-					this._helperPoint.y = en.y - en._canvasAnimation.fromHeightOffset;
+					this._helperPoint.x = en.x + (this.tileWidth/2)  - (this._helperRect.width/2);
+					this._helperPoint.y = en.y - en._canvasAnimation.fromHeightOffset + (en.origAHOffset > this.tileHeight*3 ? this.tileHeight*3 : 0);
 					this.charLayer.copyPixels(this.healthBarImage,this._helperRect,this._helperPoint);
-                }
+                } else if (!this.basicPlatformer && en.origAWOffset > this.tileWidth * 3 && en.maxHealth >= this.cameraWidth) {//boss health lining the top portion of the screen.
+					this._helperRect.width =  en.health * (this.cameraWidth / en.maxHealth);
+					this._helperRect.height = 5;
+					this._helperRect.x = this.camera.v.x+1-1;
+					this._helperRect.y = this.camera.v.y + 34;
+					this.charLayer.drawRect(this._helperRect, "#c80000");
+				}
 				
                 if(en._canvasAnimation.currentAnimation.indexOf("death") != -1 && en._canvasAnimation.finishedCurrentAnimation()) {
                     
@@ -1045,7 +1564,7 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 						
 						if(!edrop) {
 							
-							if(todrop[0] && todrop[1]) {
+							if(todrop[0] && todrop[1]) {//drop scenery object
 								var soca = new tabageos.CanvasAnimation(this._image,this.charLayer,new tabageos.Rectangle(todrop[1]*this.tileWidth,todrop[0]*this.tileHeight,this.tileWidth,this.tileHeight),en.x,en.y,this.tileWidth,this.tileHeight);
 								if(todrop[2]) {
 									//animation frames array in 2
@@ -1067,18 +1586,13 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 						en.health = -5158;
 					}
 					
-					
-					
-					
                     tabageos.GeometricMath.splice(this.enemies,this.enemies.indexOf(en));
                     break;
                     
                 }
 				
-				
-				
 				if(en && tabageos.GeometricMath.testForPointInCircle(this.player._pos,this.tileWidth,en._pos) && en.attackStrength === -1) {
-					if(this.controller.buttons.b) {
+					if(this.controller.buttons.b) {//pick up enemy, attackStrength of enemy must be -1
 						for (var itema of this.canHold) {
 							
 							if( this.valuesMatch(itema, en.tileValue) ) { 
@@ -1096,15 +1610,32 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
                 
                 
             } // end enemies
+		}
 		
-		
-			i = 0; var npc;//npc interactions / basic text adventure system
+			i = 0; var npc;//npc interactions / basic text question and answer and drop system
+			var fromMandatedWords = 0;
 			for( i ; i < this.npcs.length; i++ ) {
 				
 				npc = this.npcs[i];
 				
 				var potentialDrop = 0;
 				if( npc.exSpeed <= 0 && tabageos.GeometricMath.testForPointInCircle(this.player._pos, 32, npc.getPosition()) ) {
+					
+					
+					if(npc.manditoryWords) { //always speak when walk past this npc, and speak a repeated sequence
+						var mlen = npc.manditoryWords.indexOf("|") != -1 ? npc.manditoryWords.split("|").length : 0;
+						var mandate = mlen ? npc.manditoryWords.split("|")[npc._wordCounter] : npc.manditoryWords;
+						npc._currentWords = mandate + "";
+						npc.exSpeed = 11000;
+						this.currentNpcTalking = npc;
+						this.npcTypeTime = npc.exSpeed +1-1;
+						this.pixelParagraph(npc.x, npc.y - this.tileHeight*3, 10, mandate);
+						if(npc._wordCounter < mlen-1) {
+							npc._wordCounter += 1;
+						} else {
+							npc._wordCounter = 0;
+						}
+					}
 					
 					//a pressed 
 					if(this.controller.buttons.a && npc.bWords.indexOf("7quinprog7") != -1) {//b question in progress
@@ -1117,6 +1648,8 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 						//they have pressed 'a' after seeing the 'b' question.
 						this.pixelParagraph(npc.x, npc.y - this.tileHeight*3, 10, response);
 						npc._currentWords = response + "";npc.exSpeed = 7000;
+						this.currentNpcTalking = npc;
+						this.npcTypeTime = npc.exSpeed +1-1;
 						npc.bWords = npc.bWords.replace("7quinprog7", "?");//question to be asked again
 						
 						potentialDrop = npc.drops(this.player, this.heldScenery, "a", "b");
@@ -1136,6 +1669,8 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 						
 						this.pixelParagraph(npc.x, npc.y - this.tileHeight*3, 10, questi);
 						npc._currentWords = questi + "";npc.exSpeed = 7000;
+						this.currentNpcTalking = npc;
+						this.npcTypeTime = npc.exSpeed +1-1;
 						npc.aWords = npc.aWords.replace("?", "7quinprog7");
 						this.controller.buttons.a = 0;
 						
@@ -1149,6 +1684,8 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 						//they have pressed 'a' after seeing the 'a' question.
 						this.pixelParagraph(npc.x, npc.y - this.tileHeight*3, 10, response);
 						npc._currentWords = response + "";npc.exSpeed = 7000;
+						this.currentNpcTalking = npc;
+						this.npcTypeTime = npc.exSpeed +1-1;
 						npc.aWords = npc.aWords.replace("7quinprog7", "?");//question asked again
 						
 						potentialDrop = npc.drops(this.player, this.heldScenery, "a", "a");
@@ -1156,11 +1693,13 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 						this.controller.buttons.a = 0;
 						
 						
-					} else if (this.controller.buttons.a) { npc._canvasAnimation.animate(); //no question, potential drop
+					} else if (this.controller.buttons.a && !npc.manditoryWords) { npc._canvasAnimation.animate(); //no question, potential drop
 						var wspla = npc.aWords.split("|");var wlena = wspla.length;
 						var wordsa = wspla[Math.floor(Math.random()*wlena)];
 						this.pixelType(npc.x, npc.y - this.tileHeight*3, wordsa);
 						npc._currentWords = wordsa + "";npc.exSpeed = 7000;
+						this.currentNpcTalking = npc;
+						this.npcTypeTime = npc.exSpeed +1-1;
 						potentialDrop = npc.drops(this.player, this.heldScenery, "a");
 						this.controller.buttons.a = 0;
 					}
@@ -1177,6 +1716,8 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 						//they have pressed 'b' after seeing the 'a' question.
 						this.pixelParagraph(npc.x, npc.y - this.tileHeight*3, 10, response);
 						npc._currentWords = response + "";npc.exSpeed = 7000;
+						this.currentNpcTalking = npc;
+						this.npcTypeTime = npc.exSpeed +1-1;
 						npc.aWords = npc.aWords.replace("7quinprog7", "?");//question asked again
 						
 						potentialDrop = npc.drops(this.player, this.heldScenery, "b", "a");
@@ -1194,6 +1735,8 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 						
 						this.pixelParagraph(npc.x, npc.y - this.tileHeight*3, 10, questi);
 						npc._currentWords = questi + "";npc.exSpeed = 7000;
+						this.currentNpcTalking = npc;
+						this.npcTypeTime = npc.exSpeed +1-1;
 						npc.bWords = npc.bWords.replace("?", "7quinprog7");
 						this.controller.buttons.b = 0;
 						
@@ -1207,6 +1750,8 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 						//they have pressed 'b' after seeing the 'b' question.
 						this.pixelParagraph(npc.x, npc.y - this.tileHeight*3, 10, response);
 						npc._currentWords = response + "";npc.exSpeed = 7000;
+						this.currentNpcTalking = npc;
+						this.npcTypeTime = npc.exSpeed +1-1;
 						npc.bWords = npc.bWords.replace("7quinprog7", "?");//question asked again
 						
 						potentialDrop = npc.drops(this.player, this.heldScenery, "b", "b");
@@ -1214,11 +1759,13 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 						this.controller.buttons.b = 0;
 						
 						
-					} else if (this.controller.buttons.b) { npc._canvasAnimation.animate();
+					} else if (this.controller.buttons.b && !npc.manditoryWords) { npc._canvasAnimation.animate();
 						var wspla = npc.bWords.split("|");var wlena = wspla.length;
 						var wordsa = wspla[Math.floor(Math.random()*wlena)];
 						this.pixelType(npc.x, npc.y - this.tileHeight*3, wordsa);
 						npc._currentWords = wordsa + "";npc.exSpeed = 7000;
+						this.currentNpcTalking = npc;
+						this.npcTypeTime = npc.exSpeed +1-1;
 						potentialDrop = npc.drops(this.player, this.heldScenery, "b");
 						this.controller.buttons.b = 0;
 					}
@@ -1228,7 +1775,7 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 					
 					if(potentialDrop) { 
 						
-						if(npc.dropWords) { //todo persist even after level change and back, check
+						if(npc.dropWords) { //todo persist even after level change and back, done in _memory object
 							
 							for (var entry of this._memory.entries) {
 								if((entry[0] == npc.tileValue[0]) && (entry[1] == npc.tileValue[1])) {
@@ -1240,6 +1787,8 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 							npc.bWords = ""+ (npc.dropWords.indexOf("|") != -1 ? npc.dropWords.split("|")[1] : npc.dropWords);
 							this.pixelType(npc.x, npc.y - this.tileHeight*3, npc.dropWords);
 							npc._currentWords = npc.dropWords.split("|")[0] + "";npc.exSpeed = 7000;
+							this.currentNpcTalking = npc;
+							this.npcTypeTime = npc.exSpeed +1-1;
 						}
 						var todrop = potentialDrop;
 						if(typeof todrop != 'string' && todrop[0] && todrop[1]) {
@@ -1270,8 +1819,10 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 				}
 				
 				if(npc.exSpeed > 0) { npc.exSpeed -= 33.3;
+					
+					
 					//this.pixelDialogBox(npc._currentWords,npc.x - (npc.width*3), npc.y - this.tileHeight*3, npc.x - (npc.width*3) + 1, npc.y - (this.tileHeight*3) + 1,10);
-					this.pixelParagraph(npc.x - (npc.width*3), npc.y - this.tileHeight*3, 12,npc._currentWords);
+					//this.pixelParagraph(npc.x - (npc.width*3), npc.y - this.tileHeight*3, 12,npc._currentWords);
 					
 				}
 				if(!npc._canvasAnimation.finishedCurrentAnimation()) {
@@ -1282,17 +1833,14 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 			
 			
 		
-			this.animateThePlayer();
 			
-			if(this.controller.buttons.c) {
+			
+			if(this.controller.buttons.c && !this.__holdingC) {
 				
-				if(this.secondaryExtra && this.secondaryPowerLevel > 0) {
+				if( this.secondaryExtra ) {
 					
 					this.secondaryExtra( this.player, this.enemies, this.sceneChanger.currentMap, this.sceneChanger.currentScene, this.explosionFactory );
 					
-					this.secondaryPowerLevel -= this.secondaryPowerDrainAmount;
-					
-					this.powerBarDisplayDiv.style.width = Math.floor(this.secondaryPowerLevel / this.powerBarPercent) + "px";//max 300
 					
 				}
 				
@@ -1325,8 +1873,12 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 					}
 					
 				}
+				this.__holdingC = 1;
 				
-				this.controller.buttons.c = 0;
+			}
+			
+			if(!this.controller.buttons.c && this.__holdingC) {
+				this.controller.buttons.c = 0;this.__holdingC = 0;
 			}
 			
 			
@@ -1338,7 +1890,7 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 				proje.move();
 				proje.animate();
 				proje.blit();
-				if(proje.x < 0 || proje.x > this.gameWidth) {
+				if(proje.x < 0 || proje.x > this.gameWidth || proje.x < this.camera.v.x || proje.x > this.camera.v.x + this.camera.v.width) {
 					tabageos.GeometricMath.splice(this.movingProjectiles, this.movingProjectiles.indexOf(proje));
 					this.playerProjectiles.push(proje);
 					break;
@@ -1346,7 +1898,7 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 				//for each enemy
 				for ( var eny of this.enemies ) {
 					
-					if(tabageos.GeometricMath.testForPointInCircle(eny._pos, 16, proje.getPosition())) {
+					if(tabageos.GeometricMath.testForPointInCircle(eny._pos, en.origAWOffset ? en.origAWOffset : this.tileWidth, proje.getPosition())) {
 						
 						tabageos.GeometricMath.splice(this.movingProjectiles, this.movingProjectiles.indexOf(proje));
 						this.playerProjectiles.push(proje);
@@ -1356,23 +1908,24 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
                             
                         eny.setX( this.player._leftRightFace ? eny.x + 4 : eny.x - 4 );
                             //en.setX(en.x - (en._veloc.x*8));
-                        eny.health -= (this.attackStrength*2);
+                        eny.health -= (!this.basicPlatformer ? (this.attackStrength*2) : eny.health+1);
 						
 						if(this.projectileExplosion) {
 							var dof = this.player._canvasAnimation.getDirectionOfAnimation(this.player._canvasAnimation.currentAnimation,1) == "left" ? -((this.projectileExplosion.width/2) + this.tileWidth) : ((this.projectileExplosion.width/2) );
 							this.explosionFactory.addExplosion(proje.x + dof, proje.y - (this.projectileExplosion.height/2), 0,this.projectileExplosion.x,this.projectileExplosion.y,this.projectileExplosion.width, this.projectileExplosion.height);
 						}
-						
+						break;break;
 					}
 					
 					
 				}
 				
 				//map collision
-				var pwall = tabageos.BlitMath.checkTileValueAt(proje.x,proje.y,this.sceneChanger.currentMap,this.tileWidth,this.tileHeight);
+				var pwall = tabageos.BlitMath.checkTileValueAt(proje.x,proje.y,this.player._map,this.tileWidth,this.tileHeight);
 				if(pwall[0] || pwall[1]) {
-					
-					tabageos.GeometricMath.splice(this.movingProjectiles, this.movingProjectiles.indexOf(proje));
+					if(this.movingProjectiles.indexOf(proje) >= 0) {
+						tabageos.GeometricMath.splice(this.movingProjectiles, this.movingProjectiles.indexOf(proje));
+					}
 					this.playerProjectiles.push(proje);
 					
 					if(this.projectileExplosion) {
@@ -1416,7 +1969,7 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 				
 				for (var itema of this.canHold) {
 					if( this.valuesMatch(itema, this.player.holding.tileValue) ) { 
-						this.heldScenery.push(  [ itema[0], itema[1] ] );
+						this.heldScenery.push(  [ itema[0]+1-1, itema[1]+1-1 ] );
 						break;
 					}
 				}
@@ -1430,7 +1983,6 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 						this.player.health += 25;
 						this.healthBarDisplayDiv.style.width = Math.floor(this.player.health / this.healthBarPercent) + "px";
 					}
-					
 					
 					
 				}
@@ -1454,8 +2006,82 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 				}
 				
 				this.player._throwHolding();
+				
 			}
 			
+			var lightSet = 0;
+			if(this.lightsReady !== 0) { //lights
+			
+					let arrayOfLightPositions = [];
+					
+					for ( var alight of this.lightsTileValues ) {
+						if(tabageos.BlitMath.getLocationOfTile(alight, this.sceneChanger.currentMap, this.tileWidth, this.tileHeight) ) {
+							arrayOfLightPositions = tabageos.GeometricMath.mergeArrays(arrayOfLightPositions, tabageos.BlitMath.getPathOfTile(alight, this.sceneChanger.currentMap, this.tileWidth, this.tileHeight));
+						}
+					}
+					
+					if(this.lightsReady === -1 || this.lightsReady === 1) {
+						
+						
+						for( let lpt of arrayOfLightPositions ){
+							if(this.lightsReady === -1) { 
+								//readyLights must be called on the first light, readyLights first turns off the lights, then the first one is being turned on.
+								this.readyLights( this.lightsFrom, lpt.x - (this.lightsFrom.width/2) - this.camera.v.x,  lpt.y - (this.lightsFrom.height/2) - this.camera.v.y );
+								if(arrayOfLightPositions.length > 1) {this.lightsReady = 1;}
+								
+							} else if (this.lightsReady === 1) { //next just turn on additional lights, 
+								this.readyAdditionalLights(this.lightsFrom,lpt.x - (this.lightsFrom.width/2) - this.camera.v.x,  lpt.y - (this.lightsFrom.height/2) - this.camera.v.y );
+								if(arrayOfLightPositions.indexOf(lpt) == arrayOfLightPositions.length - 1) {
+									this.lightsReady = -1;//if we do away with this all lights keep turning on, refilling the scene thereby flooding the scene with the lights.
+								}
+							}
+							
+							var curlghtv = tabageos.BlitMath.checkTileValueAt(lpt.x,lpt.y, this.sceneChanger.currentMap, this.tileWidth,this.tileHeight);
+							
+							for (var lia of this.lightsTileValues) {
+								if ( lia[2] && this.valuesMatch(curlghtv, lia) ) {
+									this.lightsCanvasAnimation.animationSpecs = {'light' : [0,lia[2]] };
+									this.lightsCanvasAnimation.currentAnimation = 'light';
+									this.lightsCanvasAnimation.x = lpt.x;
+									this.lightsCanvasAnimation.y = lpt.y;
+									this.lightsCanvasAnimation.animate(.2);
+									this.lightsCanvasAnimation.blit();
+								
+								}
+							}
+							
+							
+						}
+						
+						
+					} else if (this.lightsReady === -2 || this.lightsReady === 2) {
+						
+						
+						for( let lpt of arrayOfLightPositions ){
+							if(this.lightsReady === -2) {
+								this.animateLights(this.lightsFrom,lpt.x - (this.lightsFrom.width/2) - this.camera.v.x,  lpt.y - (this.lightsFrom.height/2) - this.camera.v.y );
+								this.lightsReady = 2;
+							} else if (this.lightsReady === 2) {
+								this.animateAdditionalLights(this.lightsFrom,lpt.x - (this.lightsFrom.width/2) - this.camera.v.x,  lpt.y - (this.lightsFrom.height/2) - this.camera.v.y );
+								if(arrayOfLightPositions.indexOf(lpt) == arrayOfLightPositions.length - 1) {
+									this.lightsReady = -2;
+								}
+							}
+						}
+						
+						
+					}
+					
+				
+				
+			}
+			
+			
+			this.animateThePlayer();
+			
+			if(this.bossblit) { 
+				this.bossblit._canvasAnimation.blit();
+			}
 			
 			var fif = 0;var fa;
 			for(fif;fif<this.foregroundObjects.length;fif++) {
@@ -1481,28 +2107,12 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 				
 			}
 			
-			if(this.player._veloc.x == 0) {
-				this.useClintBlockFont();
-				this.pixelType(this.camera.v.x + 1,this.camera.v.y + 32,"coins " + this.coinsCollected);
-				this.useOldSchoolFont();
-				//show values held
-				
-				
-				var sx = 0;
-				for ( var held of this.heldScenery ) {
-					this._helperRect.x = Number(held[1]) * this.tileWidth;
-					this._helperRect.y = Number(held[0]) * this.tileHeight;
-					this._helperRect.width = this.tileWidth;
-					this._helperRect.height = this.tileHeight;
-					this._helperPoint.x = this.camera.v.x + 1 + sx;
-					this._helperPoint.y = this.camera.v.y + 32 + (this.tileHeight - 5);
-					this.charLayer.copyPixels(this._image, this._helperRect, this._helperPoint,this.tileWidth,this.tileHeight);
-					sx += this.tileWidth;
-				}
+			if(this.player._veloc.x == 0 ) {
+				this.showHeldScenery();
 				
 			}
 		
-			var curTile = tabageos.BlitMath.checkTileValueAt(this.player.x + (this.tileWidth/2),this.player.y + (this.tileHeight/2), this.sceneChanger.currentMap,this.tileWidth,this.tileHeight);
+			var curTile = tabageos.BlitMath.checkTileValueAt(this.player.x + (this.tileWidth/2) ,this.player.y + (this.tileHeight/2) , this.sceneChanger.currentMap,this.tileWidth,this.tileHeight);
 			
 		
 			for ( var door of this._doorUnits ) {
@@ -1515,6 +2125,13 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 							for ( var pkey of this.heldScenery ) {
 								if(this.valuesMatch(pkey,door.key)) {
 									hvky = 1;
+									if(door.playerPosition) {
+										
+										
+										this.lastMinutePlayerPosition = new tabageos.MoverPoint(door.playerPosition.x+1-1, door.playerPosition.y+1-1);
+										
+										
+									}
 									this.transitionToSceneByDoor(door.level); break; break; break;
 									
 								}
@@ -1522,23 +2139,33 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 							if(hvky === 0) {
 								this.pTypeString = (door.lockedString ? door.lockedString : "door is locked");
 								this.pTypeTime = 5000;
-								this.pixelType(this.player.x, this.player.y - 32, this.pTypeString);
+								this.pixelType(this.player.x - 48, this.player.y - 32, this.pTypeString);break; break; break;
 							}
 							
 						} else if (door.key && this.heldScenery.length <= 0) {
 							this.pTypeString = (door.lockedString ? door.lockedString : "door is locked");
 							this.pTypeTime = 5000;
-							this.pTypeMP.x = this.player.x+1-1;
+							this.pTypeMP.x = this.player.x - 48;
 							this.pTypeMP.y = this.player.y - 32;
-							this.pixelType(this.player.x, this.player.y - 32, this.pTypeString);
+							this.pixelType(this.player.x - 48, this.player.y - 32, this.pTypeString);break; break; break;
 							
 						} else if (!door.key) {
-							
+							if(door.playerPosition) {
+								
+								this.lastMinutePlayerPosition = new tabageos.MoverPoint(door.playerPosition.x+1-1, door.playerPosition.y+1-1);
+								
+							}
 							this.transitionToSceneByDoor(door.level); break; break; break;
 							
 						}
-						this.controller.buttons.b = 0;
+						this.controller.buttons.b = 0; 
 						break;
+					} else if (this.valuesMatch(dtile, curTile)) {
+						this.pTypeString = ( door.lockedString ? door.lockedString : (door.key ? "door is locked" : "press e to open door") );
+						this.pTypeTime = 1000;
+						this.pTypeMP.x = this.player.x - 48;
+						this.pTypeMP.y = this.player.y - 32;
+						this.pixelType(this.player.x - 48, this.player.y - 32, this.pTypeString);break; break; break;
 					}
 					
 				}
@@ -1546,22 +2173,113 @@ class BasicActionPlatformerGame extends tabageos.GameSkeleton {
 				
 			}
 			
+			if(this.npcTypeTime > 0) { var npcer = this.currentNpcTalking;
+				if(npcer._currentWords.indexOf("{") != -1) { 
+					var propt = npcer._currentWords.match(this.stringProp);
+					if(propt) {
+						var proptn = propt[0].replace("{", "").replace("}", "");
+						var tosay = "";
+						if(proptn.indexOf(".") != -1) {
+							var dotsep = proptn.split(".");
+							tosay = this[dotsep[0]][dotsep[1]];
+						} else {
+							tosay = this[proptn];
+						}
+						npcer._currentWords = npcer._currentWords.replace(propt[0], tosay);
+					}
+				}
+				if(this.dialogBoxFromRectangle) {
+					this.pixelDialogBox(npcer._currentWords, npcer.x - (npcer.width*3), npcer.y - this.tileHeight*3, npcer.x - (npcer.width*3) + 2, npcer.y - (this.tileHeight*3) + 2, 10, 0, 0, 0,0,this.charLayer, this.dialogBoxFromRectangle, this._image);
+				} else {
+					this.pixelParagraph(npcer.x - (npcer.width*3), npcer.y - this.tileHeight*3, 12,npcer._currentWords);
+				}
+				this.npcTypeTime -= 33.3;
+			}
+			
+			
 			if(this.pTypeTime > 0) {
 				
-				this.pixelType(this.pTypeMP.x, this.pTypeMP.y, this.pTypeString);
+				this.pixelParagraph(this.pTypeMP.x, this.pTypeMP.y, 10, this.pTypeString);
 				this.pTypeTime -= 33.3;
 				
 			}
 		
 			this.explosionFactory.displayExplosions(this.charLayer, this._image);
 			
-			
-			
-			
+			if(this.player.health <= 0) {
+				
+				this.typePixels("Game Over");
+				this.pixelParagraph(this.pTypeMP.x, this.pTypeMP.y, 10, this.pTypeString);
+				this.doGameOver();
+				
+			}
 		
 		
 	}
 	
-};
+	showHeldScenery() {
+		
+		var pld = this.playerDefinition;
+				this.pixelType(pld && pld.coinsX ? pld.coinsX : this.camera.v.x + 1, pld && pld.coinsY ? pld.coinsY : this.camera.v.y + 32,"coins " + this.coinsCollected);
+				//this.useClintBlockFont();
+				//show values held
+				
+				
+				var sx = 0;
+				for ( var held of this.heldScenery ) {
+					this._helperRect.x = Number(held[1]) * this.tileWidth;
+					this._helperRect.y = Number(held[0]) * this.tileHeight;
+					this._helperRect.width = this.tileWidth;
+					this._helperRect.height = this.tileHeight;
+					this._helperPoint.x = (pld && pld.sceneryX) ? pld.sceneryX + sx : this.camera.v.x + 1 + sx;
+					this._helperPoint.y = (pld && pld.sceneryY) ? pld.sceneryY : this.camera.v.y + 32 + (this.tileHeight - 5);
+					if(pld && pld.heldSceneryDrawLayer) {
+						this[pld.heldSceneryDrawLayer].copyPixels(this._image, this._helperRect, this._helperPoint,this.tileWidth,this.tileHeight);
+					} else {
+						this.charLayer.copyPixels(this._image, this._helperRect, this._helperPoint,this.tileWidth,this.tileHeight);
+					}
+					
+					sx += this.tileWidth;
+				}
+		
+	};
+	quickStartClick(e) {
+		tabageos.GameSkeleton.game.controller.buttons.start = 1;
+	};
+	
+	doGameOver(victory) {
+    	this.gameOverContainer.floor.canvas.removeEventListener("click", this.quickStartClick, false);
+    	this.gameOverContainer.floor.canvas.addEventListener("click", this.quickStartClick, false);
+		
+		if(victory) {
+			this.gameOverContainer.floor.copyPixels(this._image, this.gameOverVictoryRect,new tabageos.MoverPoint());
+		}
+		if(!this.basicPlatformer) {
+			this.lives = 1;//by default game transitions to the game over screen when player health reaches 0.
+		} else {
+			//for basicPlatformer, player has 3 lives initially as this.lives, on touch an enemy it resets to the beginning of the level.
+			//assumes the player starts over from same initial point defined during construction
+			//to change where the player would reset to, change this.playerDefinition.x and .y when you know game over is about to happen.
+			if(!this.gameOverPosition) {
+				this.player.setX(this.playerDefinition.x || 64);//._pos and .x, _pos is used for force, x for position, force directly effects position, but not without time.
+				this.player.setY(this.playerDefinition.y || 32);
+			} else { window.console.log("gs " + this.lives);
+				this.player.setX(this.gameOverPosition.x+1-1);
+				this.player.setY(this.gameOverPosition.y+1-1);
+				
+			}
+			//this.camera.v.x = 0;//reset cameras view
+			//this.camera.v.y = 0;
+			this.player.health = this.initialHealthLevel || 500;
+			this.camera.v.x = (this.player.x - this.camera.v.width) > 0 ? this.player.x - this.camera.v.width + (this.player._canvasAnimation.width/2) : 0;
+			//this.camera.v.y = this.player.y - this.camera.v.height + (this.player._canvasAnimation.height) + this.tileHeight;
 
+			this.callCamera(1,0,0, this.player._pos, 0, 1);
+			
+		}
+		this.gameOver(0);//subtracts 1 life and then other things to reset the scene, when lives is 0 transitions to game over screen.
+	}
+	
+};
+//version 1.5
 export { BasicActionPlatformerGame }

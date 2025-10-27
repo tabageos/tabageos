@@ -109,6 +109,7 @@ this.width = width || 0;
     MapTraveler.prototype._autoAnimate = 0;
 	MapTraveler.prototype._autoAnimationThrottle = 1;
 	MapTraveler.prototype._leftRightFace = 0;
+	MapTraveler.prototype.getToSpeed = .03;
 	
 	MapTraveler.prototype.setupForTileMove = function() {
 		
@@ -444,6 +445,20 @@ this.width = width || 0;
 
 
         }
+		
+		
+		if(this.getToSpeed && this.getToSpeed > 0) {
+			
+			if(this._walkSpeed >= this.maxSpeed && ( this._veloc.x == 0 || (this._canvasAnimation && this._canvasAnimation.currentAnimation.indexOf('idle') != -1) ) ) {
+				this._walkSpeed = 0;
+			} else {
+				if(this._walkSpeed < this.maxSpeed) {
+					this._walkSpeed += this.getToSpeed;
+				}
+			}
+			
+			
+		} 
     };
 	MapTraveler.prototype.autoAnimation = function() {
 		

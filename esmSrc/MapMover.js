@@ -82,14 +82,33 @@ import {BlitMath} from './BlitMath.js';
     MapMover.prototype._directCanvasObject = null;
 	MapMover.prototype._autoAnimate = 0;
 	MapMover.prototype._autoAnimationThrottle = .5;
+	MapMover.prototype.__moveSettings = {};
 	
 	MapMover.prototype.setupForTileMove = function() {
+		
+		this.__moveSettings._jumps = this._jumps +1-1;
+		this.__moveSettings._deltaTime = this._deltaTime +1-1;
+		this.__moveSettings._jumpSpeed = this._jumpSpeed +1-1;
+		this.__moveSettings.maxSpeed = this.maxSpeed +1-1;
+		this.__moveSettings._walkSpeed = this._walkSpeed +1-1;
 		
 		this._jumps = 0;
 		this._deltaTime = 1;
 		this._jumpSpeed = this._tw+1-1;
 		this.maxSpeed = this._tw +1-1;
 		this._walkSpeed = this._tw+1-1;
+		
+	};
+	MapMover.prototype.backFromTileMove = function() {
+		
+		if(this.__moveSettings._jumps || this.__moveSettings._walkSpeed) {
+			this._jumps = this.__moveSettings._jumps +1-1;
+			this._deltaTime = this.__moveSettings._deltaTime +1-1;
+			this._jumpSpeed = this.__moveSettings._jumpSpeed +1-1;
+			this.maxSpeed = this.__moveSettings.maxSpeed +1-1;
+			this._walkSpeed = this.__moveSettings._walkSpeed +1-1;
+		}
+		
 		
 	};
 	MapMover.prototype.tileMove = function(left,right,up,down) {

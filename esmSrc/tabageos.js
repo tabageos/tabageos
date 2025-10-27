@@ -1,4 +1,4 @@
-window.console.log('Tads Basic Game Objects v1.6977');
+window.console.log('Tads Basic Game Objects v1.6998');
 
 export { TimeKeeper } from './TimeKeeper.js';
 export { Rectangle } from './Rectangle.js';
@@ -60,8 +60,14 @@ export { OneOfMany } from './OneOfMany.js';
 export { DungeonGenerator } from './DungeonGenerator.js';
 export { BasicActionPlatformerGame } from './BasicActionPlatformerGame.js';
 export { seekTouch } from './Utils.js';
+export { seekMobile } from './Utils.js';
 export { loadSpriteSheetAndStart } from './Utils.js';
 export { ResizeGame } from './Utils.js';
 export { _pointerEvents } from './Utils.js';
 export { ControllerPad } from './ControllerPad.js';
-export default function version() { window.console.log('tabageos v1.6977') }
+export { EnemyDefinitionObject } from './EnemyDefinitionObject.js';
+export { PlayerDefinitionObject } from './PlayerDefinitionObject.js';
+export { MapDefinitionObject } from './MapDefinitionObject.js';
+export { NPCDefinitionObject } from './NPCDefinitionObject.js';
+export { SoundDefinitionObject } from './SoundDefinitionObject.js';
+export default function version() { window.console.log('tabageos v1.6998') }
